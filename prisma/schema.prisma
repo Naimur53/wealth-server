@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+  seller
+}
+
+model User {
+  id         String    @id @default(uuid())
+  name       String
+  email      String    @unique
+  password   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  role       UserRole  @default(user)
+  profileImg String?
+  isVerified Boolean   @default(false)
+  Account    Account[]
+  Orders     Orders[]
+  Cart       Cart[]
+}
+enum accountCategory {
+  Facebook  
+  Twitter  
+  Instagram 
+  LinkedIn  
+  Pinterest  
+  Snapchat  
+  TikTok  
+  YouTube   
+  GitHub  
+}
+model Account {
+  id              String   @id @unique @default(uuid())
+  name            String
+  description     String
+  price           Int
+  category        accountCategory
+  approvedForSale Boolean?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  ownById         String
+  isSold          Boolean  @default(false)
+  ownBy           User     @relation(fields: [ownById], references: [id])
+  Orders          Orders[]
+  Cart            Cart[]
+}
+
+model Orders {
+  id        String   @id @unique @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  orderById String
+  orderBy   User     @relation(fields: [orderById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id        String   @id @unique @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  orderById String
+  ownById   String
+  ownBy     User     @relation(fields: [ownById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
