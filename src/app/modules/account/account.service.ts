@@ -11,7 +11,7 @@ import { IAccountFilters } from './account.interface';
 const getAllAccount = async (
   filters: IAccountFilters,
   paginationOptions: IPaginationOptions
-): Promise<IGenericResponse<Account[]>> => {
+): Promise<IGenericResponse<Omit<Account, 'username' | 'password'>[]>> => {
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
@@ -37,6 +37,7 @@ const getAllAccount = async (
     andCondition.push({
       AND: Object.keys(filterData).map(key => ({
         [key]: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           equals: (filterData as any)[key],
         },
       })),
@@ -58,6 +59,28 @@ const getAllAccount = async (
         : {
             createdAt: 'desc',
           },
+    select: {
+      id: true,
+      category: true,
+      approvedForSale: true,
+      description: true,
+      createdAt: true,
+      isSold: true,
+      Cart: true,
+      name: true,
+      price: true,
+      updatedAt: true,
+      ownById: true,
+      ownBy: {
+        select: {
+          name: true,
+          profileImg: true,
+          email: true,
+          id: true,
+          isVerified: true,
+        },
+      },
+    },
   });
   const total = await prisma.account.count();
   const output = {
@@ -68,6 +91,7 @@ const getAllAccount = async (
 };
 
 const createAccount = async (payload: Account): Promise<Account | null> => {
+  console.log(payload);
   const newAccount = await prisma.account.create({
     data: payload,
   });
@@ -87,6 +111,7 @@ const updateAccount = async (
   id: string,
   payload: Partial<Account>
 ): Promise<Account | null> => {
+  console.log(payload);
   const result = await prisma.account.update({
     where: {
       id,

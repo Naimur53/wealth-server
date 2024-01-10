@@ -32,18 +32,41 @@ const createUser: RequestHandler = catchAsync(
     });
   }
 );
+const resendEmail: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const { email } = req.params;
+
+    const output = await AuthService.resendEmail(email || '');
+    const { refreshToken, ...result } = output;
+    await sendEmail({ to: result.user.email, token: refreshToken as string });
+    //
+    console.log('success');
+    // set refresh token into cookie
+    const cookieOptions = {
+      secure: config.env === 'production',
+      httpOnly: true,
+    };
+
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+    sendResponse<ILoginResponse>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'user created successfully!',
+      data: result,
+    });
+  }
+);
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const loginInfo = req.body;
   const result = await AuthService.loginUser(loginInfo);
 
   // set refresh token into cookie
-  // const cookieOptions = {
-  //   secure: config.env === 'production',
-  //   httpOnly: true,
-  // };
-  // console.log({ refreshToken, others });
+  const cookieOptions = {
+    secure: config.env === 'production',
+    httpOnly: true,
+  };
 
-  // res.cookie('refreshToken', refreshToken, cookieOptions);
+  res.cookie('refreshToken', refreshToken, cookieOptions);
 
   sendResponse<ILoginResponse>(res, {
     statusCode: 200,
@@ -107,4 +130,5 @@ export const AuthController = {
   loginUser,
   refreshToken,
   verifySignupToken,
+  resendEmail,
 };

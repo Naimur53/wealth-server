@@ -90,6 +90,39 @@ const loginUser = async (payload: ILogin): Promise<ILoginResponse> => {
     refreshToken,
   };
 };
+const resendEmail = async (givenEmail: string): Promise<ILoginResponse> => {
+  const isUserExist = await prisma.user.findFirst({
+    where: { email: givenEmail },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  if (isUserExist?.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already verified');
+  }
+
+  //create access token & refresh token
+
+  const { email, id, role, name, ...others } = isUserExist;
+
+  const accessToken = jwtHelpers.createToken(
+    { userId: id, role },
+    config.jwt.secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.createToken(
+    { userId: id, role },
+    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_expires_in as string
+  );
+
+  return {
+    user: { email, id, name, role, ...others },
+    accessToken,
+    refreshToken,
+  };
+};
 
 const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
   //verify token
@@ -177,4 +210,5 @@ export const AuthService = {
   loginUser,
   refreshToken,
   verifySignupToken,
+  resendEmail,
 };

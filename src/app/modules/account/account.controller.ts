@@ -2,17 +2,21 @@ import { Account } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { AccountService } from './account.service';
 import { accountFilterAbleFields } from './account.constant';
+import { AccountService } from './account.service';
 const createAccount: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const AccountData = req.body;
-
-    const result = await AccountService.createAccount(AccountData);
+    const user = req.user as JwtPayload;
+    const result = await AccountService.createAccount({
+      ...AccountData,
+      ownById: user.userId,
+    });
     sendResponse<Account>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -28,7 +32,7 @@ const getAllAccount = catchAsync(async (req: Request, res: Response) => {
 
   const result = await AccountService.getAllAccount(filters, paginationOptions);
 
-  sendResponse<Account[]>(res, {
+  sendResponse<Omit<Account, 'username' | 'password'>[]>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Account retrieved successfully !',

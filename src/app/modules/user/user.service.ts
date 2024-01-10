@@ -68,6 +68,7 @@ const getAllUser = async (
       isVerified: true,
       createdAt: true,
       updatedAt: true,
+      isBlocked: true,
     },
   });
   const total = await prisma.user.count();

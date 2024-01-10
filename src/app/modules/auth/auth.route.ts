@@ -19,5 +19,6 @@ router.post(
   AuthController.refreshToken
 );
 router.post('/verify-signup-token/:token', AuthController.verifySignupToken);
+router.post('/resend/:email', AuthController.resendEmail);
 
 export const AuthRoutes = router;

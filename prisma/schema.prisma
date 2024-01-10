@@ -23,6 +23,7 @@ model User {
   role       UserRole  @default(user)
   profileImg String?
   isVerified Boolean   @default(false)
+  isBlocked Boolean?
   Account    Account[]
   Orders     Orders[]
   Cart       Cart[]
@@ -38,13 +39,20 @@ enum accountCategory {
   YouTube   
   GitHub  
 }
+enum EApprovedForSale {
+  pending
+  approved
+  denied
+}
 model Account {
   id              String   @id @unique @default(uuid())
   name            String
   description     String
   price           Int
+  username        String
+  password        String
   category        accountCategory
-  approvedForSale Boolean?
+  approvedForSale EApprovedForSale @default(pending)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   ownById         String

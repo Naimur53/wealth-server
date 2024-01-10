@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get(
   '/',
-  auth(UserRole.admin, UserRole.seller),
+  // auth(UserRole.admin, UserRole.seller),
   UserController.getAllUser
 );
 router.get(
@@ -20,7 +20,7 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(UserRole.admin, UserRole.user, UserRole.seller),
+  // auth(UserRole.admin, UserRole.user, UserRole.seller),
   validateRequest(UserValidation.updateValidation),
   UserController.updateUser
 );
