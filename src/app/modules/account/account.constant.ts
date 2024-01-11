@@ -1,2 +1,8 @@
 export const accountSearchableFields = ['name', 'description'];
-export const accountFilterAbleFields = ['name', 'category'];
+export const accountFilterAbleFields = [
+  'name',
+  'category',
+  'approvedForSale',
+  'ownById',
+  'isSold',
+];

@@ -63,7 +63,7 @@ const updateAccount: RequestHandler = catchAsync(
 
     const result = await AccountService.updateAccount(id, updateAbleData);
 
-    sendResponse<Account>(res, {
+    sendResponse<Omit<Account, 'username' | 'password'>>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'Account Updated successfully!',
@@ -77,7 +77,7 @@ const deleteAccount: RequestHandler = catchAsync(
 
     const result = await AccountService.deleteAccount(id);
 
-    sendResponse<Account>(res, {
+    sendResponse<Omit<Account, 'username' | 'password'>>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'Account deleted successfully!',

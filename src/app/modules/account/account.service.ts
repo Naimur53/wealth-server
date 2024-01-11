@@ -110,7 +110,7 @@ const getSingleAccount = async (id: string): Promise<Account | null> => {
 const updateAccount = async (
   id: string,
   payload: Partial<Account>
-): Promise<Account | null> => {
+): Promise<Omit<Account, 'username' | 'password'> | null> => {
   console.log(payload);
   const result = await prisma.account.update({
     where: {
@@ -118,17 +118,26 @@ const updateAccount = async (
     },
     data: payload,
   });
-  return result;
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Account not found');
+  }
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  const { username, password, ...rest } = result;
+  return rest;
 };
 
-const deleteAccount = async (id: string): Promise<Account | null> => {
+const deleteAccount = async (
+  id: string
+): Promise<Omit<Account, 'username' | 'password'> | null> => {
   const result = await prisma.account.delete({
     where: { id },
   });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Account not found!');
   }
-  return result;
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  const { username, password, ...rest } = result;
+  return rest;
 };
 
 export const AccountService = {
