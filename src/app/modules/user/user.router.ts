@@ -7,20 +7,16 @@ import { UserValidation } from './user.validation';
 
 const router = express.Router();
 
-router.get(
-  '/',
-  // auth(UserRole.admin, UserRole.seller),
-  UserController.getAllUser
-);
+router.get('/', auth(UserRole.admin), UserController.getAllUser);
 router.get(
   '/:id',
-  auth(UserRole.admin, UserRole.seller),
+  auth(UserRole.admin, UserRole.seller, UserRole.user),
   UserController.getSingleUser
 );
 
 router.patch(
   '/:id',
-  // auth(UserRole.admin, UserRole.user, UserRole.seller),
+  auth(UserRole.admin, UserRole.user, UserRole.seller),
   validateRequest(UserValidation.updateValidation),
   UserController.updateUser
 );

@@ -1,9 +1,11 @@
+import { UserRole } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import sendEmail from '../../../helpers/sendEmail';
+import EmailTemplates from '../../../shared/EmailTemplates';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { ILoginResponse, IRefreshTokenResponse } from './auth.Interface';
@@ -12,11 +14,30 @@ import { AuthService } from './auth.service';
 const createUser: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const data = req.body;
+
     const output = await AuthService.createUser(data);
     const { refreshToken, ...result } = output;
-    await sendEmail({ to: result.user.email, token: refreshToken as string });
-    //
-    console.log('success');
+    if (output.user.role !== UserRole.seller) {
+      await sendEmail(
+        { to: result.user.email },
+        {
+          subject: EmailTemplates.verify.subject,
+          html: EmailTemplates.verify.html({ token: refreshToken as string }),
+        }
+      );
+      console.log('success');
+    } else {
+      await sendEmail(
+        { to: config.emailUser as string },
+        {
+          subject: EmailTemplates.sellerRequest.subject,
+          html: EmailTemplates.sellerRequest.html({
+            userEmail: output.user.email,
+            txId: output.user.txId as string,
+          }),
+        }
+      );
+    }
     // set refresh token into cookie
     const cookieOptions = {
       secure: config.env === 'production',
@@ -38,7 +59,13 @@ const resendEmail: RequestHandler = catchAsync(
 
     const output = await AuthService.resendEmail(email || '');
     const { refreshToken, ...result } = output;
-    await sendEmail({ to: result.user.email, token: refreshToken as string });
+    await sendEmail(
+      { to: result.user.email },
+      {
+        subject: EmailTemplates.verify.subject,
+        html: EmailTemplates.verify.html({ token: refreshToken as string }),
+      }
+    );
     //
     console.log('success');
     // set refresh token into cookie

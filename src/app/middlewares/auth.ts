@@ -4,6 +4,7 @@ import { Secret } from 'jsonwebtoken';
 import config from '../../config';
 import ApiError from '../../errors/ApiError';
 import { jwtHelpers } from '../../helpers/jwtHelpers';
+import prisma from '../../shared/prisma';
 
 const auth =
   (...requiredRoles: string[]) =>
@@ -18,7 +19,25 @@ const auth =
       let verifiedUser = null;
 
       verifiedUser = jwtHelpers.verifyToken(token, config.jwt.secret as Secret);
-      console.log({ verifiedUser });
+
+      // check user exits and same role
+      const queryUser = await prisma.user.findUnique({
+        where: { id: verifiedUser.userId },
+        select: {
+          role: true,
+          id: true,
+        },
+      });
+      console.log({ verifiedUser, queryUserRole: queryUser?.role, queryUser });
+      if (!queryUser) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'User not found!');
+      }
+      if (queryUser.role !== verifiedUser.role) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          'User role does not matched!'
+        );
+      }
       req.user = verifiedUser; // role  , userid
 
       // role diye guard korar jnno

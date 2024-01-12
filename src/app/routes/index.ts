@@ -1,9 +1,10 @@
+import express from 'express';
 import { AccountRoutes } from '../modules/account/account.router';
 import { AuthRoutes } from '../modules/auth/auth.route';
 import { CartRoutes } from '../modules/cart/cart.router';
+import { CurrencyRoutes } from '../modules/currency/currency.router';
+import { CurrencyRequestRoutes } from '../modules/currencyRequest/currencyRequest.router';
 import { OrdersRoutes } from '../modules/orders/orders.router';
-
-import express from 'express';
 import { ProfileRoutes } from '../modules/profile/profile.router';
 import { UserRoutes } from '../modules/user/user.router';
 const router = express.Router();
@@ -35,6 +36,14 @@ const moduleRoutes = [
   {
     path: '/cart',
     route: CartRoutes,
+  },
+  {
+    path: '/currency',
+    route: CurrencyRoutes,
+  },
+  {
+    path: '/currency-request',
+    route: CurrencyRequestRoutes,
   },
 ];
 

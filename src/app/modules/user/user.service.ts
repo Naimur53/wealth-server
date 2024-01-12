@@ -69,6 +69,7 @@ const getAllUser = async (
       createdAt: true,
       updatedAt: true,
       isBlocked: true,
+      txId: true,
     },
   });
   const total = await prisma.user.count();
@@ -118,9 +119,30 @@ const updateUser = async (
 
 const deleteUser = async (id: string): Promise<User | null> => {
   return await prisma.$transaction(async tx => {
+    console.log(id);
     // Inside the transaction, perform your database operations
-    const deleteUser = await tx.user.delete({ where: { id } });
 
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteAccount = await tx.account.deleteMany({
+      where: { ownById: id },
+    });
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteOrder = await tx.orders.deleteMany({
+      where: { orderById: id },
+    });
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteCarts = await tx.cart.deleteMany({
+      where: { ownById: id },
+    });
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteCurrency = await tx.currency.deleteMany({
+      where: { ownById: id },
+    });
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteCurrencyRequest = await tx.currency.deleteMany({
+      where: { ownById: id },
+    });
+    const deleteUser = await tx.user.delete({ where: { id } });
     return deleteUser;
   });
 };

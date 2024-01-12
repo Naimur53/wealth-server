@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 import bcryptjs from 'bcryptjs';
 import httpStatus from 'http-status';
 import { Secret } from 'jsonwebtoken';
@@ -16,12 +16,26 @@ import {
 } from './auth.Interface';
 const createUser = async (user: User): Promise<ILoginResponse> => {
   // checking is user buyer
+  const { password: givenPassword, ...rest } = user;
+  if (user.role === UserRole.seller && !user.txId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Seller must be pay to create account'
+    );
+  }
   try {
-    const { password: givenPassword, ...rest } = user;
     const genarateBycryptPass = await createBycryptPassword(givenPassword);
-
-    const newUser = await prisma.user.create({
-      data: { password: genarateBycryptPass, ...rest },
+    const newUser = await prisma.$transaction(async tx => {
+      const newUserInfo = await tx.user.create({
+        data: { password: genarateBycryptPass, ...rest, isVerified: false },
+      });
+      await tx.currency.create({
+        data: {
+          amount: 0,
+          ownById: newUserInfo.id,
+        },
+      });
+      return newUserInfo;
     });
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const { password, id, email, name, ...others } = newUser;
@@ -44,7 +58,6 @@ const createUser = async (user: User): Promise<ILoginResponse> => {
       refreshToken,
     };
   } catch (err) {
-    console.log(err);
     throw new ApiError(httpStatus.BAD_REQUEST, 'User Already exits ');
   }
   // eslint-disable-next-line no-unused-vars
@@ -180,6 +193,9 @@ const verifySignupToken = async (
   const isUserExist = await prisma.user.findFirst({ where: { id } });
   if (!isUserExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
+  }
+  if (isUserExist.role === UserRole.seller) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Only admin can verify seller');
   }
   //generate new Access token
 

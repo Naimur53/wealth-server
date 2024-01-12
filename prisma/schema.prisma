@@ -14,38 +14,44 @@ enum UserRole {
 }
 
 model User {
-  id         String    @id @default(uuid())
-  name       String
-  email      String    @unique
-  password   String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  role       UserRole  @default(user)
-  profileImg String?
-  isVerified Boolean   @default(false)
-  isBlocked Boolean?
-  Account    Account[]
-  Orders     Orders[]
-  Cart       Cart[]
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  password        String
+  txId            String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  role            UserRole          @default(user)
+  profileImg      String?
+  isVerified      Boolean           @default(false)
+  isBlocked       Boolean?
+  Account         Account[]
+  Orders          Orders[]
+  Cart            Cart[]
+  Currency        Currency?
+  CurrencyRequest CurrencyRequest[]
 }
+
 enum accountCategory {
-  Facebook  
-  Twitter  
-  Instagram 
-  LinkedIn  
-  Pinterest  
-  Snapchat  
-  TikTok  
-  YouTube   
-  GitHub  
+  Facebook
+  Twitter
+  Instagram
+  LinkedIn
+  Pinterest
+  Snapchat
+  TikTok
+  YouTube
+  GitHub
 }
+
 enum EApprovedForSale {
   pending
   approved
   denied
 }
+
 model Account {
-  id              String   @id @unique @default(uuid())
+  id              String           @id @unique @default(uuid())
   name            String
   description     String
   price           Int
@@ -53,11 +59,11 @@ model Account {
   password        String
   category        accountCategory
   approvedForSale EApprovedForSale @default(pending)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   ownById         String
-  isSold          Boolean  @default(false)
-  ownBy           User     @relation(fields: [ownById], references: [id])
+  isSold          Boolean          @default(false)
+  ownBy           User             @relation(fields: [ownById], references: [id])
   Orders          Orders[]
   Cart            Cart[]
 }
@@ -76,9 +82,34 @@ model Cart {
   id        String   @id @unique @default(uuid())
   accountId String
   account   Account  @relation(fields: [accountId], references: [id])
-  orderById String
   ownById   String
   ownBy     User     @relation(fields: [ownById], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Currency {
+  id        String   @id @unique @default(uuid())
+  amount    Float    @default(0)
+  ownById   String   @unique
+  ownBy     User     @relation(fields: [ownById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CurrencyRequest {
+  id        String                   @id @unique @default(uuid())
+  message   String
+  amount    Float
+  ownById   String
+  status    EStatusOfCurrencyRequest @default(pending)
+  ownBy     User                     @relation(fields: [ownById], references: [id])
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+}
+
+enum EStatusOfCurrencyRequest {
+  pending
+  approved
+  denied
 }
