@@ -16,6 +16,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../config"));
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const jwtHelpers_1 = require("../../helpers/jwtHelpers");
+const prisma_1 = __importDefault(require("../../shared/prisma"));
 const auth = (...requiredRoles) => (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         //get authorization token
@@ -26,7 +27,25 @@ const auth = (...requiredRoles) => (req, res, next) => __awaiter(void 0, void 0,
         // verify token
         let verifiedUser = null;
         verifiedUser = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.secret);
-        console.log({ verifiedUser });
+        // check user exits and same role
+        const queryUser = yield prisma_1.default.user.findUnique({
+            where: { id: verifiedUser.userId },
+            select: {
+                role: true,
+                id: true,
+                isBlocked: true,
+            },
+        });
+        console.log({ verifiedUser, queryUserRole: queryUser === null || queryUser === void 0 ? void 0 : queryUser.role, queryUser });
+        if (!queryUser) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User not found!');
+        }
+        if (queryUser === null || queryUser === void 0 ? void 0 : queryUser.isBlocked) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'You are blocked!');
+        }
+        if (queryUser.role !== verifiedUser.role) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User role does not matched!');
+        }
         req.user = verifiedUser; // role  , userid
         // role diye guard korar jnno
         if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {

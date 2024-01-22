@@ -15,5 +15,5 @@ router.get('/', account_controller_1.AccountController.getAllAccount);
 router.get('/:id', account_controller_1.AccountController.getSingleAccount);
 router.post('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller), (0, validateRequest_1.default)(account_validation_1.AccountValidation.createValidation), account_controller_1.AccountController.createAccount);
 router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller), (0, validateRequest_1.default)(account_validation_1.AccountValidation.updateValidation), account_controller_1.AccountController.updateAccount);
-router.delete('/:id', account_controller_1.AccountController.deleteAccount);
+router.delete('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller), account_controller_1.AccountController.deleteAccount);
 exports.AccountRoutes = router;

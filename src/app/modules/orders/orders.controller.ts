@@ -2,17 +2,21 @@ import { Orders } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { OrdersService } from './orders.service';
 import { ordersFilterAbleFields } from './orders.constant';
+import { OrdersService } from './orders.service';
 const createOrders: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const OrdersData = req.body;
-
-    const result = await OrdersService.createOrders(OrdersData);
+    const user = req.user as JwtPayload;
+    const result = await OrdersService.createOrders({
+      ...OrdersData,
+      orderById: user.userId,
+    });
     sendResponse<Orders>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -44,6 +48,20 @@ const getSingleOrders: RequestHandler = catchAsync(
     const result = await OrdersService.getSingleOrders(id);
 
     sendResponse<Orders>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Orders retrieved  successfully!',
+      data: result,
+    });
+  }
+);
+const getMyOrders: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+
+    const result = await OrdersService.getMyOrders(user.userId);
+
+    sendResponse<Orders[]>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'Orders retrieved  successfully!',
@@ -88,4 +106,5 @@ export const OrdersController = {
   updateOrders,
   getSingleOrders,
   deleteOrders,
+  getMyOrders,
 };

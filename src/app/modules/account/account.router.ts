@@ -22,6 +22,10 @@ router.patch(
   validateRequest(AccountValidation.updateValidation),
   AccountController.updateAccount
 );
-router.delete('/:id', AccountController.deleteAccount);
+router.delete(
+  '/:id',
+  auth(UserRole.admin, UserRole.seller),
+  AccountController.deleteAccount
+);
 
 export const AccountRoutes = router;

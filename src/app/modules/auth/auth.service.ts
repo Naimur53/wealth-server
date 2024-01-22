@@ -27,7 +27,12 @@ const createUser = async (user: User): Promise<ILoginResponse> => {
     const genarateBycryptPass = await createBycryptPassword(givenPassword);
     const newUser = await prisma.$transaction(async tx => {
       const newUserInfo = await tx.user.create({
-        data: { password: genarateBycryptPass, ...rest, isVerified: false },
+        data: {
+          password: genarateBycryptPass,
+          ...rest,
+          isVerified: false,
+          isApprovedForSeller: false,
+        },
       });
       await tx.currency.create({
         data: {
@@ -187,16 +192,14 @@ const verifySignupToken = async (
     throw new ApiError(httpStatus.FORBIDDEN, 'Invalid Refresh Token');
   }
 
-  const { id } = verifiedToken;
+  const { userId } = verifiedToken;
   // checking deleted user's refresh token
 
-  const isUserExist = await prisma.user.findFirst({ where: { id } });
+  const isUserExist = await prisma.user.findUnique({ where: { id: userId } });
   if (!isUserExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
   }
-  if (isUserExist.role === UserRole.seller) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Only admin can verify seller');
-  }
+
   //generate new Access token
 
   const newAccessToken = jwtHelpers.createToken(
@@ -207,9 +210,13 @@ const verifySignupToken = async (
     config.jwt.secret as Secret,
     config.jwt.expires_in as string
   );
-  const result = await UserService.updateUser(isUserExist.id, {
-    isVerified: true,
-  });
+  const result = await UserService.updateUser(
+    isUserExist.id,
+    {
+      isVerified: true,
+    },
+    {}
+  );
   if (!result) {
     new ApiError(httpStatus.BAD_REQUEST, 'user not found');
   }

@@ -1,10 +1,9 @@
-import { User, UserRole } from '@prisma/client';
+import { User } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
-import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -60,13 +59,7 @@ const updateUser: RequestHandler = catchAsync(
     const user = req.user as JwtPayload;
     const updateAbleData = req.body;
 
-    if (user.role !== UserRole.admin && updateAbleData.isVerified) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'only admin can update seller role'
-      );
-    }
-    const result = await UserService.updateUser(id, updateAbleData);
+    const result = await UserService.updateUser(id, updateAbleData, user);
 
     sendResponse<User>(res, {
       statusCode: httpStatus.OK,

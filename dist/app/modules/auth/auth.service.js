@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
+const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
@@ -34,12 +35,24 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const user_service_1 = require("../user/user.service");
 const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
     // checking is user buyer
+    const { password: givenPassword } = user, rest = __rest(user, ["password"]);
+    if (user.role === client_1.UserRole.seller && !user.txId) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Seller must be pay to create account');
+    }
     try {
-        const { password: givenPassword } = user, rest = __rest(user, ["password"]);
         const genarateBycryptPass = yield (0, createBycryptPassword_1.default)(givenPassword);
-        const newUser = yield prisma_1.default.user.create({
-            data: Object.assign({ password: genarateBycryptPass }, rest),
-        });
+        const newUser = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const newUserInfo = yield tx.user.create({
+                data: Object.assign(Object.assign({ password: genarateBycryptPass }, rest), { isVerified: false, isApprovedForSeller: false }),
+            });
+            yield tx.currency.create({
+                data: {
+                    amount: 0,
+                    ownById: newUserInfo.id,
+                },
+            });
+            return newUserInfo;
+        }));
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const { password, id, email, name } = newUser, others = __rest(newUser, ["password", "id", "email", "name"]);
         //create access token & refresh token
@@ -52,7 +65,6 @@ const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
         };
     }
     catch (err) {
-        console.log(err);
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User Already exits ');
     }
     // eslint-disable-next-line no-unused-vars
@@ -135,9 +147,9 @@ const verifySignupToken = (token) => __awaiter(void 0, void 0, void 0, function*
     catch (err) {
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Invalid Refresh Token');
     }
-    const { id } = verifiedToken;
+    const { userId } = verifiedToken;
     // checking deleted user's refresh token
-    const isUserExist = yield prisma_1.default.user.findFirst({ where: { id } });
+    const isUserExist = yield prisma_1.default.user.findUnique({ where: { id: userId } });
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User does not exist');
     }
@@ -148,7 +160,7 @@ const verifySignupToken = (token) => __awaiter(void 0, void 0, void 0, function*
     }, config_1.default.jwt.secret, config_1.default.jwt.expires_in);
     const result = yield user_service_1.UserService.updateUser(isUserExist.id, {
         isVerified: true,
-    });
+    }, {});
     if (!result) {
         new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'user not found');
     }

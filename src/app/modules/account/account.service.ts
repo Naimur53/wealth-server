@@ -1,4 +1,4 @@
-import { Account, Prisma } from '@prisma/client';
+import { Account, Prisma, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -33,12 +33,22 @@ const getAllAccount = async (
       OR: searchAbleFields,
     });
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const keyChecker = (data: any, key: string): any => {
+    const keysToCheck = ['isSold'];
+    if (keysToCheck.includes(key)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return JSON.parse((filterData as any)[key]);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (filterData as any)[key];
+  };
   if (Object.keys(filters).length) {
     andCondition.push({
       AND: Object.keys(filterData).map(key => ({
         [key]: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          equals: (filterData as any)[key],
+          equals: keyChecker(filterData, key),
         },
       })),
     });
@@ -92,6 +102,22 @@ const getAllAccount = async (
 
 const createAccount = async (payload: Account): Promise<Account | null> => {
   console.log(payload);
+
+  const isAccountOwnerExits = await prisma.user.findUnique({
+    where: { id: payload.ownById },
+  });
+  if (!isAccountOwnerExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found');
+  }
+  if (
+    isAccountOwnerExits.role === UserRole.seller &&
+    !isAccountOwnerExits.isApprovedForSeller
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Your are not approved as seller'
+    );
+  }
   const newAccount = await prisma.account.create({
     data: payload,
   });
@@ -111,7 +137,17 @@ const updateAccount = async (
   id: string,
   payload: Partial<Account>
 ): Promise<Omit<Account, 'username' | 'password'> | null> => {
-  console.log(payload);
+  const isAccountExits = await prisma.account.findUnique({ where: { id } });
+
+  if (!isAccountExits) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Account not found!');
+  }
+  if (isAccountExits.isSold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "sold account can't be updated!"
+    );
+  }
   const result = await prisma.account.update({
     where: {
       id,
@@ -129,12 +165,17 @@ const updateAccount = async (
 const deleteAccount = async (
   id: string
 ): Promise<Omit<Account, 'username' | 'password'> | null> => {
+  const isAccountExits = await prisma.account.findUnique({ where: { id } });
+
+  if (!isAccountExits) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Account not found!');
+  }
+  if (isAccountExits.isSold) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "sold account can't be delete!");
+  }
   const result = await prisma.account.delete({
     where: { id },
   });
-  if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Account not found!');
-  }
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const { username, password, ...rest } = result;
   return rest;

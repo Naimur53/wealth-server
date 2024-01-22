@@ -19,5 +19,7 @@ exports.default = {
         refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
     },
     emailUserPass: process.env.EMAIL_USER_PASS,
+    emailUser: process.env.EMAIL_USER,
     frontendUrl: process.env.FRONT_END_URL,
+    currencyPerDollar: parseFloat(process.env.CURRENCY_PER_DOLLAR),
 };

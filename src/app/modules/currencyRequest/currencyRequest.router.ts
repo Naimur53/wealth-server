@@ -19,7 +19,7 @@ router.get(
 
 router.post(
   '/',
-  auth(UserRole.admin, UserRole.seller, UserRole.user),
+  auth(UserRole.seller, UserRole.user),
   validateRequest(CurrencyRequestValidation.createValidation),
   CurrencyRequestController.createCurrencyRequest
 );

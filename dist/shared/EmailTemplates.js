@@ -1,23 +1,15 @@
-import config from '../config';
-type IHtmlData = {
-  token?: string;
-  userName?: string;
-  userEmail?: string;
-  userProfileImg?: string;
-  txId?: string | null;
-  amount?: string | number;
-  currencyAmount?: string | number;
-  currentAmount?: string | number;
-  accountUserName?: string;
-  accountPassword?: string;
-  accountName?: string;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+const config_1 = __importDefault(require("../config"));
 const EmailTemplates = {
-  verify: {
-    subject: 'Verify for login',
-    text: undefined,
-    html: (data: IHtmlData) => {
-      return `
+    verify: {
+        subject: 'Verify for login',
+        text: undefined,
+        html: (data) => {
+            return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -82,7 +74,7 @@ const EmailTemplates = {
               to Login.
             </p>
             <div class="btn-container">
-              <a href="${config.frontendUrl}/verify?token=${data?.token}" style="color:#fff" class="button">Verify</a>
+              <a href="${config_1.default.frontendUrl}/verify?token=${data === null || data === void 0 ? void 0 : data.token}" style="color:#fff" class="button">Verify</a>
             </div>
             <p class="paragraph">
               Best,<br>
@@ -96,12 +88,12 @@ const EmailTemplates = {
           </div>
         </body>
         </html>`;
+        },
     },
-  },
-  requestForCurrencyToAdmin: {
-    subject: 'Requested To Buy Currency',
-    html: (data: IHtmlData) => {
-      return `
+    requestForCurrencyToAdmin: {
+        subject: 'Requested To Buy Currency',
+        html: (data) => {
+            return `
         <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,12 +183,12 @@ const EmailTemplates = {
 </html>
 
         `;
+        },
     },
-  },
-  confirmEmailForCurrencyPurchase: {
-    subject: 'Successfully Purchased Currency',
-    html: (data: IHtmlData) => {
-      return `
+    confirmEmailForCurrencyPurchase: {
+        subject: 'Successfully Purchased Currency',
+        html: (data) => {
+            return `
         <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -266,17 +258,17 @@ const EmailTemplates = {
       <p class="current-currency">
         Your current currency is <span>${data.currentAmount}</span>
       </p>
-      <a href="${config.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
     </div>
   </div>
 </body>
 </html>
         `;
+        },
     },
-  },
-  sellerRequest: {
-    subject: 'New User Requested For Seller',
-    html: (data: IHtmlData) => `
+    sellerRequest: {
+        subject: 'New User Requested For Seller',
+        html: (data) => `
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -344,17 +336,17 @@ const EmailTemplates = {
       <p class="transaction-id">
         The transaction Id is <span>${data.txId}</span>
       </p>
-      <a href="${config.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
     </div>
   </div>
 </body>
 </html>
 
     `,
-  },
-  sellerRequestAccepted: {
-    subject: 'You are now a seller in Acctbazzar',
-    html: () => `
+    },
+    sellerRequestAccepted: {
+        subject: 'You are now a seller in Acctbazzar',
+        html: () => `
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -419,17 +411,17 @@ const EmailTemplates = {
       <p class="seller-info">
        You can now publish accounts for sale
       </p> 
-      <a href="${config.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
     </div>
   </div>
 </body>
 </html>
 
     `,
-  },
-  orderSuccessful: {
-    subject: 'You have purchase a order',
-    html: (data: IHtmlData) => `
+    },
+    orderSuccessful: {
+        subject: 'You have purchase a order',
+        html: (data) => `
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -500,13 +492,13 @@ const EmailTemplates = {
       Password: ${data.accountPassword}
       </span>
       </p> 
-      <a href="${config.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
     </div>
   </div>
 </body>
 </html>
 
     `,
-  },
+    },
 };
-export default EmailTemplates;
+exports.default = EmailTemplates;

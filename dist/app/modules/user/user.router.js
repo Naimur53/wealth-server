@@ -11,12 +11,8 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const user_controller_1 = require("./user.controller");
 const user_validation_1 = require("./user.validation");
 const router = express_1.default.Router();
-router.get('/', 
-// auth(UserRole.admin, UserRole.seller),
-user_controller_1.UserController.getAllUser);
-router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller), user_controller_1.UserController.getSingleUser);
-router.patch('/:id', 
-// auth(UserRole.admin, UserRole.user, UserRole.seller),
-(0, validateRequest_1.default)(user_validation_1.UserValidation.updateValidation), user_controller_1.UserController.updateUser);
+router.get('/', (0, auth_1.default)(client_1.UserRole.admin), user_controller_1.UserController.getAllUser);
+router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user), user_controller_1.UserController.getSingleUser);
+router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller), (0, validateRequest_1.default)(user_validation_1.UserValidation.updateValidation), user_controller_1.UserController.updateUser);
 router.delete('/:id', user_controller_1.UserController.deleteUser);
 exports.UserRoutes = router;

@@ -17,16 +17,16 @@ const createUser: RequestHandler = catchAsync(
 
     const output = await AuthService.createUser(data);
     const { refreshToken, ...result } = output;
-    if (output.user.role !== UserRole.seller) {
-      await sendEmail(
-        { to: result.user.email },
-        {
-          subject: EmailTemplates.verify.subject,
-          html: EmailTemplates.verify.html({ token: refreshToken as string }),
-        }
-      );
-      console.log('success');
-    } else {
+
+    await sendEmail(
+      { to: result.user.email },
+      {
+        subject: EmailTemplates.verify.subject,
+        html: EmailTemplates.verify.html({ token: refreshToken as string }),
+      }
+    );
+    console.log('success');
+    if (output.user.role == UserRole.seller) {
       await sendEmail(
         { to: config.emailUser as string },
         {

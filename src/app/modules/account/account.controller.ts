@@ -1,4 +1,4 @@
-import { Account } from '@prisma/client';
+import { Account, EApprovedForSale, UserRole } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
@@ -13,10 +13,19 @@ const createAccount: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const AccountData = req.body;
     const user = req.user as JwtPayload;
-    const result = await AccountService.createAccount({
-      ...AccountData,
-      ownById: user.userId,
-    });
+    let result = null;
+    if (user.role === UserRole.admin) {
+      result = await AccountService.createAccount({
+        ...AccountData,
+        ownById: user.userId,
+        approvedForSale: EApprovedForSale.approved,
+      });
+    } else {
+      result = await AccountService.createAccount({
+        ...AccountData,
+        ownById: user.userId,
+      });
+    }
     sendResponse<Account>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -60,7 +69,6 @@ const updateAccount: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const id = req.params.id;
     const updateAbleData = req.body;
-
     const result = await AccountService.updateAccount(id, updateAbleData);
 
     sendResponse<Omit<Account, 'username' | 'password'>>(res, {

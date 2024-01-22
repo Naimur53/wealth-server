@@ -24,8 +24,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
+const client_1 = require("@prisma/client");
+const http_status_1 = __importDefault(require("http-status"));
+const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const createBycryptPassword_1 = __importDefault(require("../../../helpers/createBycryptPassword"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
+const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const user_constant_1 = require("./user.constant");
 const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
@@ -50,8 +55,11 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    equals: filterData[key],
+                    equals: key === 'isApprovedForSeller'
+                        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            JSON.parse(filterData[key])
+                        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            filterData[key],
                 },
             })),
         });
@@ -79,6 +87,8 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             createdAt: true,
             updatedAt: true,
             isBlocked: true,
+            isApprovedForSeller: true,
+            txId: true,
         },
     });
     const total = yield prisma_1.default.user.count();
@@ -102,13 +112,20 @@ const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result;
 });
-const updateUser = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
+const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, void 0, function* () {
     const { password } = payload, rest = __rest(payload, ["password"]);
     let genarateBycryptPass;
     if (password) {
         genarateBycryptPass = yield (0, createBycryptPassword_1.default)(password);
     }
-    console.log(rest);
+    const isUserExist = yield prisma_1.default.user.findUnique({ where: { id } });
+    if (!isUserExist) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found');
+    }
+    console.log(rest, isUserExist);
+    if (requestedUser.role !== client_1.UserRole.admin && payload.isApprovedForSeller) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'only admin can verify seller ');
+    }
     const result = yield prisma_1.default.user.update({
         where: {
             id,
@@ -116,11 +133,39 @@ const updateUser = (id, payload) => __awaiter(void 0, void 0, void 0, function* 
         data: genarateBycryptPass
             ? Object.assign(Object.assign({}, rest), { password: genarateBycryptPass }) : rest,
     });
+    // if admin update a seller verification send email
+    if (payload.isApprovedForSeller && result.role === client_1.UserRole.seller) {
+        (0, sendEmail_1.default)({ to: result.email }, {
+            subject: EmailTemplates_1.default.sellerRequestAccepted.subject,
+            html: EmailTemplates_1.default.sellerRequestAccepted.html(),
+        });
+    }
     return result;
 });
 const deleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log(id);
         // Inside the transaction, perform your database operations
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteAccount = yield tx.account.deleteMany({
+            where: { ownById: id },
+        });
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteOrder = yield tx.orders.deleteMany({
+            where: { orderById: id },
+        });
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteCarts = yield tx.cart.deleteMany({
+            where: { ownById: id },
+        });
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteCurrency = yield tx.currency.deleteMany({
+            where: { ownById: id },
+        });
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteCurrencyRequest = yield tx.currencyRequest.deleteMany({
+            where: { ownById: id },
+        });
         const deleteUser = yield tx.user.delete({ where: { id } });
         return deleteUser;
     }));

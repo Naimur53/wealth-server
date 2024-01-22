@@ -26,11 +26,15 @@ const auth =
         select: {
           role: true,
           id: true,
+          isBlocked: true,
         },
       });
       console.log({ verifiedUser, queryUserRole: queryUser?.role, queryUser });
       if (!queryUser) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'User not found!');
+      }
+      if (queryUser?.isBlocked) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'You are blocked!');
       }
       if (queryUser.role !== verifiedUser.role) {
         throw new ApiError(

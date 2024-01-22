@@ -83,6 +83,24 @@ const getSingleCurrency = async (id: string): Promise<Currency | null> => {
   });
   return result;
 };
+const getSingleCurrencyByUserId = async (
+  id: string
+): Promise<Currency | null> => {
+  let result = await prisma.currency.findUnique({
+    where: {
+      ownById: id,
+    },
+  });
+  if (!result) {
+    const isUserExist = await prisma.user.findUnique({ where: { id } });
+    if (isUserExist) {
+      result = await prisma.currency.create({
+        data: { ownById: isUserExist.id, amount: 0 },
+      });
+    }
+  }
+  return result;
+};
 
 const updateCurrency = async (
   id: string,
@@ -113,4 +131,5 @@ export const CurrencyService = {
   updateCurrency,
   getSingleCurrency,
   deleteCurrency,
+  getSingleCurrencyByUserId,
 };

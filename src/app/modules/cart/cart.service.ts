@@ -37,6 +37,7 @@ const getAllCart = async (
     andCondition.push({
       AND: Object.keys(filterData).map(key => ({
         [key]: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           equals: (filterData as any)[key],
         },
       })),
@@ -67,13 +68,42 @@ const getAllCart = async (
   return output;
 };
 
-const createCart = async (payload: Cart): Promise<Cart | null> => {
+const createCart = async (
+  userId: string,
+  payload: Cart
+): Promise<Cart | null> => {
+  // check is cart already exits
+  const isCartExist = await prisma.cart.findFirst({
+    where: {
+      ownById: userId,
+      accountId: payload.accountId,
+    },
+  });
+  if (isCartExist?.id) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'cart already exits');
+  }
   const newCart = await prisma.cart.create({
     data: payload,
+    include: {
+      account: true,
+      ownBy: true,
+    },
   });
   return newCart;
 };
 
+const getSingleUserCarts = async (userId: string): Promise<Cart[] | null> => {
+  const result = await prisma.cart.findMany({
+    where: {
+      ownById: userId,
+    },
+    include: {
+      account: true,
+      ownBy: true,
+    },
+  });
+  return result;
+};
 const getSingleCart = async (id: string): Promise<Cart | null> => {
   const result = await prisma.cart.findUnique({
     where: {
@@ -112,4 +142,5 @@ export const CartService = {
   updateCart,
   getSingleCart,
   deleteCart,
+  getSingleUserCarts,
 };

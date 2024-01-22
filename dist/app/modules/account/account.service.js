@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AccountService = void 0;
+const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
@@ -47,12 +48,22 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
             OR: searchAbleFields,
         });
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const keyChecker = (data, key) => {
+        const keysToCheck = ['isSold'];
+        if (keysToCheck.includes(key)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return JSON.parse(filterData[key]);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return filterData[key];
+    };
     if (Object.keys(filters).length) {
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    equals: filterData[key],
+                    equals: keyChecker(filterData, key),
                 },
             })),
         });
@@ -101,6 +112,16 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
 });
 const createAccount = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(payload);
+    const isAccountOwnerExits = yield prisma_1.default.user.findUnique({
+        where: { id: payload.ownById },
+    });
+    if (!isAccountOwnerExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User not found');
+    }
+    if (isAccountOwnerExits.role === client_1.UserRole.seller &&
+        !isAccountOwnerExits.isApprovedForSeller) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Your are not approved as seller');
+    }
     const newAccount = yield prisma_1.default.account.create({
         data: payload,
     });
@@ -115,7 +136,13 @@ const getSingleAccount = (id) => __awaiter(void 0, void 0, void 0, function* () 
     return result;
 });
 const updateAccount = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
+    const isAccountExits = yield prisma_1.default.account.findUnique({ where: { id } });
+    if (!isAccountExits) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found!');
+    }
+    if (isAccountExits.isSold) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "sold account can't be updated!");
+    }
     const result = yield prisma_1.default.account.update({
         where: {
             id,
@@ -130,12 +157,16 @@ const updateAccount = (id, payload) => __awaiter(void 0, void 0, void 0, functio
     return rest;
 });
 const deleteAccount = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const isAccountExits = yield prisma_1.default.account.findUnique({ where: { id } });
+    if (!isAccountExits) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found!');
+    }
+    if (isAccountExits.isSold) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "sold account can't be delete!");
+    }
     const result = yield prisma_1.default.account.delete({
         where: { id },
     });
-    if (!result) {
-        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found!');
-    }
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const { username, password } = result, rest = __rest(result, ["username", "password"]);
     return rest;

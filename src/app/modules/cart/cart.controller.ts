@@ -2,17 +2,22 @@ import { Cart } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { CartService } from './cart.service';
 import { cartFilterAbleFields } from './cart.constant';
+import { CartService } from './cart.service';
 const createCart: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const CartData = req.body;
+    const requestBy = req.user as JwtPayload;
 
-    const result = await CartService.createCart(CartData);
+    const result = await CartService.createCart(requestBy.userId, {
+      ...CartData,
+      ownById: requestBy.userId,
+    });
     sendResponse<Cart>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -44,6 +49,20 @@ const getSingleCart: RequestHandler = catchAsync(
     const result = await CartService.getSingleCart(id);
 
     sendResponse<Cart>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Cart retrieved  successfully!',
+      data: result,
+    });
+  }
+);
+const getSingleUserCarts: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+
+    const result = await CartService.getSingleUserCarts(user.userId);
+
+    sendResponse<Cart[]>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'Cart retrieved  successfully!',
@@ -88,4 +107,5 @@ export const CartController = {
   updateCart,
   getSingleCart,
   deleteCart,
+  getSingleUserCarts,
 };

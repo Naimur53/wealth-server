@@ -14,22 +14,24 @@ enum UserRole {
 }
 
 model User {
-  id              String            @id @default(uuid())
-  name            String
-  email           String            @unique
-  password        String
-  txId            String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  role            UserRole          @default(user)
-  profileImg      String?
-  isVerified      Boolean           @default(false)
-  isBlocked       Boolean?
-  Account         Account[]
-  Orders          Orders[]
-  Cart            Cart[]
-  Currency        Currency?
-  CurrencyRequest CurrencyRequest[]
+  id                  String            @id @default(uuid())
+  name                String
+  email               String            @unique
+  password            String
+  shouldSendEmail     Boolean           @default(true)
+  txId                String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  role                UserRole          @default(user)
+  profileImg          String?
+  isVerified          Boolean           @default(false)
+  isApprovedForSeller Boolean           @default(false)
+  isBlocked           Boolean?
+  Account             Account[]
+  Orders              Orders[]
+  Cart                Cart[]
+  Currency            Currency?
+  CurrencyRequest     CurrencyRequest[]
 }
 
 enum accountCategory {
@@ -64,13 +66,13 @@ model Account {
   ownById         String
   isSold          Boolean          @default(false)
   ownBy           User             @relation(fields: [ownById], references: [id])
-  Orders          Orders[]
   Cart            Cart[]
+  Orders          Orders?
 }
 
 model Orders {
   id        String   @id @unique @default(uuid())
-  accountId String
+  accountId String   @unique
   account   Account  @relation(fields: [accountId], references: [id])
   orderById String
   orderBy   User     @relation(fields: [orderById], references: [id])

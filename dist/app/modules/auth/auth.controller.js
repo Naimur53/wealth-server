@@ -24,10 +24,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
+const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
+const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const auth_service_1 = require("./auth.service");
@@ -35,9 +37,20 @@ const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     const data = req.body;
     const output = yield auth_service_1.AuthService.createUser(data);
     const { refreshToken } = output, result = __rest(output, ["refreshToken"]);
-    yield (0, sendEmail_1.default)({ to: result.user.email, token: refreshToken });
-    //
+    yield (0, sendEmail_1.default)({ to: result.user.email }, {
+        subject: EmailTemplates_1.default.verify.subject,
+        html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
+    });
     console.log('success');
+    if (output.user.role == client_1.UserRole.seller) {
+        yield (0, sendEmail_1.default)({ to: config_1.default.emailUser }, {
+            subject: EmailTemplates_1.default.sellerRequest.subject,
+            html: EmailTemplates_1.default.sellerRequest.html({
+                userEmail: output.user.email,
+                txId: output.user.txId,
+            }),
+        });
+    }
     // set refresh token into cookie
     const cookieOptions = {
         secure: config_1.default.env === 'production',
@@ -55,7 +68,10 @@ const resendEmail = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     const { email } = req.params;
     const output = yield auth_service_1.AuthService.resendEmail(email || '');
     const { refreshToken } = output, result = __rest(output, ["refreshToken"]);
-    yield (0, sendEmail_1.default)({ to: result.user.email, token: refreshToken });
+    yield (0, sendEmail_1.default)({ to: result.user.email }, {
+        subject: EmailTemplates_1.default.verify.subject,
+        html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
+    });
     //
     console.log('success');
     // set refresh token into cookie
