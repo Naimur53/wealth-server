@@ -44,6 +44,30 @@ enum accountCategory {
   TikTok
   YouTube
   GitHub
+  Threads
+  Telegram
+  Whatsapp
+  Playstation
+  CallOfDuty
+  Pubg
+  Steam
+  Gmail
+  Ymail
+  Hotmail
+  MailRu
+  Outlook
+  Windscribe
+  Nord
+  Vpn911
+  Other
+}
+
+enum accountType {
+  SocialMedia
+  Game
+  Email
+  Vpn
+  Other
 }
 
 enum EApprovedForSale {
@@ -60,6 +84,7 @@ model Account {
   username        String
   password        String
   category        accountCategory
+  accountType     accountType      @default(SocialMedia)
   approvedForSale EApprovedForSale @default(pending)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

@@ -184,6 +184,7 @@ const getSingleOrders = async (id: string): Promise<Orders | null> => {
   return result;
 };
 const getMyOrders = async (id: string): Promise<Orders[] | null> => {
+  console.log({ id });
   const result = await prisma.orders.findMany({
     where: {
       orderById: id,

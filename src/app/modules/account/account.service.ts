@@ -15,7 +15,7 @@ const getAllAccount = async (
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, maxPrice, minPrice, ...filterData } = filters;
 
   const andCondition = [];
 
@@ -31,6 +31,20 @@ const getAllAccount = async (
     });
     andCondition.push({
       OR: searchAbleFields,
+    });
+  }
+  if (maxPrice) {
+    andCondition.push({
+      price: {
+        lte: Number(maxPrice),
+      },
+    });
+  }
+  if (minPrice) {
+    andCondition.push({
+      price: {
+        gte: Number(minPrice),
+      },
     });
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,6 +95,7 @@ const getAllAccount = async (
       price: true,
       updatedAt: true,
       ownById: true,
+      accountType: true,
       ownBy: {
         select: {
           name: true,
