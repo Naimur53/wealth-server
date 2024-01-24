@@ -26,6 +26,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
+const lodash_1 = require("lodash");
+const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
@@ -81,6 +83,7 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
     return output;
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('makking ', payload);
     return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const isAccountExits = yield tx.account.findUnique({
             where: {
@@ -130,17 +133,43 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         if (!isSellerExist.Currency) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
         }
+        // the only 10 percent will receive by admin and expect the 10 percent seller will receive
+        // get admin info
+        const isAdminExist = yield tx.user.findUnique({
+            where: { email: config_1.default.mainAdminEmail },
+            include: {
+                Currency: true,
+            },
+        });
+        if (!isAdminExist) {
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
+        }
+        if (!isAdminExist.Currency) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
+        }
+        //
+        const adminFee = (config_1.default.accountSellPercentage / 100) * isAccountExits.price;
+        const sellerReceive = isAccountExits.price - adminFee;
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const removeCurrencyFromUser = yield tx.currency.update({
             where: { ownById: isUserExist.id },
             data: {
-                amount: isUserExist.Currency.amount - isAccountExits.price,
+                amount: (0, lodash_1.round)(isUserExist.Currency.amount - isAccountExits.price, config_1.default.calculationMoneyRound),
             },
         });
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const addCurrencyToSeller = yield tx.currency.update({
             where: { ownById: isAccountExits.ownById },
-            data: { amount: isSellerExist.Currency.amount + isAccountExits.price },
+            data: {
+                amount: (0, lodash_1.round)(isSellerExist.Currency.amount + sellerReceive, config_1.default.calculationMoneyRound),
+            },
+        });
+        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+        const addCurrencyToAdmin = yield tx.currency.update({
+            where: { id: isAccountExits.id },
+            data: {
+                amount: (0, lodash_1.round)(isAdminExist.Currency.amount + adminFee, config_1.default.calculationMoneyRound),
+            },
         });
         //changer status of account is sold
         yield tx.account.update({
@@ -169,6 +198,18 @@ const getSingleOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result;
 });
+const getMyOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log({ id });
+    const result = yield prisma_1.default.orders.findMany({
+        where: {
+            orderById: id,
+        },
+        include: {
+            account: true,
+        },
+    });
+    return result;
+});
 const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.orders.update({
         where: {
@@ -193,4 +234,5 @@ exports.OrdersService = {
     updateOrders,
     getSingleOrders,
     deleteOrders,
+    getMyOrders,
 };

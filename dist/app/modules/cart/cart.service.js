@@ -51,6 +51,7 @@ const getAllCart = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     equals: filterData[key],
                 },
             })),
@@ -76,11 +77,37 @@ const getAllCart = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
     };
     return output;
 });
-const createCart = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+const createCart = (userId, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    // check is cart already exits
+    const isCartExist = yield prisma_1.default.cart.findFirst({
+        where: {
+            ownById: userId,
+            accountId: payload.accountId,
+        },
+    });
+    if (isCartExist === null || isCartExist === void 0 ? void 0 : isCartExist.id) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'cart already exits');
+    }
     const newCart = yield prisma_1.default.cart.create({
         data: payload,
+        include: {
+            account: true,
+            ownBy: true,
+        },
     });
     return newCart;
+});
+const getSingleUserCarts = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.cart.findMany({
+        where: {
+            ownById: userId,
+        },
+        include: {
+            account: true,
+            ownBy: true,
+        },
+    });
+    return result;
 });
 const getSingleCart = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.cart.findUnique({
@@ -114,4 +141,5 @@ exports.CartService = {
     updateCart,
     getSingleCart,
     deleteCart,
+    getSingleUserCarts,
 };

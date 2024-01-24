@@ -47,6 +47,29 @@ const createCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result,
     });
 }));
+const createCurrencyRequestInvoice = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const CurrencyRequestData = req.body;
+    const user = req.user;
+    const userInfo = yield prisma_1.default.user.findFirst({
+        where: { id: user.userId },
+    });
+    const result = yield currencyRequest_service_1.CurrencyRequestService.createCurrencyRequestInvoice(Object.assign(Object.assign({}, CurrencyRequestData), { ownById: user.userId }));
+    yield (0, sendEmail_1.default)({ to: config_1.default.emailUser }, {
+        subject: EmailTemplates_1.default.requestForCurrencyToAdmin.subject,
+        html: EmailTemplates_1.default.requestForCurrencyToAdmin.html({
+            amount: result === null || result === void 0 ? void 0 : result.amount,
+            userEmail: userInfo === null || userInfo === void 0 ? void 0 : userInfo.email,
+            userName: userInfo === null || userInfo === void 0 ? void 0 : userInfo.name,
+            userProfileImg: (userInfo === null || userInfo === void 0 ? void 0 : userInfo.profileImg) || '',
+        }),
+    });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'CurrencyRequest Created successfully!',
+        data: result,
+    });
+}));
 const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filters = (0, pick_1.default)(req.query, [
         'searchTerm',
@@ -60,6 +83,18 @@ const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(
         message: 'CurrencyRequest retrieved successfully !',
         meta: result.meta,
         data: result.data,
+    });
+}));
+const getSingleCurrencyRequestIpn = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const ipnData = req.body;
+    console.log('ipnData', ipnData);
+    // eslint-disable-next-line no-unused-vars
+    yield currencyRequest_service_1.CurrencyRequestService.createCurrencyRequestIpn(ipnData);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'CurrencyRequest retrieved  successfully!',
+        data: 'succes',
     });
 }));
 const getSingleCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,4 +134,6 @@ exports.CurrencyRequestController = {
     updateCurrencyRequest,
     getSingleCurrencyRequest,
     deleteCurrencyRequest,
+    createCurrencyRequestInvoice,
+    getSingleCurrencyRequestIpn,
 };

@@ -53,6 +53,16 @@ const getSingleOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
+const getMyOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const result = yield orders_service_1.OrdersService.getMyOrders(user.userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Orders retrieved  successfully!',
+        data: result,
+    });
+}));
 const updateOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
     const updateAbleData = req.body;
@@ -80,4 +90,5 @@ exports.OrdersController = {
     updateOrders,
     getSingleOrders,
     deleteOrders,
+    getMyOrders,
 };

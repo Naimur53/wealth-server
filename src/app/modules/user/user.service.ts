@@ -80,6 +80,8 @@ const getAllUser = async (
       isBlocked: true,
       isApprovedForSeller: true,
       txId: true,
+      shouldSendEmail: true,
+      phoneNumber: true,
     },
   });
   const total = await prisma.user.count();
@@ -172,6 +174,10 @@ const deleteUser = async (id: string): Promise<User | null> => {
     });
     // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
     const deleteCurrencyRequest = await tx.currencyRequest.deleteMany({
+      where: { ownById: id },
+    });
+    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+    const deleteWithdrawalRequest = await tx.withdrawalRequest.deleteMany({
       where: { ownById: id },
     });
     const deleteUser = await tx.user.delete({ where: { id } });

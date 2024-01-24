@@ -1,5 +1,7 @@
 import { EApprovedForSale, Orders, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
+import { round } from 'lodash';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import sendEmail from '../../../helpers/sendEmail';
@@ -139,17 +141,56 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
         'something went wrong currency not found for this seller!'
       );
     }
+    // the only 10 percent will receive by admin and expect the 10 percent seller will receive
+    // get admin info
+    const isAdminExist = await tx.user.findUnique({
+      where: { email: config.mainAdminEmail },
+      include: {
+        Currency: true,
+      },
+    });
+    if (!isAdminExist) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
+    }
+    if (!isAdminExist.Currency) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'something went wrong currency not found for this seller!'
+      );
+    }
+    //
+    const adminFee =
+      (config.accountSellPercentage / 100) * isAccountExits.price;
+    const sellerReceive = isAccountExits.price - adminFee;
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const removeCurrencyFromUser = await tx.currency.update({
       where: { ownById: isUserExist.id },
       data: {
-        amount: isUserExist.Currency.amount - isAccountExits.price,
+        amount: round(
+          isUserExist.Currency.amount - isAccountExits.price,
+          config.calculationMoneyRound
+        ),
       },
     });
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const addCurrencyToSeller = await tx.currency.update({
       where: { ownById: isAccountExits.ownById },
-      data: { amount: isSellerExist.Currency.amount + isAccountExits.price },
+      data: {
+        amount: round(
+          isSellerExist.Currency.amount + sellerReceive,
+          config.calculationMoneyRound
+        ),
+      },
+    });
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const addCurrencyToAdmin = await tx.currency.update({
+      where: { id: isAccountExits.id },
+      data: {
+        amount: round(
+          isAdminExist.Currency.amount + adminFee,
+          config.calculationMoneyRound
+        ),
+      },
     });
 
     //changer status of account is sold

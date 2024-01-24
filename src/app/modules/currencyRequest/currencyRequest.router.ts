@@ -17,11 +17,21 @@ router.get(
   CurrencyRequestController.getSingleCurrencyRequest
 );
 
+// router.post(
+//   '/',
+//   auth(UserRole.seller, UserRole.user),
+//   validateRequest(CurrencyRequestValidation.createValidation),
+//   CurrencyRequestController.createCurrencyRequest
+// );
 router.post(
   '/',
   auth(UserRole.seller, UserRole.user),
   validateRequest(CurrencyRequestValidation.createValidation),
-  CurrencyRequestController.createCurrencyRequest
+  CurrencyRequestController.createCurrencyRequestInvoice
+);
+router.post(
+  '/nowpayments-ipn',
+  CurrencyRequestController.getSingleCurrencyRequestIpn
 );
 
 router.patch(

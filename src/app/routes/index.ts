@@ -7,6 +7,7 @@ import { CurrencyRequestRoutes } from '../modules/currencyRequest/currencyReques
 import { OrdersRoutes } from '../modules/orders/orders.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
 import { UserRoutes } from '../modules/user/user.router';
+import { WithdrawalRequestRoutes } from '../modules/withdrawalRequest/withdrawalRequest.router';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -44,6 +45,10 @@ const moduleRoutes = [
   {
     path: '/currency-request',
     route: CurrencyRequestRoutes,
+  },
+  {
+    path: '/withdrawal-request',
+    route: WithdrawalRequestRoutes,
   },
 ];
 

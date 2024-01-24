@@ -3,6 +3,7 @@ import {
   EStatusOfCurrencyRequest,
   Prisma,
 } from '@prisma/client';
+import axios from 'axios';
 import httpStatus from 'http-status';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
@@ -13,7 +14,10 @@ import { IPaginationOptions } from '../../../interfaces/pagination';
 import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
 import { currencyRequestSearchableFields } from './currencyRequest.constant';
-import { ICurrencyRequestFilters } from './currencyRequest.interface';
+import {
+  ICreateCurrencyRequestRes,
+  ICurrencyRequestFilters,
+} from './currencyRequest.interface';
 
 const getAllCurrencyRequest = async (
   filters: ICurrencyRequestFilters,
@@ -85,6 +89,61 @@ const createCurrencyRequest = async (
     },
   });
   return newCurrencyRequest;
+};
+const createCurrencyRequestInvoice = async (
+  payload: CurrencyRequest
+): Promise<ICreateCurrencyRequestRes | null> => {
+  const newCurrencyRequest = await prisma.currencyRequest.create({
+    data: { ...payload, status: EStatusOfCurrencyRequest.pending },
+    include: {
+      ownBy: true,
+    },
+  });
+  if (!newCurrencyRequest) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to create Invoie');
+  }
+  const nowPaymentsApiKey = config.nowPaymentApiKey || ''; // Use your sandbox API key
+
+  // Use the sandbox API URL
+  const sandboxApiUrl = 'https://api-sandbox.nowpayments.io/v1/invoice';
+
+  // Create an invoice using the NowPayments sandbox API
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  console.log({ nowPaymentsApiKey });
+  // const api = new NOWPaymentsApi({ apiKey: nowPaymentsApiKey });
+  const invoice = {
+    price_amount: payload.amount,
+    price_currency: 'USD',
+    order_id: newCurrencyRequest.id,
+    pay_currency: 'BTC', // Specify the cryptocurrency to accept (e.g., BTC)
+    ipn_callback_url:
+      'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
+    // api_key: nowPaymentsApiKey,
+  };
+  // const response = await api.createInvoice({
+  //   ...invoice,
+  // });
+  const response = await axios.post(sandboxApiUrl, invoice, {
+    headers: {
+      'x-api-key': nowPaymentsApiKey,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  console.log('res', response);
+
+  return { ...newCurrencyRequest, url: response.data.invoice_url };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createCurrencyRequestIpn = async (data: any): Promise<void> => {
+  console.log('nowpayments-ipn data', data);
+  // const result = await prisma.currencyRequest.findUnique({
+  //   where: {
+  //     id,
+  //   },
+  // });
+  // return result;
 };
 
 const getSingleCurrencyRequest = async (
@@ -183,4 +242,6 @@ export const CurrencyRequestService = {
   updateCurrencyRequest,
   getSingleCurrencyRequest,
   deleteCurrencyRequest,
+  createCurrencyRequestInvoice,
+  createCurrencyRequestIpn,
 };

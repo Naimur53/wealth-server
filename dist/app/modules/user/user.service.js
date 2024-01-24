@@ -89,6 +89,8 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             isBlocked: true,
             isApprovedForSeller: true,
             txId: true,
+            shouldSendEmail: true,
+            phoneNumber: true,
         },
     });
     const total = yield prisma_1.default.user.count();
@@ -164,6 +166,10 @@ const deleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
         });
         // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
         const deleteCurrencyRequest = yield tx.currencyRequest.deleteMany({
+            where: { ownById: id },
+        });
+        // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
+        const deleteWithdrawalRequest = yield tx.withdrawalRequest.deleteMany({
             where: { ownById: id },
         });
         const deleteUser = yield tx.user.delete({ where: { id } });

@@ -12,6 +12,7 @@ const currencyRequest_router_1 = require("../modules/currencyRequest/currencyReq
 const orders_router_1 = require("../modules/orders/orders.router");
 const profile_router_1 = require("../modules/profile/profile.router");
 const user_router_1 = require("../modules/user/user.router");
+const withdrawalRequest_router_1 = require("../modules/withdrawalRequest/withdrawalRequest.router");
 const router = express_1.default.Router();
 const moduleRoutes = [
     // ... routes
@@ -32,7 +33,7 @@ const moduleRoutes = [
         route: account_router_1.AccountRoutes,
     },
     {
-        path: '/orders',
+        path: '/order',
         route: orders_router_1.OrdersRoutes,
     },
     {
@@ -46,6 +47,10 @@ const moduleRoutes = [
     {
         path: '/currency-request',
         route: currencyRequest_router_1.CurrencyRequestRoutes,
+    },
+    {
+        path: '/withdrawal-request',
+        route: withdrawalRequest_router_1.WithdrawalRequestRoutes,
     },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));

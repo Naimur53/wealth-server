@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CurrencyRequestService = void 0;
 const client_1 = require("@prisma/client");
+const axios_1 = __importDefault(require("axios"));
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
@@ -89,6 +90,53 @@ const createCurrencyRequest = (payload) => __awaiter(void 0, void 0, void 0, fun
         },
     });
     return newCurrencyRequest;
+});
+const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const newCurrencyRequest = yield prisma_1.default.currencyRequest.create({
+        data: Object.assign(Object.assign({}, payload), { status: client_1.EStatusOfCurrencyRequest.pending }),
+        include: {
+            ownBy: true,
+        },
+    });
+    if (!newCurrencyRequest) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to create Invoie');
+    }
+    const nowPaymentsApiKey = config_1.default.nowPaymentApiKey || ''; // Use your sandbox API key
+    // Use the sandbox API URL
+    const sandboxApiUrl = 'https://api-sandbox.nowpayments.io/v1/invoice';
+    // Create an invoice using the NowPayments sandbox API
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    console.log({ nowPaymentsApiKey });
+    // const api = new NOWPaymentsApi({ apiKey: nowPaymentsApiKey });
+    const invoice = {
+        price_amount: payload.amount,
+        price_currency: 'USD',
+        order_id: newCurrencyRequest.id,
+        pay_currency: 'BTC',
+        ipn_callback_url: 'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
+        // api_key: nowPaymentsApiKey,
+    };
+    // const response = await api.createInvoice({
+    //   ...invoice,
+    // });
+    const response = yield axios_1.default.post(sandboxApiUrl, invoice, {
+        headers: {
+            'x-api-key': nowPaymentsApiKey,
+            'Content-Type': 'application/json',
+        },
+    });
+    console.log('res', response);
+    return Object.assign(Object.assign({}, newCurrencyRequest), { url: response.data.invoice_url });
+});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createCurrencyRequestIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('nowpayments-ipn data', data);
+    // const result = await prisma.currencyRequest.findUnique({
+    //   where: {
+    //     id,
+    //   },
+    // });
+    // return result;
 });
 const getSingleCurrencyRequest = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.currencyRequest.findUnique({
@@ -173,4 +221,6 @@ exports.CurrencyRequestService = {
     updateCurrencyRequest,
     getSingleCurrencyRequest,
     deleteCurrencyRequest,
+    createCurrencyRequestInvoice,
+    createCurrencyRequestIpn,
 };

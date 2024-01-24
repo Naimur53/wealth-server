@@ -32,7 +32,7 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const account_constant_1 = require("./account.constant");
 const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
-    const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
+    const { searchTerm, maxPrice, minPrice } = filters, filterData = __rest(filters, ["searchTerm", "maxPrice", "minPrice"]);
     const andCondition = [];
     if (searchTerm) {
         const searchAbleFields = account_constant_1.accountSearchableFields.map(single => {
@@ -46,6 +46,20 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
         });
         andCondition.push({
             OR: searchAbleFields,
+        });
+    }
+    if (maxPrice) {
+        andCondition.push({
+            price: {
+                lte: Number(maxPrice),
+            },
+        });
+    }
+    if (minPrice) {
+        andCondition.push({
+            price: {
+                gte: Number(minPrice),
+            },
         });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,6 +106,7 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
             price: true,
             updatedAt: true,
             ownById: true,
+            accountType: true,
             ownBy: {
                 select: {
                     name: true,

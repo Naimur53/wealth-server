@@ -14,24 +14,26 @@ enum UserRole {
 }
 
 model User {
-  id                  String            @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String
-  email               String            @unique
+  email               String              @unique
   password            String
-  shouldSendEmail     Boolean           @default(true)
+  phoneNumber         String?
+  shouldSendEmail     Boolean             @default(true)
   txId                String?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  role                UserRole          @default(user)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  role                UserRole            @default(user)
   profileImg          String?
-  isVerified          Boolean           @default(false)
-  isApprovedForSeller Boolean           @default(false)
+  isVerified          Boolean             @default(false)
+  isApprovedForSeller Boolean             @default(false)
   isBlocked           Boolean?
   Account             Account[]
   Orders              Orders[]
   Cart                Cart[]
   Currency            Currency?
   CurrencyRequest     CurrencyRequest[]
+  WithdrawalRequest   WithdrawalRequest[]
 }
 
 enum accountCategory {
@@ -139,4 +141,21 @@ enum EStatusOfCurrencyRequest {
   pending
   approved
   denied
+}
+
+enum EStatusOfWithdrawalRequest {
+  pending
+  approved
+  denied
+}
+
+model WithdrawalRequest {
+  id        String                     @id @unique @default(uuid())
+  message   String?
+  amount    Float
+  ownById   String
+  status    EStatusOfWithdrawalRequest @default(pending)
+  ownBy     User                       @relation(fields: [ownById], references: [id])
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
 }

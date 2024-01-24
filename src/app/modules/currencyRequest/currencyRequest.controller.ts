@@ -46,6 +46,39 @@ const createCurrencyRequest: RequestHandler = catchAsync(
     });
   }
 );
+const createCurrencyRequestInvoice: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const CurrencyRequestData = req.body;
+    const user = req.user as JwtPayload;
+
+    const userInfo = await prisma.user.findFirst({
+      where: { id: user.userId },
+    });
+
+    const result = await CurrencyRequestService.createCurrencyRequestInvoice({
+      ...CurrencyRequestData,
+      ownById: user.userId,
+    });
+    await sendEmail(
+      { to: config.emailUser as string },
+      {
+        subject: EmailTemplates.requestForCurrencyToAdmin.subject,
+        html: EmailTemplates.requestForCurrencyToAdmin.html({
+          amount: result?.amount,
+          userEmail: userInfo?.email,
+          userName: userInfo?.name,
+          userProfileImg: userInfo?.profileImg || '',
+        }),
+      }
+    );
+    sendResponse<CurrencyRequest>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'CurrencyRequest Created successfully!',
+      data: result,
+    });
+  }
+);
 
 const getAllCurrencyRequest = catchAsync(
   async (req: Request, res: Response) => {
@@ -66,6 +99,23 @@ const getAllCurrencyRequest = catchAsync(
       message: 'CurrencyRequest retrieved successfully !',
       meta: result.meta,
       data: result.data,
+    });
+  }
+);
+
+const getSingleCurrencyRequestIpn: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const ipnData = req.body;
+    console.log('ipnData', ipnData);
+
+    // eslint-disable-next-line no-unused-vars
+    await CurrencyRequestService.createCurrencyRequestIpn(ipnData);
+
+    sendResponse<string>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'CurrencyRequest retrieved  successfully!',
+      data: 'succes',
     });
   }
 );
@@ -123,4 +173,6 @@ export const CurrencyRequestController = {
   updateCurrencyRequest,
   getSingleCurrencyRequest,
   deleteCurrencyRequest,
+  createCurrencyRequestInvoice,
+  getSingleCurrencyRequestIpn,
 };
