@@ -8,5 +8,6 @@ exports.accountFilterAbleFields = [
     'approvedForSale',
     'ownById',
     'isSold',
+    'accountType',
 ];
 exports.accountFilterByPrice = ['maxPrice', 'minPrice'];

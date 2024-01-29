@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get(
   '/',
-  auth(UserRole.admin, UserRole.seller, UserRole.user),
+  // auth(UserRole.admin, UserRole.seller, UserRole.user),
   CurrencyRequestController.getAllCurrencyRequest
 );
 router.get(

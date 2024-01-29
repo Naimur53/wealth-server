@@ -65,6 +65,7 @@ const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
         };
     }
     catch (err) {
+        console.log(err);
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User Already exits ');
     }
     // eslint-disable-next-line no-unused-vars

@@ -7,6 +7,7 @@ const createValidation = z.object({
     username: z.string(),
     password: z.string(),
     description: z.string(),
+    preview: z.string().optional(),
     price: z.number(),
     category: z.nativeEnum(accountCategory),
     approvedForSale: z
@@ -25,6 +26,7 @@ const updateValidation = z.object({
     approvedForSale: z.nativeEnum(EApprovedForSale).optional(),
     isSold: z.boolean().optional(),
     ownById: z.string().optional(),
+    preview: z.string().optional(),
   }),
 });
 export const AccountValidation = {

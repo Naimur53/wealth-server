@@ -22,7 +22,7 @@ const getAllWithdrawalRequest = async (
     paginationHelpers.calculatePagination(paginationOptions);
 
   const { searchTerm, ...filterData } = filters;
-
+  console.log(filterData);
   const andCondition = [];
 
   if (searchTerm) {
@@ -52,7 +52,6 @@ const getAllWithdrawalRequest = async (
 
   const whereConditions: Prisma.WithdrawalRequestWhereInput =
     andCondition.length > 0 ? { AND: andCondition } : {};
-
   const result = await prisma.withdrawalRequest.findMany({
     where: whereConditions,
     skip,
@@ -65,6 +64,17 @@ const getAllWithdrawalRequest = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      ownBy: {
+        select: {
+          name: true,
+          email: true,
+          id: true,
+          phoneNumber: true,
+          profileImg: true,
+        },
+      },
+    },
   });
   const total = await prisma.withdrawalRequest.count();
   const output = {
@@ -171,6 +181,17 @@ const getSingleWithdrawalRequest = async (
   return result;
 };
 
+const getSingleUserWithdrawalRequest = async (
+  id: string
+): Promise<WithdrawalRequest[] | null> => {
+  const result = await prisma.withdrawalRequest.findMany({
+    where: {
+      ownById: id,
+    },
+  });
+  return result;
+};
+
 const updateWithdrawalRequest = async (
   id: string,
   payload: Partial<WithdrawalRequest>
@@ -261,7 +282,7 @@ const updateWithdrawalRequest = async (
 
       // update user money
       await tx.currency.update({
-        where: { ownById: isUserCurrencyExist.id },
+        where: { ownById: isUserCurrencyExist.ownById },
         data: { amount: totalMoney },
       });
       return await tx.withdrawalRequest.update({
@@ -285,6 +306,7 @@ const deleteWithdrawalRequest = async (
   const isWithdrawalRequestExits = await prisma.withdrawalRequest.findUnique({
     where: { id },
   });
+  console.log(isWithdrawalRequestExits, id);
 
   if (!isWithdrawalRequestExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Not found!');
@@ -307,10 +329,10 @@ const deleteWithdrawalRequest = async (
 
       // update user money
       await tx.currency.update({
-        where: { ownById: isUserCurrencyExist.id },
+        where: { ownById: isUserCurrencyExist.ownById },
         data: { amount: totalMoney },
       });
-      return await prisma.withdrawalRequest.delete({
+      return await tx.withdrawalRequest.delete({
         where: { id },
       });
     });
@@ -330,4 +352,5 @@ export const WithdrawalRequestService = {
   updateWithdrawalRequest,
   getSingleWithdrawalRequest,
   deleteWithdrawalRequest,
+  getSingleUserWithdrawalRequest,
 };

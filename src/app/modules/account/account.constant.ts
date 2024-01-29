@@ -5,5 +5,6 @@ export const accountFilterAbleFields = [
   'approvedForSale',
   'ownById',
   'isSold',
+  'accountType',
 ];
 export const accountFilterByPrice = ['maxPrice', 'minPrice'];

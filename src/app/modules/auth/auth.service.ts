@@ -63,6 +63,7 @@ const createUser = async (user: User): Promise<ILoginResponse> => {
       refreshToken,
     };
   } catch (err) {
+    console.log(err);
     throw new ApiError(httpStatus.BAD_REQUEST, 'User Already exits ');
   }
   // eslint-disable-next-line no-unused-vars

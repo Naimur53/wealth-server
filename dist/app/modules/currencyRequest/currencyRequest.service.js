@@ -27,6 +27,7 @@ exports.CurrencyRequestService = void 0;
 const client_1 = require("@prisma/client");
 const axios_1 = __importDefault(require("axios"));
 const http_status_1 = __importDefault(require("http-status"));
+const lodash_1 = require("lodash");
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
@@ -93,7 +94,7 @@ const createCurrencyRequest = (payload) => __awaiter(void 0, void 0, void 0, fun
 });
 const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const newCurrencyRequest = yield prisma_1.default.currencyRequest.create({
-        data: Object.assign(Object.assign({}, payload), { status: client_1.EStatusOfCurrencyRequest.pending }),
+        data: Object.assign(Object.assign({}, payload), { message: 'auto', status: client_1.EStatusOfCurrencyRequest.pending }),
         include: {
             ownBy: true,
         },
@@ -112,8 +113,11 @@ const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void
         price_amount: payload.amount,
         price_currency: 'USD',
         order_id: newCurrencyRequest.id,
+        success_url: config_1.default.frontendUrl,
         pay_currency: 'BTC',
         ipn_callback_url: 'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
+        // ipn_callback_url:
+        //   'https://0a07-103-148-210-101.ngrok-free.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
         // api_key: nowPaymentsApiKey,
     };
     // const response = await api.createInvoice({
@@ -125,12 +129,61 @@ const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void
             'Content-Type': 'application/json',
         },
     });
-    console.log('res', response);
+    console.log('res', response.data);
     return Object.assign(Object.assign({}, newCurrencyRequest), { url: response.data.invoice_url });
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('nowpayments-ipn data', data);
+    // change status of currency Request and add money to user
+    try {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            // check is request exits
+            const isCurrencyRequestExits = yield tx.currencyRequest.findUnique({
+                where: { id: data.order_id },
+                include: {
+                    ownBy: { include: { Currency: true } },
+                },
+            });
+            if (!isCurrencyRequestExits || !isCurrencyRequestExits.ownBy) {
+                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong');
+            }
+            // user previous currency
+            const isUserCurrencyExist = yield tx.currency.findUnique({
+                where: { ownById: isCurrencyRequestExits.ownById },
+            });
+            if (!isUserCurrencyExist) {
+                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Currency not found!');
+            }
+            // change status to approved
+            if (isCurrencyRequestExits.status === client_1.EStatusOfCurrencyRequest.pending) {
+                //
+                yield tx.currencyRequest.update({
+                    where: { id: data.order_id },
+                    data: {
+                        status: client_1.EStatusOfCurrencyRequest.approved,
+                        paymentStatus: data.payment_status,
+                    },
+                });
+                // add money to user
+                yield tx.currency.update({
+                    where: { ownById: isCurrencyRequestExits.ownById },
+                    data: {
+                        amount: (0, lodash_1.round)(data.price_amount + isUserCurrencyExist.amount, config_1.default.calculationMoneyRound),
+                    },
+                });
+            }
+        }));
+    }
+    catch (err) {
+        (0, sendEmail_1.default)({ to: config_1.default.emailUser || '' }, {
+            subject: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.subject,
+            html: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.html({
+                failedSavedData: JSON.stringify(data),
+            }),
+        });
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went worg');
+    }
     // const result = await prisma.currencyRequest.findUnique({
     //   where: {
     //     id,

@@ -84,67 +84,74 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('makking ', payload);
-    return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const isAccountExits = yield tx.account.findUnique({
-            where: {
-                id: payload.accountId,
-                approvedForSale: client_1.EApprovedForSale.approved,
-            },
-        });
-        if (!isAccountExits) {
-            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found');
-        }
-        // check user exits and dose user have enough currency to buy
-        const isUserExist = yield tx.user.findUnique({
-            where: { id: payload.orderById },
-            include: {
-                Currency: true,
-            },
-        });
-        if (!isUserExist) {
-            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
-        }
-        console.log('order by', isUserExist);
-        if (!isUserExist.Currency) {
+    const isAccountExits = yield prisma_1.default.account.findUnique({
+        where: {
+            id: payload.accountId,
+            approvedForSale: client_1.EApprovedForSale.approved,
+        },
+    });
+    if (!isAccountExits) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found');
+    }
+    // check user exits and dose user have enough currency to buy
+    const isUserExist = yield prisma_1.default.user.findUnique({
+        where: { id: payload.orderById },
+        select: {
+            id: true,
+            email: true,
+            Currency: { select: { amount: true, id: true } },
+        },
+    });
+    if (!isUserExist) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
+    }
+    //check buyer is not the the owner of this account
+    if (isAccountExits.ownById === isUserExist.id) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Account owner can not buy their account !');
+    }
+    // check is account already sold
+    if (isAccountExits.isSold) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'This account already sold');
+    }
+    // get seller info
+    const isSellerExist = yield prisma_1.default.user.findUnique({
+        where: { id: isAccountExits.ownById },
+        select: {
+            id: true,
+            email: true,
+            Currency: { select: { amount: true, id: true } },
+        },
+    });
+    console.log('seller', isSellerExist);
+    // the only 10 percent will receive by admin and expect the 10 percent seller will receive
+    // get admin info
+    const isAdminExist = yield prisma_1.default.user.findFirst({
+        where: { email: config_1.default.mainAdminEmail },
+        select: {
+            id: true,
+            email: true,
+            Currency: { select: { amount: true, id: true } },
+        },
+    });
+    const data = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a, _b, _c;
+        if (!((_a = isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.Currency) === null || _a === void 0 ? void 0 : _a.id)) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this user!');
         }
         if (isUserExist.Currency.amount < isAccountExits.price) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Not enough currency left to by this account!');
         }
-        //check buyer is not the the owner of this account
-        if (isAccountExits.ownById === isUserExist.id) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Account owner can not buy their account !');
-        }
-        // check is account already sold
-        if (isAccountExits.isSold) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'This account already sold');
-        }
-        // get seller info
-        const isSellerExist = yield tx.user.findUnique({
-            where: { id: isAccountExits.ownById },
-            include: {
-                Currency: true,
-            },
-        });
-        console.log('seller', isSellerExist);
         if (!isSellerExist) {
             throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
         }
-        if (!isSellerExist.Currency) {
+        if (!((_b = isSellerExist === null || isSellerExist === void 0 ? void 0 : isSellerExist.Currency) === null || _b === void 0 ? void 0 : _b.amount)) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
         }
-        // the only 10 percent will receive by admin and expect the 10 percent seller will receive
-        // get admin info
-        const isAdminExist = yield tx.user.findUnique({
-            where: { email: config_1.default.mainAdminEmail },
-            include: {
-                Currency: true,
-            },
-        });
         if (!isAdminExist) {
             throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
+            // return
         }
-        if (!isAdminExist.Currency) {
+        if (!((_c = isAdminExist.Currency) === null || _c === void 0 ? void 0 : _c.id)) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
         }
         //
@@ -157,6 +164,7 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 amount: (0, lodash_1.round)(isUserExist.Currency.amount - isAccountExits.price, config_1.default.calculationMoneyRound),
             },
         });
+        console.log('remove from user', removeCurrencyFromUser);
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const addCurrencyToSeller = yield tx.currency.update({
             where: { ownById: isAccountExits.ownById },
@@ -164,31 +172,51 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 amount: (0, lodash_1.round)(isSellerExist.Currency.amount + sellerReceive, config_1.default.calculationMoneyRound),
             },
         });
+        console.log('add to seller', addCurrencyToSeller);
+        const newAmountForAdmin = (0, lodash_1.round)(isAdminExist.Currency.amount + adminFee, config_1.default.calculationMoneyRound);
+        console.log({ newAmountForAdmin });
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const addCurrencyToAdmin = yield tx.currency.update({
-            where: { id: isAccountExits.id },
+            where: { ownById: isAdminExist.id },
             data: {
-                amount: (0, lodash_1.round)(isAdminExist.Currency.amount + adminFee, config_1.default.calculationMoneyRound),
+                amount: newAmountForAdmin,
             },
         });
+        console.log('after add to admi', addCurrencyToSeller);
         //changer status of account is sold
-        yield tx.account.update({
+        console.log('update', payload.accountId);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+        const update = yield tx.account.update({
             where: { id: payload.accountId },
             data: { isSold: true },
         });
+        console.log({ payload });
         const newOrders = yield tx.orders.create({
             data: payload,
         });
-        (0, sendEmail_1.default)({ to: isUserExist.email }, {
-            subject: EmailTemplates_1.default.orderSuccessful.subject,
-            html: EmailTemplates_1.default.orderSuccessful.html({
-                accountName: isAccountExits.name,
-                accountPassword: isAccountExits.password,
-                accountUserName: isAccountExits.username,
-            }),
-        });
+        if (!newOrders) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'dffdfdf');
+        }
         return newOrders;
     }));
+    (0, sendEmail_1.default)({ to: isUserExist.email }, {
+        subject: EmailTemplates_1.default.orderSuccessful.subject,
+        html: EmailTemplates_1.default.orderSuccessful.html({
+            accountName: isAccountExits.name,
+            accountPassword: isAccountExits.password,
+            accountUserName: isAccountExits.username,
+        }),
+    });
+    yield prisma_1.default.cart.deleteMany({
+        where: {
+            AND: [
+                { id: isAccountExits.id },
+                { ownById: isUserExist.id },
+                // Add more conditions if needed
+            ],
+        },
+    });
+    return data;
 });
 const getSingleOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.orders.findUnique({

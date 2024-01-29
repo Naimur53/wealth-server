@@ -12,6 +12,11 @@ router.get(
   WithdrawalRequestController.getAllWithdrawalRequest
 );
 router.get(
+  '/single-user-request',
+  auth(UserRole.admin, UserRole.seller, UserRole.user),
+  WithdrawalRequestController.getSingleUserWithdrawalRequest
+);
+router.get(
   '/:id',
   auth(UserRole.admin, UserRole.seller, UserRole.user),
   WithdrawalRequestController.getSingleWithdrawalRequest

@@ -11,7 +11,9 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const currencyRequest_controller_1 = require("./currencyRequest.controller");
 const currencyRequest_validation_1 = require("./currencyRequest.validation");
 const router = express_1.default.Router();
-router.get('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user), currencyRequest_controller_1.CurrencyRequestController.getAllCurrencyRequest);
+router.get('/', 
+// auth(UserRole.admin, UserRole.seller, UserRole.user),
+currencyRequest_controller_1.CurrencyRequestController.getAllCurrencyRequest);
 router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user), currencyRequest_controller_1.CurrencyRequestController.getSingleCurrencyRequest);
 // router.post(
 //   '/',

@@ -107,6 +107,7 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
             updatedAt: true,
             ownById: true,
             accountType: true,
+            preview: true,
             ownBy: {
                 select: {
                     name: true,

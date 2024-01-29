@@ -500,5 +500,81 @@ const EmailTemplates = {
 
     `,
     },
+    currencyRequestPaymentSuccessButFailed: {
+        subject: 'Successfully payment is complete for currency but did not save data',
+        html: (data) => `
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Requested</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .content {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .seller-info {
+      margin-top: 5px;
+    }
+
+    .transaction-id {
+      font-weight: bold;
+    }
+
+    .visit-site-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 8px 20px;
+      background-color: #2563eb;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SomeThing went wrong while saving paid currency info Here is the order info  </h1>
+    </div>
+    <div class="content">
+      <p class="seller-info">
+      
+      ${data.failedSavedData}
+      </p>  
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+    </div>
+  </div>
+</body>
+</html>
+
+    `,
+    },
 };
 exports.default = EmailTemplates;

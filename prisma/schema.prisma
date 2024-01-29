@@ -24,7 +24,7 @@ model User {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   role                UserRole            @default(user)
-  profileImg          String?
+  profileImg          String?             @default("/assets/demo-user.png")
   isVerified          Boolean             @default(false)
   isApprovedForSeller Boolean             @default(false)
   isBlocked           Boolean?
@@ -85,6 +85,7 @@ model Account {
   price           Int
   username        String
   password        String
+  preview         String?
   category        accountCategory
   accountType     accountType      @default(SocialMedia)
   approvedForSale EApprovedForSale @default(pending)
@@ -132,6 +133,7 @@ model CurrencyRequest {
   amount    Float
   ownById   String
   status    EStatusOfCurrencyRequest @default(pending)
+  paymentStatus String                @default("waiting")
   ownBy     User                     @relation(fields: [ownById], references: [id])
   createdAt DateTime                 @default(now())
   updatedAt DateTime                 @updatedAt
@@ -155,6 +157,11 @@ model WithdrawalRequest {
   amount    Float
   ownById   String
   status    EStatusOfWithdrawalRequest @default(pending)
+  fullName  String?
+  accountNumber String?
+  bankName      String?
+  walletAddress String?
+  isTrc         Boolean?
   ownBy     User                       @relation(fields: [ownById], references: [id])
   createdAt DateTime                   @default(now())
   updatedAt DateTime                   @updatedAt

@@ -1,9 +1,2 @@
-
-        export const withdrawalRequestSearchableFields = [ 
-          
-        ];
-        export const withdrawalRequestFilterAbleFields = [
-            
-          ];
-          
-        
+export const withdrawalRequestSearchableFields = [];
+export const withdrawalRequestFilterAbleFields = ['ownById'];

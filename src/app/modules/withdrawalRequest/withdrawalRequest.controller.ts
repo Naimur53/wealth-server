@@ -4,6 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
+import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -11,15 +12,44 @@ import { withdrawalRequestFilterAbleFields } from './withdrawalRequest.constant'
 import { WithdrawalRequestService } from './withdrawalRequest.service';
 const createWithdrawalRequest: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
-    const WithdrawalRequestData = req.body;
+    const WithdrawalRequestData = req.body as WithdrawalRequest;
     const user = req.user as JwtPayload;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.log(WithdrawalRequestData);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any = {
+      amount: WithdrawalRequestData.amount,
+    };
+    if (
+      WithdrawalRequestData.walletAddress &&
+      WithdrawalRequestData.isTrc !== undefined
+    ) {
+      data.walletAddress = WithdrawalRequestData.walletAddress;
+      data.isTrc = WithdrawalRequestData.isTrc;
+    } else if (
+      WithdrawalRequestData.accountNumber &&
+      WithdrawalRequestData.fullName &&
+      WithdrawalRequestData.bankName
+    ) {
+      data = {
+        amount: WithdrawalRequestData.amount,
+        fullName: WithdrawalRequestData.fullName,
+        accountNumber: WithdrawalRequestData.accountNumber,
+        bankName: WithdrawalRequestData.bankName,
+      };
+    } else {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Data didn't pass properly");
+    }
+
     const result = await WithdrawalRequestService.createWithdrawalRequest(
       {
-        ...WithdrawalRequestData,
+        ...data,
         ownById: user.userId,
       },
       user
     );
+    console.log(result);
     sendResponse<WithdrawalRequest>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -68,6 +98,22 @@ const getSingleWithdrawalRequest: RequestHandler = catchAsync(
     });
   }
 );
+const getSingleUserWithdrawalRequest: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+    const id = user.userId;
+
+    const result =
+      await WithdrawalRequestService.getSingleUserWithdrawalRequest(id);
+
+    sendResponse<WithdrawalRequest[]>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'WithdrawalRequest retrieved  successfully!',
+      data: result,
+    });
+  }
+);
 
 const updateWithdrawalRequest: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
@@ -108,4 +154,5 @@ export const WithdrawalRequestController = {
   updateWithdrawalRequest,
   getSingleWithdrawalRequest,
   deleteWithdrawalRequest,
+  getSingleUserWithdrawalRequest,
 };

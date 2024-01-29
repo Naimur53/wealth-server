@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WithdrawalRequestController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const pagination_1 = require("../../../constants/pagination");
+const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
@@ -23,7 +24,32 @@ const withdrawalRequest_service_1 = require("./withdrawalRequest.service");
 const createWithdrawalRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const WithdrawalRequestData = req.body;
     const user = req.user;
-    const result = yield withdrawalRequest_service_1.WithdrawalRequestService.createWithdrawalRequest(Object.assign(Object.assign({}, WithdrawalRequestData), { ownById: user.userId }), user);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.log(WithdrawalRequestData);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data = {
+        amount: WithdrawalRequestData.amount,
+    };
+    if (WithdrawalRequestData.walletAddress &&
+        WithdrawalRequestData.isTrc !== undefined) {
+        data.walletAddress = WithdrawalRequestData.walletAddress;
+        data.isTrc = WithdrawalRequestData.isTrc;
+    }
+    else if (WithdrawalRequestData.accountNumber &&
+        WithdrawalRequestData.fullName &&
+        WithdrawalRequestData.bankName) {
+        data = {
+            amount: WithdrawalRequestData.amount,
+            fullName: WithdrawalRequestData.fullName,
+            accountNumber: WithdrawalRequestData.accountNumber,
+            bankName: WithdrawalRequestData.bankName,
+        };
+    }
+    else {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Data didn't pass properly");
+    }
+    const result = yield withdrawalRequest_service_1.WithdrawalRequestService.createWithdrawalRequest(Object.assign(Object.assign({}, data), { ownById: user.userId }), user);
+    console.log(result);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -49,6 +75,17 @@ const getAllWithdrawalRequest = (0, catchAsync_1.default)((req, res) => __awaite
 const getSingleWithdrawalRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
     const result = yield withdrawalRequest_service_1.WithdrawalRequestService.getSingleWithdrawalRequest(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'WithdrawalRequest retrieved  successfully!',
+        data: result,
+    });
+}));
+const getSingleUserWithdrawalRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const id = user.userId;
+    const result = yield withdrawalRequest_service_1.WithdrawalRequestService.getSingleUserWithdrawalRequest(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -83,4 +120,5 @@ exports.WithdrawalRequestController = {
     updateWithdrawalRequest,
     getSingleWithdrawalRequest,
     deleteWithdrawalRequest,
+    getSingleUserWithdrawalRequest,
 };

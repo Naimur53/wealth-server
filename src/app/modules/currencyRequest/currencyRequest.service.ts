@@ -5,6 +5,7 @@ import {
 } from '@prisma/client';
 import axios from 'axios';
 import httpStatus from 'http-status';
+import { round } from 'lodash';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -94,7 +95,11 @@ const createCurrencyRequestInvoice = async (
   payload: CurrencyRequest
 ): Promise<ICreateCurrencyRequestRes | null> => {
   const newCurrencyRequest = await prisma.currencyRequest.create({
-    data: { ...payload, status: EStatusOfCurrencyRequest.pending },
+    data: {
+      ...payload,
+      message: 'auto',
+      status: EStatusOfCurrencyRequest.pending,
+    },
     include: {
       ownBy: true,
     },
@@ -115,9 +120,12 @@ const createCurrencyRequestInvoice = async (
     price_amount: payload.amount,
     price_currency: 'USD',
     order_id: newCurrencyRequest.id,
+    success_url: config.frontendUrl,
     pay_currency: 'BTC', // Specify the cryptocurrency to accept (e.g., BTC)
     ipn_callback_url:
       'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
+    // ipn_callback_url:
+    //   'https://0a07-103-148-210-101.ngrok-free.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
     // api_key: nowPaymentsApiKey,
   };
   // const response = await api.createInvoice({
@@ -130,7 +138,7 @@ const createCurrencyRequestInvoice = async (
     },
   });
 
-  console.log('res', response);
+  console.log('res', response.data);
 
   return { ...newCurrencyRequest, url: response.data.invoice_url };
 };
@@ -138,6 +146,61 @@ const createCurrencyRequestInvoice = async (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = async (data: any): Promise<void> => {
   console.log('nowpayments-ipn data', data);
+
+  // change status of currency Request and add money to user
+  try {
+    await prisma.$transaction(async tx => {
+      // check is request exits
+      const isCurrencyRequestExits = await tx.currencyRequest.findUnique({
+        where: { id: data.order_id },
+        include: {
+          ownBy: { include: { Currency: true } },
+        },
+      });
+      if (!isCurrencyRequestExits || !isCurrencyRequestExits.ownBy) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
+      }
+      // user previous currency
+      const isUserCurrencyExist = await tx.currency.findUnique({
+        where: { ownById: isCurrencyRequestExits.ownById },
+      });
+      if (!isUserCurrencyExist) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Currency not found!');
+      }
+      // change status to approved
+      if (isCurrencyRequestExits.status === EStatusOfCurrencyRequest.pending) {
+        //
+        await tx.currencyRequest.update({
+          where: { id: data.order_id },
+          data: {
+            status: EStatusOfCurrencyRequest.approved,
+            paymentStatus: data.payment_status,
+          },
+        });
+        // add money to user
+        await tx.currency.update({
+          where: { ownById: isCurrencyRequestExits.ownById },
+          data: {
+            amount: round(
+              data.price_amount + isUserCurrencyExist.amount,
+              config.calculationMoneyRound
+            ),
+          },
+        });
+      }
+    });
+  } catch (err) {
+    sendEmail(
+      { to: config.emailUser || '' },
+      {
+        subject: EmailTemplates.currencyRequestPaymentSuccessButFailed.subject,
+        html: EmailTemplates.currencyRequestPaymentSuccessButFailed.html({
+          failedSavedData: JSON.stringify(data),
+        }),
+      }
+    );
+    throw new ApiError(httpStatus.BAD_REQUEST, 'something went worg');
+  }
   // const result = await prisma.currencyRequest.findUnique({
   //   where: {
   //     id,

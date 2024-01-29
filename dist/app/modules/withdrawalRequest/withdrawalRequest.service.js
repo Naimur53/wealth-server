@@ -35,6 +35,7 @@ const withdrawalRequest_constant_1 = require("./withdrawalRequest.constant");
 const getAllWithdrawalRequest = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
     const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
+    console.log(filterData);
     const andCondition = [];
     if (searchTerm) {
         const searchAbleFields = withdrawalRequest_constant_1.withdrawalRequestSearchableFields.map(single => {
@@ -72,6 +73,17 @@ const getAllWithdrawalRequest = (filters, paginationOptions) => __awaiter(void 0
             : {
                 createdAt: 'desc',
             },
+        include: {
+            ownBy: {
+                select: {
+                    name: true,
+                    email: true,
+                    id: true,
+                    phoneNumber: true,
+                    profileImg: true,
+                },
+            },
+        },
     });
     const total = yield prisma_1.default.withdrawalRequest.count();
     const output = {
@@ -150,6 +162,14 @@ const getSingleWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, fun
     });
     return result;
 });
+const getSingleUserWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.withdrawalRequest.findMany({
+        where: {
+            ownById: id,
+        },
+    });
+    return result;
+});
 const updateWithdrawalRequest = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const isWithdrawalRequestExits = yield prisma_1.default.withdrawalRequest.findFirst({
         where: { id },
@@ -211,7 +231,7 @@ const updateWithdrawalRequest = (id, payload) => __awaiter(void 0, void 0, void 
             const totalMoney = (0, lodash_1.round)(isUserCurrencyExist.amount + isWithdrawalRequestExits.amount, config_1.default.calculationMoneyRound);
             // update user money
             yield tx.currency.update({
-                where: { ownById: isUserCurrencyExist.id },
+                where: { ownById: isUserCurrencyExist.ownById },
                 data: { amount: totalMoney },
             });
             return yield tx.withdrawalRequest.update({
@@ -229,6 +249,7 @@ const deleteWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, functi
     const isWithdrawalRequestExits = yield prisma_1.default.withdrawalRequest.findUnique({
         where: { id },
     });
+    console.log(isWithdrawalRequestExits, id);
     if (!isWithdrawalRequestExits) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Not found!');
     }
@@ -244,10 +265,10 @@ const deleteWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, functi
             const totalMoney = (0, lodash_1.round)(isUserCurrencyExist.amount + isWithdrawalRequestExits.amount, config_1.default.calculationMoneyRound);
             // update user money
             yield tx.currency.update({
-                where: { ownById: isUserCurrencyExist.id },
+                where: { ownById: isUserCurrencyExist.ownById },
                 data: { amount: totalMoney },
             });
-            return yield prisma_1.default.withdrawalRequest.delete({
+            return yield tx.withdrawalRequest.delete({
                 where: { id },
             });
         }));
@@ -266,4 +287,5 @@ exports.WithdrawalRequestService = {
     updateWithdrawalRequest,
     getSingleWithdrawalRequest,
     deleteWithdrawalRequest,
+    getSingleUserWithdrawalRequest,
 };

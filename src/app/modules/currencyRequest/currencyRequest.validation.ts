@@ -4,7 +4,7 @@ import { z } from 'zod';
 const createValidation = z.object({
   body: z.object({
     amount: z.number({ required_error: 'amount is required' }).min(0),
-    message: z.string({ required_error: 'message is required' }),
+    message: z.string({ required_error: 'message is required' }).optional(),
   }),
 });
 const updateValidation = z.object({

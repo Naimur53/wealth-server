@@ -96,6 +96,7 @@ const getAllAccount = async (
       updatedAt: true,
       ownById: true,
       accountType: true,
+      preview: true,
       ownBy: {
         select: {
           name: true,

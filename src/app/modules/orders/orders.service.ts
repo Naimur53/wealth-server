@@ -74,31 +74,67 @@ const getAllOrders = async (
 
 const createOrders = async (payload: Orders): Promise<Orders | null> => {
   console.log('makking ', payload);
-  return await prisma.$transaction(async tx => {
-    const isAccountExits = await tx.account.findUnique({
-      where: {
-        id: payload.accountId,
-        approvedForSale: EApprovedForSale.approved,
-      },
-    });
+  const isAccountExits = await prisma.account.findUnique({
+    where: {
+      id: payload.accountId,
+      approvedForSale: EApprovedForSale.approved,
+    },
+  });
 
-    if (!isAccountExits) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Account not found');
-    }
-    // check user exits and dose user have enough currency to buy
+  if (!isAccountExits) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Account not found');
+  }
+  // check user exits and dose user have enough currency to buy
 
-    const isUserExist = await tx.user.findUnique({
-      where: { id: payload.orderById },
-      include: {
-        Currency: true,
-      },
-    });
-    if (!isUserExist) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
-    }
-    console.log('order by', isUserExist);
+  const isUserExist = await prisma.user.findUnique({
+    where: { id: payload.orderById },
+    select: {
+      id: true,
+      email: true,
+      Currency: { select: { amount: true, id: true } },
+    },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
+  }
 
-    if (!isUserExist.Currency) {
+  //check buyer is not the the owner of this account
+
+  if (isAccountExits.ownById === isUserExist.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Account owner can not buy their account !'
+    );
+  }
+  // check is account already sold
+
+  if (isAccountExits.isSold) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'This account already sold');
+  }
+  // get seller info
+  const isSellerExist = await prisma.user.findUnique({
+    where: { id: isAccountExits.ownById },
+    select: {
+      id: true,
+      email: true,
+      Currency: { select: { amount: true, id: true } },
+    },
+  });
+  console.log('seller', isSellerExist);
+
+  // the only 10 percent will receive by admin and expect the 10 percent seller will receive
+  // get admin info
+  const isAdminExist = await prisma.user.findFirst({
+    where: { email: config.mainAdminEmail },
+    select: {
+      id: true,
+      email: true,
+      Currency: { select: { amount: true, id: true } },
+    },
+  });
+
+  const data = await prisma.$transaction(async tx => {
+    if (!isUserExist?.Currency?.id) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
         'something went wrong currency not found for this user!'
@@ -110,49 +146,20 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
         'Not enough currency left to by this account!'
       );
     }
-
-    //check buyer is not the the owner of this account
-
-    if (isAccountExits.ownById === isUserExist.id) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'Account owner can not buy their account !'
-      );
-    }
-    // check is account already sold
-
-    if (isAccountExits.isSold) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'This account already sold');
-    }
-    // get seller info
-    const isSellerExist = await tx.user.findUnique({
-      where: { id: isAccountExits.ownById },
-      include: {
-        Currency: true,
-      },
-    });
-    console.log('seller', isSellerExist);
     if (!isSellerExist) {
       throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
     }
-    if (!isSellerExist.Currency) {
+    if (!isSellerExist?.Currency?.amount) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
         'something went wrong currency not found for this seller!'
       );
     }
-    // the only 10 percent will receive by admin and expect the 10 percent seller will receive
-    // get admin info
-    const isAdminExist = await tx.user.findUnique({
-      where: { email: config.mainAdminEmail },
-      include: {
-        Currency: true,
-      },
-    });
     if (!isAdminExist) {
       throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
+      // return
     }
-    if (!isAdminExist.Currency) {
+    if (!isAdminExist.Currency?.id) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
         'something went wrong currency not found for this seller!'
@@ -172,6 +179,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
         ),
       },
     });
+    console.log('remove from user', removeCurrencyFromUser);
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const addCurrencyToSeller = await tx.currency.update({
       where: { ownById: isAccountExits.ownById },
@@ -182,38 +190,60 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
         ),
       },
     });
+    console.log('add to seller', addCurrencyToSeller);
+
+    const newAmountForAdmin = round(
+      isAdminExist.Currency.amount + adminFee,
+      config.calculationMoneyRound
+    );
+    console.log({ newAmountForAdmin });
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const addCurrencyToAdmin = await tx.currency.update({
-      where: { id: isAccountExits.id },
+      where: { ownById: isAdminExist.id },
       data: {
-        amount: round(
-          isAdminExist.Currency.amount + adminFee,
-          config.calculationMoneyRound
-        ),
+        amount: newAmountForAdmin,
       },
     });
+    console.log('after add to admi', addCurrencyToSeller);
 
     //changer status of account is sold
-    await tx.account.update({
+    console.log('update', payload.accountId);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+    const update = await tx.account.update({
       where: { id: payload.accountId },
       data: { isSold: true },
     });
+    console.log({ payload });
     const newOrders = await tx.orders.create({
       data: payload,
     });
-    sendEmail(
-      { to: isUserExist.email },
-      {
-        subject: EmailTemplates.orderSuccessful.subject,
-        html: EmailTemplates.orderSuccessful.html({
-          accountName: isAccountExits.name,
-          accountPassword: isAccountExits.password,
-          accountUserName: isAccountExits.username,
-        }),
-      }
-    );
+
+    if (!newOrders) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'dffdfdf');
+    }
     return newOrders;
   });
+  sendEmail(
+    { to: isUserExist.email },
+    {
+      subject: EmailTemplates.orderSuccessful.subject,
+      html: EmailTemplates.orderSuccessful.html({
+        accountName: isAccountExits.name,
+        accountPassword: isAccountExits.password,
+        accountUserName: isAccountExits.username,
+      }),
+    }
+  );
+  await prisma.cart.deleteMany({
+    where: {
+      AND: [
+        { id: isAccountExits.id },
+        { ownById: isUserExist.id },
+        // Add more conditions if needed
+      ],
+    },
+  });
+  return data;
 };
 
 const getSingleOrders = async (id: string): Promise<Orders | null> => {
