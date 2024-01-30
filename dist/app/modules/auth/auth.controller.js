@@ -36,12 +36,15 @@ const auth_service_1 = require("./auth.service");
 const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const data = req.body;
     const output = yield auth_service_1.AuthService.createUser(data);
-    const { refreshToken } = output, result = __rest(output, ["refreshToken"]);
-    yield (0, sendEmail_1.default)({ to: result.user.email }, {
-        subject: EmailTemplates_1.default.verify.subject,
-        html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
-    });
-    console.log('success');
+    const { refreshToken, refreshTokenSignup } = output, result = __rest(output, ["refreshToken", "refreshTokenSignup"]);
+    if (output.user.role !== client_1.UserRole.seller) {
+        yield (0, sendEmail_1.default)({ to: result.user.email }, {
+            subject: EmailTemplates_1.default.verify.subject,
+            html: EmailTemplates_1.default.verify.html({
+                token: refreshTokenSignup,
+            }),
+        });
+    }
     if (output.user.role == client_1.UserRole.seller) {
         yield (0, sendEmail_1.default)({ to: config_1.default.emailUser }, {
             subject: EmailTemplates_1.default.sellerRequest.subject,

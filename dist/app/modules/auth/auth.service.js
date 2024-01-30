@@ -30,44 +30,62 @@ const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const createBycryptPassword_1 = __importDefault(require("../../../helpers/createBycryptPassword"));
+const creeateInvoice_1 = __importDefault(require("../../../helpers/creeateInvoice"));
 const jwtHelpers_1 = require("../../../helpers/jwtHelpers");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const user_service_1 = require("../user/user.service");
 const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
     // checking is user buyer
     const { password: givenPassword } = user, rest = __rest(user, ["password"]);
-    if (user.role === client_1.UserRole.seller && !user.txId) {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Seller must be pay to create account');
+    const isUserExist = yield prisma_1.default.user.findUnique({
+        where: { email: user.email },
+    });
+    if (isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.id) {
+        throw new ApiError_1.default(http_status_1.default.NOT_ACCEPTABLE, 'User already exits');
     }
-    try {
-        const genarateBycryptPass = yield (0, createBycryptPassword_1.default)(givenPassword);
-        const newUser = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-            const newUserInfo = yield tx.user.create({
-                data: Object.assign(Object.assign({ password: genarateBycryptPass }, rest), { isVerified: false, isApprovedForSeller: false }),
-            });
-            yield tx.currency.create({
-                data: {
-                    amount: 0,
-                    ownById: newUserInfo.id,
-                },
-            });
+    const genarateBycryptPass = yield (0, createBycryptPassword_1.default)(givenPassword);
+    // start new  transection  for new user
+    const newUser = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const newUserInfo = yield tx.user.create({
+            data: Object.assign(Object.assign({ password: genarateBycryptPass }, rest), { isVerified: false, isApprovedForSeller: false }),
+        });
+        yield tx.currency.create({
+            data: {
+                amount: 0,
+                ownById: newUserInfo.id,
+            },
+        });
+        // is is it seller
+        if (newUserInfo.role !== client_1.UserRole.seller) {
             return newUserInfo;
-        }));
-        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-        const { password, id, email, name } = newUser, others = __rest(newUser, ["password", "id", "email", "name"]);
-        //create access token & refresh token
-        const accessToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role: newUser.role }, config_1.default.jwt.secret, config_1.default.jwt.expires_in);
-        const refreshToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role: newUser.role }, config_1.default.jwt.refresh_secret, config_1.default.jwt.refresh_expires_in);
-        return {
-            user: Object.assign({ email, id, name }, others),
-            accessToken,
-            refreshToken,
-        };
-    }
-    catch (err) {
-        console.log(err);
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User Already exits ');
-    }
+        }
+        const data = yield (0, creeateInvoice_1.default)({
+            price_amount: config_1.default.sellerOneTimePayment,
+            order_id: newUserInfo.id,
+            ipn_callback_url: '/users/nowpayments-ipn',
+            order_description: 'Creating Seller Account',
+            success_url: config_1.default.frontendUrl + `/verify?toEmail=${newUserInfo.email}`,
+            cancel_url: config_1.default.frontendUrl || '',
+        });
+        // newUser.txId=data.invoice_url;
+        const updateUser = tx.user.update({
+            where: { id: newUserInfo.id },
+            data: { txId: data.invoice_url },
+        });
+        return updateUser;
+    }));
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const { password, id, email, name } = newUser, others = __rest(newUser, ["password", "id", "email", "name"]);
+    //create access token & refresh token
+    const accessToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role: newUser.role }, config_1.default.jwt.secret, config_1.default.jwt.expires_in);
+    const refreshToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role: newUser.role }, config_1.default.jwt.refresh_secret, config_1.default.jwt.refresh_expires_in);
+    const refreshTokenSignup = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role: newUser.role }, config_1.default.jwt.refresh_secret_signup, config_1.default.jwt.refresh_expires_in);
+    return {
+        user: Object.assign({ email, id, name }, others),
+        accessToken,
+        refreshToken,
+        refreshTokenSignup,
+    };
     // eslint-disable-next-line no-unused-vars
 });
 const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -106,11 +124,11 @@ const resendEmail = (givenEmail) => __awaiter(void 0, void 0, void 0, function* 
     //create access token & refresh token
     const { email, id, role, name } = isUserExist, others = __rest(isUserExist, ["email", "id", "role", "name"]);
     const accessToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role }, config_1.default.jwt.secret, config_1.default.jwt.expires_in);
-    const refreshToken = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role }, config_1.default.jwt.refresh_secret, config_1.default.jwt.refresh_expires_in);
+    const refreshTokenSignUp = jwtHelpers_1.jwtHelpers.createToken({ userId: id, role }, config_1.default.jwt.refresh_secret_signup, config_1.default.jwt.refresh_expires_in);
     return {
         user: Object.assign({ email, id, name, role }, others),
         accessToken,
-        refreshToken,
+        refreshToken: refreshTokenSignUp,
     };
 });
 const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
@@ -143,13 +161,14 @@ const verifySignupToken = (token) => __awaiter(void 0, void 0, void 0, function*
     // invalid token - synchronous
     let verifiedToken = null;
     try {
-        verifiedToken = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.refresh_secret);
+        verifiedToken = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.refresh_secret_signup);
     }
     catch (err) {
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Invalid Refresh Token');
     }
     const { userId } = verifiedToken;
     // checking deleted user's refresh token
+    console.log('the token', userId);
     const isUserExist = yield prisma_1.default.user.findUnique({ where: { id: userId } });
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User does not exist');

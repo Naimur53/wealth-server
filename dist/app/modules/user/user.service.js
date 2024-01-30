@@ -26,12 +26,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
+const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const createBycryptPassword_1 = __importDefault(require("../../../helpers/createBycryptPassword"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
 const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
+const auth_service_1 = require("../auth/auth.service");
 const user_constant_1 = require("./user.constant");
 const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
@@ -91,6 +93,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             txId: true,
             shouldSendEmail: true,
             phoneNumber: true,
+            isPaidForSeller: true,
         },
     });
     const total = yield prisma_1.default.user.count();
@@ -113,6 +116,28 @@ const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
         },
     });
     return result;
+});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sellerIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('nowpayments-ipn data', data);
+    const isSellerExits = yield prisma_1.default.user.findUnique({
+        where: { id: data.order_id },
+    });
+    if (!isSellerExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User not found');
+    }
+    yield prisma_1.default.user.update({
+        where: { id: isSellerExits.id },
+        data: { isPaidForSeller: true, isApprovedForSeller: true },
+    });
+    // send verification token
+    const output = yield auth_service_1.AuthService.resendEmail(isSellerExits.email);
+    const { refreshToken } = output, result = __rest(output, ["refreshToken"]);
+    yield (0, sendEmail_1.default)({ to: result.user.email }, {
+        subject: EmailTemplates_1.default.verify.subject,
+        html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
+    });
+    // update user to vari
 });
 const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, void 0, function* () {
     const { password } = payload, rest = __rest(payload, ["password"]);
@@ -176,10 +201,71 @@ const deleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
         return deleteUser;
     }));
 });
+const adminOverview = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const totalAccount = yield prisma_1.default.account.count();
+    const totalSoldAccount = yield prisma_1.default.account.count({
+        where: { isSold: true },
+    });
+    const totalUser = yield prisma_1.default.account.count();
+    const mainAdmin = yield prisma_1.default.user.findUnique({
+        where: { email: config_1.default.mainAdminEmail },
+        include: {
+            Currency: { select: { amount: true } },
+        },
+    });
+    if (!mainAdmin) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Main admin Not found!');
+    }
+    const totalEarning = ((_a = mainAdmin.Currency) === null || _a === void 0 ? void 0 : _a.amount) || 0;
+    return {
+        totalAccount,
+        totalSoldAccount,
+        totalUser,
+        totalEarning,
+    };
+});
+const sellerOverview = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalAccount = yield prisma_1.default.account.count({ where: { ownById: id } });
+    const totalSoldAccount = yield prisma_1.default.account.count({
+        where: { isSold: true, ownById: id },
+    });
+    const totalOrder = yield prisma_1.default.orders.count({ where: { orderById: id } });
+    const currency = yield prisma_1.default.currency.findUnique({
+        where: { ownById: id },
+    });
+    const totalMoney = (currency === null || currency === void 0 ? void 0 : currency.amount) || 0;
+    return {
+        totalAccount,
+        totalSoldAccount,
+        totalOrder,
+        totalMoney,
+    };
+});
+const userOverview = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalOrder = yield prisma_1.default.orders.count({ where: { orderById: id } });
+    const totalAccountOnCart = yield prisma_1.default.cart.count({
+        where: { ownById: id },
+    });
+    // const totalOrder = await prisma.account.count({ where: { ownById: id } });
+    const currency = yield prisma_1.default.currency.findUnique({
+        where: { ownById: id },
+    });
+    const totalMoney = (currency === null || currency === void 0 ? void 0 : currency.amount) || 0;
+    return {
+        totalOrder,
+        totalAccountOnCart,
+        totalMoney,
+    };
+});
 exports.UserService = {
     getAllUser,
     createUser,
     updateUser,
     getSingleUser,
     deleteUser,
+    sellerIpn,
+    adminOverview,
+    sellerOverview,
+    userOverview,
 };

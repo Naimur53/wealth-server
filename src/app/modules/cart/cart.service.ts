@@ -73,6 +73,19 @@ const createCart = async (
   payload: Cart
 ): Promise<Cart | null> => {
   // check is cart already exits
+  const isAccountExits = await prisma.account.findUnique({
+    where: { id: payload.accountId },
+  });
+  if (!isAccountExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Account not found');
+  }
+  // checking user is the owner
+  if (isAccountExits.ownById === payload.ownById) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'You cannot add your created item to the cart!'
+    );
+  }
   const isCartExist = await prisma.cart.findFirst({
     where: {
       ownById: userId,
@@ -82,6 +95,7 @@ const createCart = async (
   if (isCartExist?.id) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'cart already exits');
   }
+  // check is
   const newCart = await prisma.cart.create({
     data: payload,
     include: {

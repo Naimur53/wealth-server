@@ -79,6 +79,16 @@ const getAllCart = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
 });
 const createCart = (userId, payload) => __awaiter(void 0, void 0, void 0, function* () {
     // check is cart already exits
+    const isAccountExits = yield prisma_1.default.account.findUnique({
+        where: { id: payload.accountId },
+    });
+    if (!isAccountExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Account not found');
+    }
+    // checking user is the owner
+    if (isAccountExits.ownById === payload.ownById) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'You cannot add your created item to the cart!');
+    }
     const isCartExist = yield prisma_1.default.cart.findFirst({
         where: {
             ownById: userId,
@@ -88,6 +98,7 @@ const createCart = (userId, payload) => __awaiter(void 0, void 0, void 0, functi
     if (isCartExist === null || isCartExist === void 0 ? void 0 : isCartExist.id) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'cart already exits');
     }
+    // check is
     const newCart = yield prisma_1.default.cart.create({
         data: payload,
         include: {

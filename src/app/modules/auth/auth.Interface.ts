@@ -14,4 +14,5 @@ export type ILoginResponse = {
   accessToken: string;
   user: Omit<User, 'password'>;
   refreshToken?: string;
+  refreshTokenSignup?: string;
 };

@@ -1,14 +1,21 @@
 import { Prisma, User, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import sendEmail from '../../../helpers/sendEmail';
-import { IGenericResponse } from '../../../interfaces/common';
+import {
+  IGenericResponse,
+  TAdminOverview,
+  TSellerOverview,
+  TUserOverview,
+} from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
+import { AuthService } from '../auth/auth.service';
 import { userSearchableFields } from './user.constant';
 import { IUserFilters } from './user.interface';
 
@@ -82,6 +89,7 @@ const getAllUser = async (
       txId: true,
       shouldSendEmail: true,
       phoneNumber: true,
+      isPaidForSeller: true,
     },
   });
   const total = await prisma.user.count();
@@ -106,6 +114,32 @@ const getSingleUser = async (id: string): Promise<User | null> => {
     },
   });
   return result;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sellerIpn = async (data: any): Promise<void> => {
+  console.log('nowpayments-ipn data', data);
+  const isSellerExits = await prisma.user.findUnique({
+    where: { id: data.order_id },
+  });
+  if (!isSellerExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found');
+  }
+  await prisma.user.update({
+    where: { id: isSellerExits.id },
+    data: { isPaidForSeller: true, isApprovedForSeller: true },
+  });
+  // send verification token
+  const output = await AuthService.resendEmail(isSellerExits.email);
+  const { refreshToken, ...result } = output;
+  await sendEmail(
+    { to: result.user.email },
+    {
+      subject: EmailTemplates.verify.subject,
+      html: EmailTemplates.verify.html({ token: refreshToken as string }),
+    }
+  );
+
+  // update user to vari
 };
 
 const updateUser = async (
@@ -185,10 +219,71 @@ const deleteUser = async (id: string): Promise<User | null> => {
   });
 };
 
+const adminOverview = async (): Promise<TAdminOverview | null> => {
+  const totalAccount = await prisma.account.count();
+  const totalSoldAccount = await prisma.account.count({
+    where: { isSold: true },
+  });
+  const totalUser = await prisma.account.count();
+  const mainAdmin = await prisma.user.findUnique({
+    where: { email: config.mainAdminEmail },
+    include: {
+      Currency: { select: { amount: true } },
+    },
+  });
+  if (!mainAdmin) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Main admin Not found!');
+  }
+  const totalEarning = mainAdmin.Currency?.amount || 0;
+  return {
+    totalAccount,
+    totalSoldAccount,
+    totalUser,
+    totalEarning,
+  };
+};
+const sellerOverview = async (id: string): Promise<TSellerOverview | null> => {
+  const totalAccount = await prisma.account.count({ where: { ownById: id } });
+  const totalSoldAccount = await prisma.account.count({
+    where: { isSold: true, ownById: id },
+  });
+  const totalOrder = await prisma.orders.count({ where: { orderById: id } });
+  const currency = await prisma.currency.findUnique({
+    where: { ownById: id },
+  });
+  const totalMoney = currency?.amount || 0;
+  return {
+    totalAccount,
+    totalSoldAccount,
+    totalOrder,
+    totalMoney,
+  };
+};
+const userOverview = async (id: string): Promise<TUserOverview | null> => {
+  const totalOrder = await prisma.orders.count({ where: { orderById: id } });
+  const totalAccountOnCart = await prisma.cart.count({
+    where: { ownById: id },
+  });
+  // const totalOrder = await prisma.account.count({ where: { ownById: id } });
+  const currency = await prisma.currency.findUnique({
+    where: { ownById: id },
+  });
+  const totalMoney = currency?.amount || 0;
+  return {
+    totalOrder,
+    totalAccountOnCart,
+    totalMoney,
+  };
+};
+
 export const UserService = {
   getAllUser,
   createUser,
   updateUser,
   getSingleUser,
   deleteUser,
+  sellerIpn,
+  adminOverview,
+  sellerOverview,
+  userOverview,
 };

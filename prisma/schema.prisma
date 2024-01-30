@@ -28,6 +28,7 @@ model User {
   isVerified          Boolean             @default(false)
   isApprovedForSeller Boolean             @default(false)
   isBlocked           Boolean?
+  isPaidForSeller           Boolean?
   Account             Account[]
   Orders              Orders[]
   Cart                Cart[]
@@ -86,6 +87,8 @@ model Account {
   username        String
   password        String
   preview         String?
+  additionalEmail         String?
+  additionalPassword         String?
   category        accountCategory
   accountType     accountType      @default(SocialMedia)
   approvedForSale EApprovedForSale @default(pending)

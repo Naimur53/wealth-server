@@ -63,13 +63,13 @@ const EmailTemplates = {
         <body>
           <div class="container">
             <div class="logo-wrap">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsF05WGOcmIm1X52kObH1we2qm-leDJx80tBtKf007-Q&s" width="150" height="150" alt="DigitalHippo" class="logo">
+            <img src="${config_1.default.mainLogo}" style="display:block" width="150" height="150" title='logo' alt="acctbazaar" class="logo"/>
             </div>
-    
+            src="${config_1.default.mainLogo}"
     
             <p class="paragraph">Hi there,</p>
             <p class="paragraph">
-              Welcome to DigitalHippo, the marketplace for
+              Welcome to acctbazaar, the marketplace for
               high quality digital goods. Use the button below
               to Login.
             </p>
@@ -78,7 +78,7 @@ const EmailTemplates = {
             </div>
             <p class="paragraph">
               Best,<br>
-              The DigitalHippo team
+              The acctbazaar team
             </p>
             <hr class="hr">
             <p class="footer">
@@ -345,7 +345,7 @@ const EmailTemplates = {
     `,
     },
     sellerRequestAccepted: {
-        subject: 'You are now a seller in Acctbazzar',
+        subject: 'You are now a seller in Acctbazaar',
         html: () => `
     <!DOCTYPE html>
 <html lang="en">
@@ -500,6 +500,83 @@ const EmailTemplates = {
 
     `,
     },
+    newAccountAdded: {
+        subject: 'New account added on Acctbazaar ',
+        html: (data) => `
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Requested</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .content {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .seller-info {
+      margin-top: 5px;
+    }
+
+    .transaction-id {
+      font-weight: bold;
+    }
+
+    .visit-site-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 8px 20px;
+      background-color: #2563eb;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>New ${data.category} account added on Acctbazaar </h1>
+    </div>
+    <div class="content">
+      <p class="seller-info">
+      Account name: <span style="font-weight:bold"> ${data.accountName} </span> 
+      <br/>
+      
+      </p> 
+      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
+    </div>
+  </div>
+</body>
+</html>
+
+    `,
+    },
     currencyRequestPaymentSuccessButFailed: {
         subject: 'Successfully payment is complete for currency but did not save data',
         html: (data) => `
@@ -562,7 +639,7 @@ const EmailTemplates = {
   <div class="container">
     <div class="header">
       <h1>SomeThing went wrong while saving paid currency info Here is the order info  </h1>
-    </div>
+    </div>  
     <div class="content">
       <p class="seller-info">
       

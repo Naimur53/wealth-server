@@ -12,6 +12,7 @@ export default {
   jwt: {
     secret: process.env.JWT_SECRET,
     refresh_secret: process.env.JWT_REFRESH_SECRET,
+    refresh_secret_signup: process.env.JWT_REFRESH_SECRET_SIGNUP,
     expires_in: process.env.JWT_EXPIRES_IN,
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   },
@@ -19,6 +20,9 @@ export default {
   emailUser: process.env.EMAIL_USER,
   mainAdminEmail: process.env.EMAIL_USER,
   frontendUrl: process.env.FRONT_END_URL,
+  sellerOneTimePayment: parseFloat(
+    process.env.SELLER_ONE_TIME_PAYMENT as string
+  ),
   currencyPerDollar: parseFloat(process.env.CURRENCY_PER_DOLLAR as string),
   withdrawalPercentage: parseFloat(process.env.WITHDRAWAL_PERCENTAGE as string),
   withdrawalMinMoney: parseFloat(process.env.WITHDRAWAL_MIN_MONEY as string),
@@ -30,4 +34,7 @@ export default {
     process.env.ACCOUNT_SELL_PERCENTAGE as string
   ),
   nowPaymentApiKey: process.env.NOW_PAYMENT_API_KEY,
+  nowPaymentInvoiceUrl: process.env.NOW_PAYMENT_INVOICE_URL,
+  baseServerUrl: process.env.BASER_SERVER_URL,
+  mainLogo: process.env.MAIN_LOGO,
 };

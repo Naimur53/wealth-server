@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const config_1 = __importDefault(require("../config"));
 /* eslint-disable @typescript-eslint/no-unused-vars */
-const sendEmail = ({ to }, { subject, html, text }) => __awaiter(void 0, void 0, void 0, function* () {
+const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, void 0, void 0, function* () {
     const transport = yield nodemailer_1.default.createTransport({
         service: 'gmail',
         auth: {
@@ -33,13 +33,34 @@ const sendEmail = ({ to }, { subject, html, text }) => __awaiter(void 0, void 0,
         text,
     };
     // eslint-disable-next-line no-unused-vars
-    yield transport.sendMail(Object.assign({}, mailOptions), (e, res) => {
-        if (e) {
-            console.log('something went wrong to send email');
+    if (multi === null || multi === void 0 ? void 0 : multi.length) {
+        for (const recipient of to) {
+            const mailOptions = {
+                from: config_1.default.emailUser,
+                to: recipient,
+                subject,
+                html,
+                text,
+            };
+            try {
+                // Send mail for each recipient
+                yield transport.sendMail(mailOptions);
+                console.log(`Email sent successfully to ${recipient}`);
+            }
+            catch (error) {
+                console.error(`Error sending email to ${recipient}:`, error);
+            }
         }
-        else {
-            console.log('Email sent successfully');
-        }
-    });
+    }
+    else {
+        yield transport.sendMail(Object.assign({}, mailOptions), e => {
+            if (e) {
+                console.log('something went wrong to send email');
+            }
+            else {
+                console.log('Email sent successfully');
+            }
+        });
+    }
 });
 exports.default = sendEmail;

@@ -4,6 +4,11 @@ import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
+import {
+  TAdminOverview,
+  TSellerOverview,
+  TUserOverview,
+} from '../../../interfaces/common';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -52,6 +57,20 @@ const getSingleUser: RequestHandler = catchAsync(
     });
   }
 );
+const sellerIpn: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const data = req.body;
+
+    UserService.sellerIpn(data);
+
+    sendResponse<object>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User fetched successfully!',
+      data: {},
+    });
+  }
+);
 
 const updateUser: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
@@ -83,6 +102,44 @@ const deleteUser: RequestHandler = catchAsync(
     });
   }
 );
+const adminOverview: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await UserService.adminOverview();
+
+    sendResponse<TAdminOverview>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Admin overview successfully!',
+      data: result,
+    });
+  }
+);
+const sellerOverview: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+    const result = await UserService.sellerOverview(user.userId);
+
+    sendResponse<TSellerOverview>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Seller overview successfully!',
+      data: result,
+    });
+  }
+);
+const userOverview: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+    const result = await UserService.userOverview(user.userId);
+
+    sendResponse<TUserOverview>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User overview successfully!',
+      data: result,
+    });
+  }
+);
 
 export const UserController = {
   getAllUser,
@@ -90,4 +147,8 @@ export const UserController = {
   updateUser,
   getSingleUser,
   deleteUser,
+  sellerIpn,
+  adminOverview,
+  sellerOverview,
+  userOverview,
 };

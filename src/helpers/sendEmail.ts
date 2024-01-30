@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import config from '../config';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const sendEmail = async (
-  { to }: { to: string },
+  { to, multi }: { to: string; multi?: string[] },
   { subject, html, text }: { subject: string; html: string; text?: string }
 ) => {
   const transport = await nodemailer.createTransport({
@@ -22,12 +22,32 @@ const sendEmail = async (
     text,
   };
   // eslint-disable-next-line no-unused-vars
-  await transport.sendMail({ ...mailOptions }, (e, res) => {
-    if (e) {
-      console.log('something went wrong to send email');
-    } else {
-      console.log('Email sent successfully');
+  if (multi?.length) {
+    for (const recipient of to) {
+      const mailOptions = {
+        from: config.emailUser,
+        to: recipient,
+        subject,
+        html,
+        text,
+      };
+
+      try {
+        // Send mail for each recipient
+        await transport.sendMail(mailOptions);
+        console.log(`Email sent successfully to ${recipient}`);
+      } catch (error) {
+        console.error(`Error sending email to ${recipient}:`, error);
+      }
     }
-  });
+  } else {
+    await transport.sendMail({ ...mailOptions }, e => {
+      if (e) {
+        console.log('something went wrong to send email');
+      } else {
+        console.log('Email sent successfully');
+      }
+    });
+  }
 };
 export default sendEmail;

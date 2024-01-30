@@ -16,16 +16,19 @@ const createUser: RequestHandler = catchAsync(
     const data = req.body;
 
     const output = await AuthService.createUser(data);
-    const { refreshToken, ...result } = output;
+    const { refreshToken, refreshTokenSignup, ...result } = output;
 
-    await sendEmail(
-      { to: result.user.email },
-      {
-        subject: EmailTemplates.verify.subject,
-        html: EmailTemplates.verify.html({ token: refreshToken as string }),
-      }
-    );
-    console.log('success');
+    if (output.user.role !== UserRole.seller) {
+      await sendEmail(
+        { to: result.user.email },
+        {
+          subject: EmailTemplates.verify.subject,
+          html: EmailTemplates.verify.html({
+            token: refreshTokenSignup as string,
+          }),
+        }
+      );
+    }
     if (output.user.role == UserRole.seller) {
       await sendEmail(
         { to: config.emailUser as string },

@@ -210,7 +210,7 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     yield prisma_1.default.cart.deleteMany({
         where: {
             AND: [
-                { id: isAccountExits.id },
+                { accountId: isAccountExits.id },
                 { ownById: isUserExist.id },
                 // Add more conditions if needed
             ],
@@ -235,6 +235,7 @@ const getMyOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
         include: {
             account: true,
         },
+        orderBy: { createdAt: 'desc' },
     });
     return result;
 });

@@ -237,7 +237,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
   await prisma.cart.deleteMany({
     where: {
       AND: [
-        { id: isAccountExits.id },
+        { accountId: isAccountExits.id },
         { ownById: isUserExist.id },
         // Add more conditions if needed
       ],
@@ -263,6 +263,7 @@ const getMyOrders = async (id: string): Promise<Orders[] | null> => {
     include: {
       account: true,
     },
+    orderBy: { createdAt: 'desc' },
   });
   return result;
 };

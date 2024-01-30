@@ -14,3 +14,20 @@ export type IGenericErrorResponse = {
   message: string;
   errorMessages: IGenericErrorMessage[];
 };
+export type TAdminOverview = {
+  totalAccount: number;
+  totalSoldAccount: number;
+  totalUser: number;
+  totalEarning: number;
+};
+export type TSellerOverview = {
+  totalAccount: number;
+  totalSoldAccount: number;
+  totalOrder: number;
+  totalMoney: number;
+};
+export type TUserOverview = {
+  totalAccountOnCart: number;
+  totalOrder: number;
+  totalMoney: number;
+};

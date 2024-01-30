@@ -28,6 +28,7 @@ const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const sendEmailToEveryOne_1 = __importDefault(require("../../../helpers/sendEmailToEveryOne"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const account_constant_1 = require("./account.constant");
 const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
@@ -119,7 +120,7 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
             },
         },
     });
-    const total = yield prisma_1.default.account.count();
+    const total = yield prisma_1.default.account.count({ where: whereConditions });
     const output = {
         data: result,
         meta: { page, limit, total },
@@ -151,8 +152,19 @@ const getSingleAccount = (id) => __awaiter(void 0, void 0, void 0, function* () 
     });
     return result;
 });
-const updateAccount = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const isAccountExits = yield prisma_1.default.account.findUnique({ where: { id } });
+const updateAccount = (id, payload, { id: reqUserId, role }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const isAccountExits = yield prisma_1.default.account.findUnique({
+        where: { id },
+        include: { ownBy: { select: { email: true } } },
+    });
+    if (role !== client_1.UserRole.admin) {
+        // check if he is not owner
+        if ((isAccountExits === null || isAccountExits === void 0 ? void 0 : isAccountExits.ownById) !== reqUserId) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "You didn't own this account!");
+        }
+    }
+    // const isUserExist = await prisma.account.findUnique({where:{id:reqById,}})
     if (!isAccountExits) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found!');
     }
@@ -165,6 +177,14 @@ const updateAccount = (id, payload) => __awaiter(void 0, void 0, void 0, functio
         },
         data: payload,
     });
+    if (payload.approvedForSale === client_1.EApprovedForSale.approved &&
+        isAccountExits.approvedForSale !== client_1.EApprovedForSale.approved) {
+        (0, sendEmailToEveryOne_1.default)({
+            accountName: result.name,
+            category: result.category,
+            without: [(_a = isAccountExits.ownBy) === null || _a === void 0 ? void 0 : _a.email],
+        });
+    }
     if (!result) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found');
     }

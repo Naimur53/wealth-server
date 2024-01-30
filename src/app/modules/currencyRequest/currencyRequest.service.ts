@@ -3,11 +3,11 @@ import {
   EStatusOfCurrencyRequest,
   Prisma,
 } from '@prisma/client';
-import axios from 'axios';
 import httpStatus from 'http-status';
 import { round } from 'lodash';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
+import createNowPayInvoice from '../../../helpers/creeateInvoice';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import sendEmail from '../../../helpers/sendEmail';
 import { IGenericResponse } from '../../../interfaces/common';
@@ -107,40 +107,18 @@ const createCurrencyRequestInvoice = async (
   if (!newCurrencyRequest) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to create Invoie');
   }
-  const nowPaymentsApiKey = config.nowPaymentApiKey || ''; // Use your sandbox API key
 
-  // Use the sandbox API URL
-  const sandboxApiUrl = 'https://api-sandbox.nowpayments.io/v1/invoice';
-
-  // Create an invoice using the NowPayments sandbox API
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  console.log({ nowPaymentsApiKey });
-  // const api = new NOWPaymentsApi({ apiKey: nowPaymentsApiKey });
-  const invoice = {
-    price_amount: payload.amount,
-    price_currency: 'USD',
+  const data = await createNowPayInvoice({
+    price_amount: newCurrencyRequest.amount,
     order_id: newCurrencyRequest.id,
-    success_url: config.frontendUrl,
-    pay_currency: 'BTC', // Specify the cryptocurrency to accept (e.g., BTC)
-    ipn_callback_url:
-      'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
-    // ipn_callback_url:
-    //   'https://0a07-103-148-210-101.ngrok-free.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
-    // api_key: nowPaymentsApiKey,
-  };
-  // const response = await api.createInvoice({
-  //   ...invoice,
-  // });
-  const response = await axios.post(sandboxApiUrl, invoice, {
-    headers: {
-      'x-api-key': nowPaymentsApiKey,
-      'Content-Type': 'application/json',
-    },
+    ipn_callback_url: '/currency-request/nowpayments-ipn',
+    success_url: config.frontendUrl || '',
+    cancel_url: config.frontendUrl || '',
   });
 
-  console.log('res', response.data);
+  console.log('res', data.invoice_url);
 
-  return { ...newCurrencyRequest, url: response.data.invoice_url };
+  return { ...newCurrencyRequest, url: data.invoice_url };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

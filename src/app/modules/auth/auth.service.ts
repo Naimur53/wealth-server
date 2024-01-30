@@ -5,6 +5,7 @@ import { Secret } from 'jsonwebtoken';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
+import createNowPayInvoice from '../../../helpers/creeateInvoice';
 import { jwtHelpers } from '../../../helpers/jwtHelpers';
 import prisma from '../../../shared/prisma';
 import { UserService } from '../user/user.service';
@@ -17,55 +18,78 @@ import {
 const createUser = async (user: User): Promise<ILoginResponse> => {
   // checking is user buyer
   const { password: givenPassword, ...rest } = user;
-  if (user.role === UserRole.seller && !user.txId) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Seller must be pay to create account'
-    );
+
+  const isUserExist = await prisma.user.findUnique({
+    where: { email: user.email },
+  });
+  if (isUserExist?.id) {
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'User already exits');
   }
-  try {
-    const genarateBycryptPass = await createBycryptPassword(givenPassword);
-    const newUser = await prisma.$transaction(async tx => {
-      const newUserInfo = await tx.user.create({
-        data: {
-          password: genarateBycryptPass,
-          ...rest,
-          isVerified: false,
-          isApprovedForSeller: false,
-        },
-      });
-      await tx.currency.create({
-        data: {
-          amount: 0,
-          ownById: newUserInfo.id,
-        },
-      });
-      return newUserInfo;
+  const genarateBycryptPass = await createBycryptPassword(givenPassword);
+
+  // start new  transection  for new user
+  const newUser = await prisma.$transaction(async tx => {
+    const newUserInfo = await tx.user.create({
+      data: {
+        password: genarateBycryptPass,
+        ...rest,
+        isVerified: false,
+        isApprovedForSeller: false,
+      },
     });
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    const { password, id, email, name, ...others } = newUser;
-    //create access token & refresh token
-    const accessToken = jwtHelpers.createToken(
-      { userId: id, role: newUser.role },
-      config.jwt.secret as Secret,
-      config.jwt.expires_in as string
-    );
+    await tx.currency.create({
+      data: {
+        amount: 0,
+        ownById: newUserInfo.id,
+      },
+    });
 
-    const refreshToken = jwtHelpers.createToken(
-      { userId: id, role: newUser.role },
-      config.jwt.refresh_secret as Secret,
-      config.jwt.refresh_expires_in as string
-    );
+    // is is it seller
+    if (newUserInfo.role !== UserRole.seller) {
+      return newUserInfo;
+    }
+    const data = await createNowPayInvoice({
+      price_amount: config.sellerOneTimePayment,
+      order_id: newUserInfo.id,
+      ipn_callback_url: '/users/nowpayments-ipn',
+      order_description: 'Creating Seller Account',
+      success_url: config.frontendUrl + `/verify?toEmail=${newUserInfo.email}`,
+      cancel_url: config.frontendUrl || '',
+    });
+    // newUser.txId=data.invoice_url;
 
-    return {
-      user: { email, id, name, ...others },
-      accessToken,
-      refreshToken,
-    };
-  } catch (err) {
-    console.log(err);
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User Already exits ');
-  }
+    const updateUser = tx.user.update({
+      where: { id: newUserInfo.id },
+      data: { txId: data.invoice_url },
+    });
+    return updateUser;
+  });
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  const { password, id, email, name, ...others } = newUser;
+  //create access token & refresh token
+  const accessToken = jwtHelpers.createToken(
+    { userId: id, role: newUser.role },
+    config.jwt.secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.createToken(
+    { userId: id, role: newUser.role },
+    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_expires_in as string
+  );
+  const refreshTokenSignup = jwtHelpers.createToken(
+    { userId: id, role: newUser.role },
+    config.jwt.refresh_secret_signup as Secret,
+    config.jwt.refresh_expires_in as string
+  );
+
+  return {
+    user: { email, id, name, ...others },
+    accessToken,
+    refreshToken,
+    refreshTokenSignup,
+  };
   // eslint-disable-next-line no-unused-vars
 };
 
@@ -121,7 +145,6 @@ const resendEmail = async (givenEmail: string): Promise<ILoginResponse> => {
   }
 
   //create access token & refresh token
-
   const { email, id, role, name, ...others } = isUserExist;
 
   const accessToken = jwtHelpers.createToken(
@@ -130,16 +153,16 @@ const resendEmail = async (givenEmail: string): Promise<ILoginResponse> => {
     config.jwt.expires_in as string
   );
 
-  const refreshToken = jwtHelpers.createToken(
+  const refreshTokenSignUp = jwtHelpers.createToken(
     { userId: id, role },
-    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_secret_signup as Secret,
     config.jwt.refresh_expires_in as string
   );
 
   return {
     user: { email, id, name, role, ...others },
     accessToken,
-    refreshToken,
+    refreshToken: refreshTokenSignUp,
   };
 };
 
@@ -187,7 +210,7 @@ const verifySignupToken = async (
   try {
     verifiedToken = jwtHelpers.verifyToken(
       token,
-      config.jwt.refresh_secret as Secret
+      config.jwt.refresh_secret_signup as Secret
     );
   } catch (err) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Invalid Refresh Token');
@@ -195,6 +218,7 @@ const verifySignupToken = async (
 
   const { userId } = verifiedToken;
   // checking deleted user's refresh token
+  console.log('the token', userId);
 
   const isUserExist = await prisma.user.findUnique({ where: { id: userId } });
   if (!isUserExist) {

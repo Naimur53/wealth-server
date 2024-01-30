@@ -3,8 +3,10 @@ import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
+import config from '../../../config';
 import { paginationFields } from '../../../constants/pagination';
 import { accountCategoryToType } from '../../../helpers/getAccountCategoryToType';
+import sendEmailToEveryOne from '../../../helpers/sendEmailToEveryOne';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -26,6 +28,12 @@ const createAccount: RequestHandler = catchAsync(
         ownById: user.userId,
         approvedForSale: EApprovedForSale.approved,
         accountType,
+      });
+
+      sendEmailToEveryOne({
+        accountName: result?.name || '',
+        category: result?.category || '',
+        without: [config.mainAdminEmail as string],
       });
     } else {
       result = await AccountService.createAccount({
@@ -54,7 +62,12 @@ const getAllAccount = catchAsync(async (req: Request, res: Response) => {
 
   const result = await AccountService.getAllAccount(filters, paginationOptions);
 
-  sendResponse<Omit<Account, 'username' | 'password'>[]>(res, {
+  sendResponse<
+    Omit<
+      Account,
+      'username' | 'password' | 'additionalEmail' | 'additionalPassword'
+    >[]
+  >(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Account retrieved successfully !',
@@ -82,7 +95,11 @@ const updateAccount: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const id = req.params.id;
     const updateAbleData = req.body;
-    const result = await AccountService.updateAccount(id, updateAbleData);
+    const user = req.user as JwtPayload;
+    const result = await AccountService.updateAccount(id, updateAbleData, {
+      id: user.userId,
+      role: user.role,
+    });
 
     sendResponse<Omit<Account, 'username' | 'password'>>(res, {
       statusCode: httpStatus.OK,

@@ -25,11 +25,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CurrencyRequestService = void 0;
 const client_1 = require("@prisma/client");
-const axios_1 = __importDefault(require("axios"));
 const http_status_1 = __importDefault(require("http-status"));
 const lodash_1 = require("lodash");
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
+const creeateInvoice_1 = __importDefault(require("../../../helpers/creeateInvoice"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
 const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
@@ -102,35 +102,15 @@ const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void
     if (!newCurrencyRequest) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to create Invoie');
     }
-    const nowPaymentsApiKey = config_1.default.nowPaymentApiKey || ''; // Use your sandbox API key
-    // Use the sandbox API URL
-    const sandboxApiUrl = 'https://api-sandbox.nowpayments.io/v1/invoice';
-    // Create an invoice using the NowPayments sandbox API
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    console.log({ nowPaymentsApiKey });
-    // const api = new NOWPaymentsApi({ apiKey: nowPaymentsApiKey });
-    const invoice = {
-        price_amount: payload.amount,
-        price_currency: 'USD',
+    const data = yield (0, creeateInvoice_1.default)({
+        price_amount: newCurrencyRequest.amount,
         order_id: newCurrencyRequest.id,
-        success_url: config_1.default.frontendUrl,
-        pay_currency: 'BTC',
-        ipn_callback_url: 'https://acctbazzar-server.vercel.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
-        // ipn_callback_url:
-        //   'https://0a07-103-148-210-101.ngrok-free.app/api/v1/currency-request/nowpayments-ipn', // Specify your IPN callback URL
-        // api_key: nowPaymentsApiKey,
-    };
-    // const response = await api.createInvoice({
-    //   ...invoice,
-    // });
-    const response = yield axios_1.default.post(sandboxApiUrl, invoice, {
-        headers: {
-            'x-api-key': nowPaymentsApiKey,
-            'Content-Type': 'application/json',
-        },
+        ipn_callback_url: '/currency-request/nowpayments-ipn',
+        success_url: config_1.default.frontendUrl || '',
+        cancel_url: config_1.default.frontendUrl || '',
     });
-    console.log('res', response.data);
-    return Object.assign(Object.assign({}, newCurrencyRequest), { url: response.data.invoice_url });
+    console.log('res', data.invoice_url);
+    return Object.assign(Object.assign({}, newCurrencyRequest), { url: data.invoice_url });
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {

@@ -1,7 +1,8 @@
-import { Account, Prisma, UserRole } from '@prisma/client';
+import { Account, EApprovedForSale, Prisma, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
+import sendEmailToEveryOne from '../../../helpers/sendEmailToEveryOne';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
@@ -11,7 +12,14 @@ import { IAccountFilters } from './account.interface';
 const getAllAccount = async (
   filters: IAccountFilters,
   paginationOptions: IPaginationOptions
-): Promise<IGenericResponse<Omit<Account, 'username' | 'password'>[]>> => {
+): Promise<
+  IGenericResponse<
+    Omit<
+      Account,
+      'username' | 'password' | 'additionalEmail' | 'additionalPassword'
+    >[]
+  >
+> => {
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
@@ -108,7 +116,7 @@ const getAllAccount = async (
       },
     },
   });
-  const total = await prisma.account.count();
+  const total = await prisma.account.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },
@@ -151,9 +159,23 @@ const getSingleAccount = async (id: string): Promise<Account | null> => {
 
 const updateAccount = async (
   id: string,
-  payload: Partial<Account>
+  payload: Partial<Account>,
+  { id: reqUserId, role }: { id: string; role: UserRole }
 ): Promise<Omit<Account, 'username' | 'password'> | null> => {
-  const isAccountExits = await prisma.account.findUnique({ where: { id } });
+  const isAccountExits = await prisma.account.findUnique({
+    where: { id },
+    include: { ownBy: { select: { email: true } } },
+  });
+  if (role !== UserRole.admin) {
+    // check if he is not owner
+    if (isAccountExits?.ownById !== reqUserId) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "You didn't own this account!"
+      );
+    }
+  }
+  // const isUserExist = await prisma.account.findUnique({where:{id:reqById,}})
 
   if (!isAccountExits) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Account not found!');
@@ -164,12 +186,23 @@ const updateAccount = async (
       "sold account can't be updated!"
     );
   }
+
   const result = await prisma.account.update({
     where: {
       id,
     },
     data: payload,
   });
+  if (
+    payload.approvedForSale === EApprovedForSale.approved &&
+    isAccountExits.approvedForSale !== EApprovedForSale.approved
+  ) {
+    sendEmailToEveryOne({
+      accountName: result.name,
+      category: result.category,
+      without: [isAccountExits.ownBy?.email],
+    });
+  }
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Account not found');
   }
