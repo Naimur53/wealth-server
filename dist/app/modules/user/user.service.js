@@ -28,12 +28,13 @@ const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
+const UpdateSellerAfterPay_1 = __importDefault(require("../../../helpers/UpdateSellerAfterPay"));
 const createBycryptPassword_1 = __importDefault(require("../../../helpers/createBycryptPassword"));
+const nowPaymentChecker_1 = __importDefault(require("../../../helpers/nowPaymentChecker"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
 const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
-const auth_service_1 = require("../auth/auth.service");
 const user_constant_1 = require("./user.constant");
 const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
@@ -94,6 +95,11 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             shouldSendEmail: true,
             phoneNumber: true,
             isPaidForSeller: true,
+            Currency: {
+                select: {
+                    amount: true,
+                },
+            },
         },
     });
     const total = yield prisma_1.default.user.count();
@@ -120,27 +126,21 @@ const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sellerIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('nowpayments-ipn data', data);
-    const isSellerExits = yield prisma_1.default.user.findUnique({
-        where: { id: data.order_id },
-    });
-    if (!isSellerExits) {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User not found');
+    if (data.payment_status !== 'finished') {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry payment is not finished yet ');
     }
-    yield prisma_1.default.user.update({
-        where: { id: isSellerExits.id },
-        data: { isPaidForSeller: true, isApprovedForSeller: true },
-    });
-    // send verification token
-    const output = yield auth_service_1.AuthService.resendEmail(isSellerExits.email);
-    const { refreshToken } = output, result = __rest(output, ["refreshToken"]);
-    yield (0, sendEmail_1.default)({ to: result.user.email }, {
-        subject: EmailTemplates_1.default.verify.subject,
-        html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
+    yield (0, nowPaymentChecker_1.default)(data.payment_id);
+    const { order_id, payment_status, price_amount } = data;
+    yield (0, UpdateSellerAfterPay_1.default)({
+        order_id,
+        payment_status,
+        price_amount,
     });
     // update user to vari
 });
 const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, void 0, function* () {
-    const { password } = payload, rest = __rest(payload, ["password"]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+    const { password, isPaidForSeller, isApprovedForSeller } = payload, rest = __rest(payload, ["password", "isPaidForSeller", "isApprovedForSeller"]);
     let genarateBycryptPass;
     if (password) {
         genarateBycryptPass = yield (0, createBycryptPassword_1.default)(password);
@@ -150,6 +150,12 @@ const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, voi
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found');
     }
     console.log(rest, isUserExist);
+    const isRoleExits = rest.role;
+    const isRoleNotMatch = isUserExist.role !== rest.role;
+    const isRequestedUSerNotSuperAdmin = requestedUser.role !== client_1.UserRole.superAdmin;
+    if (isRoleExits && isRoleNotMatch && isRequestedUSerNotSuperAdmin) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User role can only be changed by super admin');
+    }
     if (requestedUser.role !== client_1.UserRole.admin && payload.isApprovedForSeller) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'only admin can verify seller ');
     }

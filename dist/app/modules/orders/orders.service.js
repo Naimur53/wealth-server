@@ -83,6 +83,7 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
     return output;
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     console.log('makking ', payload);
     const isAccountExits = yield prisma_1.default.account.findUnique({
         where: {
@@ -119,6 +120,7 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         select: {
             id: true,
             email: true,
+            role: true,
             Currency: { select: { amount: true, id: true } },
         },
     });
@@ -133,58 +135,72 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             Currency: { select: { amount: true, id: true } },
         },
     });
+    if (!((_a = isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.Currency) === null || _a === void 0 ? void 0 : _a.id)) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this user!');
+    }
+    const serviceCharge = (config_1.default.accountSellServiceCharge / 100) * isAccountExits.price;
+    const amountToCutFromTheBuyer = serviceCharge + isAccountExits.price;
+    if (amountToCutFromTheBuyer < isAccountExits.price) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Not enough currency left to by this account!');
+    }
+    if (!isSellerExist) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
+    }
+    if (!((_b = isSellerExist === null || isSellerExist === void 0 ? void 0 : isSellerExist.Currency) === null || _b === void 0 ? void 0 : _b.amount)) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
+    }
+    if (!isAdminExist) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
+        // return
+    }
+    if (!((_c = isAdminExist.Currency) === null || _c === void 0 ? void 0 : _c.id)) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
+    }
+    //
+    const adminFee = (config_1.default.accountSellPercentage / 100) * isAccountExits.price;
+    const sellerReceive = isAccountExits.price - adminFee;
+    const userAmount = (0, lodash_1.round)(isUserExist.Currency.amount - amountToCutFromTheBuyer, config_1.default.calculationMoneyRound);
+    const sellerCAmount = (0, lodash_1.round)(isSellerExist.Currency.amount + sellerReceive, config_1.default.calculationMoneyRound);
+    const newAmountForAdmin = isSellerExist.role === client_1.UserRole.admin
+        ? (0, lodash_1.round)(isAdminExist.Currency.amount + isAccountExits.price, config_1.default.calculationMoneyRound)
+        : (0, lodash_1.round)(isAdminExist.Currency.amount + adminFee, config_1.default.calculationMoneyRound);
     const data = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b, _c;
-        if (!((_a = isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.Currency) === null || _a === void 0 ? void 0 : _a.id)) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this user!');
-        }
-        if (isUserExist.Currency.amount < isAccountExits.price) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Not enough currency left to by this account!');
-        }
-        if (!isSellerExist) {
-            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
-        }
-        if (!((_b = isSellerExist === null || isSellerExist === void 0 ? void 0 : isSellerExist.Currency) === null || _b === void 0 ? void 0 : _b.amount)) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
-        }
-        if (!isAdminExist) {
-            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found!');
-            // return
-        }
-        if (!((_c = isAdminExist.Currency) === null || _c === void 0 ? void 0 : _c.id)) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this seller!');
-        }
-        //
-        const adminFee = (config_1.default.accountSellPercentage / 100) * isAccountExits.price;
-        const sellerReceive = isAccountExits.price - adminFee;
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         const removeCurrencyFromUser = yield tx.currency.update({
             where: { ownById: isUserExist.id },
             data: {
-                amount: (0, lodash_1.round)(isUserExist.Currency.amount - isAccountExits.price, config_1.default.calculationMoneyRound),
+                amount: userAmount,
             },
         });
         console.log('remove from user', removeCurrencyFromUser);
-        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-        const addCurrencyToSeller = yield tx.currency.update({
-            where: { ownById: isAccountExits.ownById },
-            data: {
-                amount: (0, lodash_1.round)(isSellerExist.Currency.amount + sellerReceive, config_1.default.calculationMoneyRound),
-            },
-        });
-        console.log('add to seller', addCurrencyToSeller);
-        const newAmountForAdmin = (0, lodash_1.round)(isAdminExist.Currency.amount + adminFee, config_1.default.calculationMoneyRound);
-        console.log({ newAmountForAdmin });
-        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-        const addCurrencyToAdmin = yield tx.currency.update({
-            where: { ownById: isAdminExist.id },
-            data: {
-                amount: newAmountForAdmin,
-            },
-        });
-        console.log('after add to admi', addCurrencyToSeller);
+        if (isSellerExist.role === client_1.UserRole.admin) {
+            // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+            const addCurrencyToAdmin = yield tx.currency.update({
+                where: { ownById: isAdminExist.id },
+                data: {
+                    amount: newAmountForAdmin,
+                },
+            });
+        }
+        else {
+            // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+            const addCurrencyToSeller = yield tx.currency.update({
+                where: { ownById: isAccountExits.ownById },
+                data: {
+                    amount: sellerCAmount,
+                },
+            });
+            console.log('add to seller', addCurrencyToSeller);
+            console.log({ newAmountForAdmin });
+            // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+            const addCurrencyToAdmin = yield tx.currency.update({
+                where: { ownById: isAdminExist.id },
+                data: {
+                    amount: newAmountForAdmin,
+                },
+            });
+        }
         //changer status of account is sold
-        console.log('update', payload.accountId);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
         const update = yield tx.account.update({
             where: { id: payload.accountId },

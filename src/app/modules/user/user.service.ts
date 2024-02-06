@@ -3,7 +3,9 @@ import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
+import UpdateSellerAfterPay from '../../../helpers/UpdateSellerAfterPay';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
+import nowPaymentChecker from '../../../helpers/nowPaymentChecker';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import sendEmail from '../../../helpers/sendEmail';
 import {
@@ -15,7 +17,6 @@ import {
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
-import { AuthService } from '../auth/auth.service';
 import { userSearchableFields } from './user.constant';
 import { IUserFilters } from './user.interface';
 
@@ -90,6 +91,11 @@ const getAllUser = async (
       shouldSendEmail: true,
       phoneNumber: true,
       isPaidForSeller: true,
+      Currency: {
+        select: {
+          amount: true,
+        },
+      },
     },
   });
   const total = await prisma.user.count();
@@ -118,27 +124,19 @@ const getSingleUser = async (id: string): Promise<User | null> => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sellerIpn = async (data: any): Promise<void> => {
   console.log('nowpayments-ipn data', data);
-  const isSellerExits = await prisma.user.findUnique({
-    where: { id: data.order_id },
-  });
-  if (!isSellerExits) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found');
+  if (data.payment_status !== 'finished') {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Sorry payment is not finished yet '
+    );
   }
-  await prisma.user.update({
-    where: { id: isSellerExits.id },
-    data: { isPaidForSeller: true, isApprovedForSeller: true },
+  await nowPaymentChecker(data.payment_id);
+  const { order_id, payment_status, price_amount } = data;
+  await UpdateSellerAfterPay({
+    order_id,
+    payment_status,
+    price_amount,
   });
-  // send verification token
-  const output = await AuthService.resendEmail(isSellerExits.email);
-  const { refreshToken, ...result } = output;
-  await sendEmail(
-    { to: result.user.email },
-    {
-      subject: EmailTemplates.verify.subject,
-      html: EmailTemplates.verify.html({ token: refreshToken as string }),
-    }
-  );
-
   // update user to vari
 };
 
@@ -147,7 +145,8 @@ const updateUser = async (
   payload: Partial<User>,
   requestedUser: JwtPayload
 ): Promise<User | null> => {
-  const { password, ...rest } = payload;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  const { password, isPaidForSeller, isApprovedForSeller, ...rest } = payload;
   let genarateBycryptPass;
   if (password) {
     genarateBycryptPass = await createBycryptPassword(password);
@@ -158,6 +157,17 @@ const updateUser = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'user not found');
   }
   console.log(rest, isUserExist);
+  const isRoleExits = rest.role;
+  const isRoleNotMatch = isUserExist.role !== rest.role;
+  const isRequestedUSerNotSuperAdmin =
+    requestedUser.role !== UserRole.superAdmin;
+
+  if (isRoleExits && isRoleNotMatch && isRequestedUSerNotSuperAdmin) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'User role can only be changed by super admin'
+    );
+  }
 
   if (requestedUser.role !== UserRole.admin && payload.isApprovedForSeller) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'only admin can verify seller ');

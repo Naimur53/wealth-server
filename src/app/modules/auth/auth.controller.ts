@@ -13,9 +13,9 @@ import { AuthService } from './auth.service';
 
 const createUser: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
-    const data = req.body;
+    const { paymentWithPaystack, ...data } = req.body;
 
-    const output = await AuthService.createUser(data);
+    const output = await AuthService.createUser(data, paymentWithPaystack);
     const { refreshToken, refreshTokenSignup, ...result } = output;
 
     if (output.user.role !== UserRole.seller) {
@@ -29,18 +29,18 @@ const createUser: RequestHandler = catchAsync(
         }
       );
     }
-    if (output.user.role == UserRole.seller) {
-      await sendEmail(
-        { to: config.emailUser as string },
-        {
-          subject: EmailTemplates.sellerRequest.subject,
-          html: EmailTemplates.sellerRequest.html({
-            userEmail: output.user.email,
-            txId: output.user.txId as string,
-          }),
-        }
-      );
-    }
+    // if (output.user.role == UserRole.seller) {
+    //   await sendEmail(
+    //     { to: config.emailUser as string },
+    //     {
+    //       subject: EmailTemplates.sellerRequest.subject,
+    //       html: EmailTemplates.sellerRequest.html({
+    //         userEmail: output.user.email,
+    //         txId: output.user.txId as string,
+    //       }),
+    //     }
+    //   );
+    // }
     // set refresh token into cookie
     const cookieOptions = {
       secure: config.env === 'production',

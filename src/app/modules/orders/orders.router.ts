@@ -20,7 +20,7 @@ router.get(
 
 router.post(
   '/',
-  auth(UserRole.seller, UserRole.user, UserRole.admin),
+  auth(UserRole.seller, UserRole.user),
   validateRequest(OrdersValidation.createValidation),
   OrdersController.createOrders
 );

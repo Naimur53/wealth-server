@@ -11,20 +11,20 @@ router.get('/:id', AccountController.getSingleAccount);
 
 router.post(
   '/',
-  auth(UserRole.admin, UserRole.seller),
+  auth(UserRole.admin, UserRole.seller, UserRole.superAdmin),
   validateRequest(AccountValidation.createValidation),
   AccountController.createAccount
 );
 
 router.patch(
   '/:id',
-  auth(UserRole.admin, UserRole.seller),
+  auth(UserRole.admin, UserRole.seller, UserRole.superAdmin),
   validateRequest(AccountValidation.updateValidation),
   AccountController.updateAccount
 );
 router.delete(
   '/:id',
-  auth(UserRole.admin, UserRole.seller),
+  auth(UserRole.admin, UserRole.seller, UserRole.superAdmin),
   AccountController.deleteAccount
 );
 

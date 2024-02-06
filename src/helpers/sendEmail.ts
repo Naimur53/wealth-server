@@ -23,8 +23,9 @@ const sendEmail = async (
   };
   // eslint-disable-next-line no-unused-vars
   if (multi?.length) {
-    for (const recipient of to) {
-      const mailOptions = {
+    console.log(multi);
+    for (const recipient of multi) {
+      const mailOptionsPer = {
         from: config.emailUser,
         to: recipient,
         subject,
@@ -34,7 +35,7 @@ const sendEmail = async (
 
       try {
         // Send mail for each recipient
-        await transport.sendMail(mailOptions);
+        await transport.sendMail(mailOptionsPer);
         console.log(`Email sent successfully to ${recipient}`);
       } catch (error) {
         console.error(`Error sending email to ${recipient}:`, error);

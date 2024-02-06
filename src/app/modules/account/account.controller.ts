@@ -22,7 +22,7 @@ const createAccount: RequestHandler = catchAsync(
     let result = null;
 
     const accountType = accountCategoryToType(AccountData.category);
-    if (user.role === UserRole.admin) {
+    if (user.role === UserRole.admin || user.role === UserRole.superAdmin) {
       result = await AccountService.createAccount({
         ...AccountData,
         ownById: user.userId,

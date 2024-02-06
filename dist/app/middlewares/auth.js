@@ -36,7 +36,7 @@ const auth = (...requiredRoles) => (req, res, next) => __awaiter(void 0, void 0,
                 isBlocked: true,
             },
         });
-        console.log({ verifiedUser, queryUserRole: queryUser === null || queryUser === void 0 ? void 0 : queryUser.role, queryUser });
+        console.log({ requiredRoles });
         if (!queryUser) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User not found!');
         }

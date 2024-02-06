@@ -16,9 +16,12 @@ exports.CurrencyRequestController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../../../config"));
 const pagination_1 = require("../../../constants/pagination");
+const UpdateSellerAfterPay_1 = __importDefault(require("../../../helpers/UpdateSellerAfterPay"));
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
+const common_1 = require("../../../interfaces/common");
 const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
+const catchAsyncSemaphore_1 = __importDefault(require("../../../shared/catchAsyncSemaphore"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
@@ -70,6 +73,17 @@ const createCurrencyRequestInvoice = (0, catchAsync_1.default)((req, res) => __a
         data: result,
     });
 }));
+const createCurrencyRequestWithPayStack = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const CurrencyRequestData = req.body;
+    const user = req.user;
+    const result = yield currencyRequest_service_1.CurrencyRequestService.createCurrencyRequestWithPayStack(Object.assign(Object.assign({}, CurrencyRequestData), { ownById: user.userId }));
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'CurrencyRequest Created successfully!',
+        data: result,
+    });
+}));
 const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filters = (0, pick_1.default)(req.query, [
         'searchTerm',
@@ -85,7 +99,37 @@ const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result.data,
     });
 }));
-const getSingleCurrencyRequestIpn = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const payStackWebHook = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const ipnData = req.body;
+    console.log('webhook data call ', ipnData.data);
+    if (ipnData.event === 'charge.success') {
+        const paymentReference = ipnData.data.reference;
+        console.log(`Payment successful for reference: ${paymentReference}`);
+        // Perform additional actions, such as updating your database, sending emails, etc.
+        const paymentType = (_b = (_a = ipnData === null || ipnData === void 0 ? void 0 : ipnData.data) === null || _a === void 0 ? void 0 : _a.metadata) === null || _b === void 0 ? void 0 : _b.payment_type;
+        if (paymentType === common_1.EPaymentType.addFunds) {
+            yield currencyRequest_service_1.CurrencyRequestService.payStackWebHook({
+                reference: paymentReference,
+            });
+        }
+        else if (paymentType === common_1.EPaymentType.seller) {
+            yield (0, UpdateSellerAfterPay_1.default)({
+                order_id: paymentReference,
+                payment_status: 'finished',
+                price_amount: config_1.default.sellerOneTimePayment,
+            });
+        }
+    }
+    // eslint-disable-next-line no-unused-vars
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'CurrencyRequest retrieved  successfully!',
+        data: 'succes',
+    });
+}));
+const getSingleCurrencyRequestIpn = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const ipnData = req.body;
     console.log('ipnData', ipnData);
     // eslint-disable-next-line no-unused-vars
@@ -107,7 +151,7 @@ const getSingleCurrencyRequest = (0, catchAsync_1.default)((req, res) => __await
         data: result,
     });
 }));
-const updateCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateCurrencyRequest = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
     const updateAbleData = req.body;
     const result = yield currencyRequest_service_1.CurrencyRequestService.updateCurrencyRequest(id, updateAbleData);
@@ -136,4 +180,6 @@ exports.CurrencyRequestController = {
     deleteCurrencyRequest,
     createCurrencyRequestInvoice,
     getSingleCurrencyRequestIpn,
+    createCurrencyRequestWithPayStack,
+    payStackWebHook,
 };

@@ -4,6 +4,7 @@ import { AuthRoutes } from '../modules/auth/auth.route';
 import { CartRoutes } from '../modules/cart/cart.router';
 import { CurrencyRoutes } from '../modules/currency/currency.router';
 import { CurrencyRequestRoutes } from '../modules/currencyRequest/currencyRequest.router';
+import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
 import { OrdersRoutes } from '../modules/orders/orders.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
 import { UserRoutes } from '../modules/user/user.router';
@@ -49,6 +50,10 @@ const moduleRoutes = [
   {
     path: '/withdrawal-request',
     route: WithdrawalRequestRoutes,
+  },
+  {
+    path: '/uploadImg',
+    route: fileUploadRoutes,
   },
 ];
 

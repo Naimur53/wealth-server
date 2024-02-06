@@ -13,7 +13,7 @@ router.get(
 );
 router.get(
   '/:id',
-  auth(UserRole.admin, UserRole.seller, UserRole.user),
+  auth(UserRole.admin, UserRole.seller, UserRole.user, UserRole.superAdmin),
   CurrencyRequestController.getSingleCurrencyRequest
 );
 
@@ -24,11 +24,19 @@ router.get(
 //   CurrencyRequestController.createCurrencyRequest
 // );
 router.post(
+  '/paystack',
+  auth(UserRole.seller, UserRole.user),
+  validateRequest(CurrencyRequestValidation.createValidation),
+  CurrencyRequestController.createCurrencyRequestWithPayStack
+);
+router.post(
   '/',
   auth(UserRole.seller, UserRole.user),
   validateRequest(CurrencyRequestValidation.createValidation),
   CurrencyRequestController.createCurrencyRequestInvoice
 );
+
+router.post('/webhook', CurrencyRequestController.payStackWebHook);
 router.post(
   '/nowpayments-ipn',
   CurrencyRequestController.getSingleCurrencyRequestIpn
@@ -36,7 +44,7 @@ router.post(
 
 router.patch(
   '/:id',
-  auth(UserRole.admin),
+  auth(UserRole.superAdmin),
   validateRequest(CurrencyRequestValidation.updateValidation),
   CurrencyRequestController.updateCurrencyRequest
 );

@@ -19,7 +19,6 @@ const createNowPayInvoice = (invoice) => __awaiter(void 0, void 0, void 0, funct
     console.log(invoice);
     // Use the sandbox API URL
     const sandboxApiUrl = config_1.default.nowPaymentInvoiceUrl || '';
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     console.log({ nowPaymentsApiKey, sandboxApiUrl });
     const response = yield axios_1.default.post(sandboxApiUrl, Object.assign(Object.assign({}, invoice), { ipn_callback_url: invoice.ipn_callback_url
             ? config_1.default.baseServerUrl + invoice.ipn_callback_url
@@ -29,7 +28,7 @@ const createNowPayInvoice = (invoice) => __awaiter(void 0, void 0, void 0, funct
             'Content-Type': 'application/json',
         },
     });
-    console.log(response.status);
+    console.log(response.data);
     return response.data;
 });
 exports.default = createNowPayInvoice;

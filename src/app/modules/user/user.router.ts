@@ -7,10 +7,14 @@ import { UserValidation } from './user.validation';
 
 const router = express.Router();
 
-router.get('/', auth(UserRole.admin), UserController.getAllUser);
+router.get(
+  '/',
+  auth(UserRole.admin, UserRole.superAdmin),
+  UserController.getAllUser
+);
 router.get(
   '/admin/overview',
-  auth(UserRole.admin),
+  auth(UserRole.admin, UserRole.superAdmin),
   UserController.adminOverview
 );
 router.get(
@@ -28,10 +32,10 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(UserRole.admin, UserRole.user, UserRole.seller),
+  auth(UserRole.admin, UserRole.user, UserRole.seller, UserRole.superAdmin),
   validateRequest(UserValidation.updateValidation),
   UserController.updateUser
 );
-router.delete('/:id', auth(UserRole.admin), UserController.deleteUser);
+router.delete('/:id', auth(UserRole.superAdmin), UserController.deleteUser);
 
 export const UserRoutes = router;

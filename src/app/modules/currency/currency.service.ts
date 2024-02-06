@@ -1,5 +1,7 @@
 import { Currency, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
+import { round } from 'lodash';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
@@ -106,12 +108,54 @@ const updateCurrency = async (
   id: string,
   payload: Partial<Currency>
 ): Promise<Currency | null> => {
-  const result = await prisma.currency.update({
-    where: {
-      id,
-    },
-    data: payload,
+  let result;
+  const isCurrencyExits = await prisma.currency.findUnique({
+    where: { ownById: id },
   });
+
+  const amountToAdd = payload.amount || 0;
+
+  if (!isCurrencyExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Currency not found!');
+  }
+  console.log(amountToAdd > 0);
+  if (amountToAdd > 0) {
+    result = await prisma.currency.update({
+      where: {
+        ownById: id,
+      },
+      data: {
+        amount: round(
+          isCurrencyExits.amount + amountToAdd,
+          config.calculationMoneyRound
+        ),
+      },
+    });
+  } else if (amountToAdd < 0) {
+    const newAmount = round(
+      isCurrencyExits.amount + amountToAdd,
+      config.calculationMoneyRound
+    );
+    console.log(newAmount, isCurrencyExits.amount + amountToAdd);
+    // if new amount is less then 0 then not allow
+    if (newAmount < 0) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'New currency cannot be negative'
+      );
+    }
+    result = await prisma.currency.update({
+      where: {
+        ownById: id,
+      },
+      data: {
+        amount: newAmount,
+      },
+    });
+  } else {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
+  }
+
   return result;
 };
 

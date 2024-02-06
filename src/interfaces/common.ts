@@ -31,3 +31,10 @@ export type TUserOverview = {
   totalOrder: number;
   totalMoney: number;
 };
+
+export enum EPaymentType {
+  // eslint-disable-next-line no-unused-vars
+  seller = 'seller',
+  // eslint-disable-next-line no-unused-vars
+  addFunds = 'addFunds',
+}

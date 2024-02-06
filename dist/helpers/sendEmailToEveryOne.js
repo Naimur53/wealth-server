@@ -19,7 +19,7 @@ const sendEmailToEveryOne = ({ accountName, category, without, }) => __awaiter(v
     const allEmail = yield prisma_1.default.user.findMany({
         where: {
             AND: [
-                { shouldSendEmail: true },
+                { shouldSendEmail: true, isVerified: true },
                 {
                     NOT: {
                         email: {

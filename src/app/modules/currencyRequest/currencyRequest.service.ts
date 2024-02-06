@@ -4,13 +4,15 @@ import {
   Prisma,
 } from '@prisma/client';
 import httpStatus from 'http-status';
-import { round } from 'lodash';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
+import UpdateCurrencyByRequestAfterPay from '../../../helpers/UpdateCurrencyByRequestAfterPay';
 import createNowPayInvoice from '../../../helpers/creeateInvoice';
+import nowPaymentChecker from '../../../helpers/nowPaymentChecker';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
+import { initiatePayment } from '../../../helpers/paystackPayment';
 import sendEmail from '../../../helpers/sendEmail';
-import { IGenericResponse } from '../../../interfaces/common';
+import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
@@ -94,91 +96,121 @@ const createCurrencyRequest = async (
 const createCurrencyRequestInvoice = async (
   payload: CurrencyRequest
 ): Promise<ICreateCurrencyRequestRes | null> => {
-  const newCurrencyRequest = await prisma.currencyRequest.create({
-    data: {
-      ...payload,
-      message: 'auto',
-      status: EStatusOfCurrencyRequest.pending,
-    },
-    include: {
-      ownBy: true,
-    },
+  const newCurrencyRequest = prisma.$transaction(async tx => {
+    const result = await tx.currencyRequest.create({
+      data: {
+        ...payload,
+        message: 'auto',
+        status: EStatusOfCurrencyRequest.pending,
+      },
+      include: {
+        ownBy: true,
+      },
+    });
+    if (!newCurrencyRequest) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to create Invoie');
+    }
+
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const data = await createNowPayInvoice({
+      price_amount: result.amount,
+      order_id: result.id,
+      ipn_callback_url: '/currency-request/nowpayments-ipn',
+      success_url: config.frontendUrl || '',
+      cancel_url: config.frontendUrl || '',
+      // additionalInfo: 'its adidinlal ',
+    });
+    return { ...result, url: data.invoice_url };
   });
-  if (!newCurrencyRequest) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to create Invoie');
+
+  return newCurrencyRequest;
+};
+const createCurrencyRequestWithPayStack = async (
+  payload: CurrencyRequest
+): Promise<ICreateCurrencyRequestRes | null> => {
+  const newCurrencyRequest = prisma.$transaction(async tx => {
+    const result = await tx.currencyRequest.create({
+      data: {
+        ...payload,
+        message: 'auto',
+        status: EStatusOfCurrencyRequest.pending,
+      },
+      include: {
+        ownBy: true,
+      },
+    });
+    if (!result) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to create Invoie');
+    }
+
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    //   const data = await createNowPayInvoice({
+    //     price_amount: result.amount,
+    //     order_id: result.id,
+    //     ipn_callback_url: '/currency-request/nowpayments-ipn',
+    //     success_url: config.frontendUrl || '',
+    //     cancel_url: config.frontendUrl || '',
+    //     // additionalInfo: 'its adidinlal ',
+    //   });
+    const request = await initiatePayment(
+      result.amount,
+      result.ownBy.email,
+      result.id,
+      EPaymentType.addFunds,
+      config.frontendUrl
+    );
+    console.log(request.data, EPaymentType.addFunds);
+    return { ...result, url: request.data.authorization_url || '' };
+  });
+
+  return newCurrencyRequest;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const payStackWebHook = async (data: any): Promise<void> => {
+  const order_id = data.reference;
+  const payment_status = 'finished';
+  const isCurrencyRequestExits = await prisma.currencyRequest.findUnique({
+    where: { id: order_id },
+  });
+  if (!isCurrencyRequestExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'currency request not found!');
   }
-
-  const data = await createNowPayInvoice({
-    price_amount: newCurrencyRequest.amount,
-    order_id: newCurrencyRequest.id,
-    ipn_callback_url: '/currency-request/nowpayments-ipn',
-    success_url: config.frontendUrl || '',
-    cancel_url: config.frontendUrl || '',
+  // change status of currency Request and add money to user
+  await UpdateCurrencyByRequestAfterPay({
+    order_id,
+    payment_status,
+    price_amount: isCurrencyRequestExits.amount,
   });
-
-  console.log('res', data.invoice_url);
-
-  return { ...newCurrencyRequest, url: data.invoice_url };
+  // const result = await prisma.currencyRequest.findUnique({
+  //   where: {
+  //     id,
+  //   },
+  // });
+  // return result;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = async (data: any): Promise<void> => {
   console.log('nowpayments-ipn data', data);
-
-  // change status of currency Request and add money to user
-  try {
-    await prisma.$transaction(async tx => {
-      // check is request exits
-      const isCurrencyRequestExits = await tx.currencyRequest.findUnique({
-        where: { id: data.order_id },
-        include: {
-          ownBy: { include: { Currency: true } },
-        },
-      });
-      if (!isCurrencyRequestExits || !isCurrencyRequestExits.ownBy) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
-      }
-      // user previous currency
-      const isUserCurrencyExist = await tx.currency.findUnique({
-        where: { ownById: isCurrencyRequestExits.ownById },
-      });
-      if (!isUserCurrencyExist) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Currency not found!');
-      }
-      // change status to approved
-      if (isCurrencyRequestExits.status === EStatusOfCurrencyRequest.pending) {
-        //
-        await tx.currencyRequest.update({
-          where: { id: data.order_id },
-          data: {
-            status: EStatusOfCurrencyRequest.approved,
-            paymentStatus: data.payment_status,
-          },
-        });
-        // add money to user
-        await tx.currency.update({
-          where: { ownById: isCurrencyRequestExits.ownById },
-          data: {
-            amount: round(
-              data.price_amount + isUserCurrencyExist.amount,
-              config.calculationMoneyRound
-            ),
-          },
-        });
-      }
-    });
-  } catch (err) {
-    sendEmail(
-      { to: config.emailUser || '' },
-      {
-        subject: EmailTemplates.currencyRequestPaymentSuccessButFailed.subject,
-        html: EmailTemplates.currencyRequestPaymentSuccessButFailed.html({
-          failedSavedData: JSON.stringify(data),
-        }),
-      }
+  const { order_id, payment_status, price_amount } = data;
+  if (data.payment_status !== 'finished') {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Sorry payment is not finished yet '
     );
-    throw new ApiError(httpStatus.BAD_REQUEST, 'something went worg');
   }
+  console.log('before checker');
+  await nowPaymentChecker(data.payment_id);
+  console.log('after checker');
+
+  await UpdateCurrencyByRequestAfterPay({
+    order_id,
+    payment_status,
+    price_amount,
+  });
+  // change status of currency Request and add money to user
+
   // const result = await prisma.currencyRequest.findUnique({
   //   where: {
   //     id,
@@ -285,4 +317,6 @@ export const CurrencyRequestService = {
   deleteCurrencyRequest,
   createCurrencyRequestInvoice,
   createCurrencyRequestIpn,
+  createCurrencyRequestWithPayStack,
+  payStackWebHook,
 };

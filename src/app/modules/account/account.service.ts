@@ -166,7 +166,9 @@ const updateAccount = async (
     where: { id },
     include: { ownBy: { select: { email: true } } },
   });
-  if (role !== UserRole.admin) {
+  const notAdmin = role !== UserRole.admin;
+  const notSuperAdmin = role !== UserRole.superAdmin;
+  if (notAdmin && notSuperAdmin) {
     // check if he is not owner
     if (isAccountExits?.ownById !== reqUserId) {
       throw new ApiError(

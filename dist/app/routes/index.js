@@ -9,6 +9,7 @@ const auth_route_1 = require("../modules/auth/auth.route");
 const cart_router_1 = require("../modules/cart/cart.router");
 const currency_router_1 = require("../modules/currency/currency.router");
 const currencyRequest_router_1 = require("../modules/currencyRequest/currencyRequest.router");
+const fileUpload_route_1 = require("../modules/fileUpload/fileUpload.route");
 const orders_router_1 = require("../modules/orders/orders.router");
 const profile_router_1 = require("../modules/profile/profile.router");
 const user_router_1 = require("../modules/user/user.router");
@@ -51,6 +52,10 @@ const moduleRoutes = [
     {
         path: '/withdrawal-request',
         route: withdrawalRequest_router_1.WithdrawalRequestRoutes,
+    },
+    {
+        path: '/uploadImg',
+        route: fileUpload_route_1.fileUploadRoutes,
     },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));

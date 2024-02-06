@@ -15,7 +15,6 @@ const createNowPayInvoice = async (invoice: {
   // Use the sandbox API URL
   const sandboxApiUrl = config.nowPaymentInvoiceUrl || '';
 
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   console.log({ nowPaymentsApiKey, sandboxApiUrl });
   const response = await axios.post(
     sandboxApiUrl,
@@ -34,7 +33,7 @@ const createNowPayInvoice = async (invoice: {
       },
     }
   );
-  console.log(response.status);
+  console.log(response.data);
   return response.data;
 };
 export default createNowPayInvoice;

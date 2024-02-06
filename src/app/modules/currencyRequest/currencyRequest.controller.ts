@@ -5,9 +5,12 @@ import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import config from '../../../config';
 import { paginationFields } from '../../../constants/pagination';
+import UpdateSellerAfterPay from '../../../helpers/UpdateSellerAfterPay';
 import sendEmail from '../../../helpers/sendEmail';
+import { EPaymentType } from '../../../interfaces/common';
 import EmailTemplates from '../../../shared/EmailTemplates';
 import catchAsync from '../../../shared/catchAsync';
+import catchAsyncSemaphore from '../../../shared/catchAsyncSemaphore';
 import pick from '../../../shared/pick';
 import prisma from '../../../shared/prisma';
 import sendResponse from '../../../shared/sendResponse';
@@ -79,6 +82,24 @@ const createCurrencyRequestInvoice: RequestHandler = catchAsync(
     });
   }
 );
+const createCurrencyRequestWithPayStack: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const CurrencyRequestData = req.body;
+    const user = req.user as JwtPayload;
+
+    const result =
+      await CurrencyRequestService.createCurrencyRequestWithPayStack({
+        ...CurrencyRequestData,
+        ownById: user.userId,
+      });
+    sendResponse<CurrencyRequest>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'CurrencyRequest Created successfully!',
+      data: result,
+    });
+  }
+);
 
 const getAllCurrencyRequest = catchAsync(
   async (req: Request, res: Response) => {
@@ -103,7 +124,40 @@ const getAllCurrencyRequest = catchAsync(
   }
 );
 
-const getSingleCurrencyRequestIpn: RequestHandler = catchAsync(
+const payStackWebHook: RequestHandler = catchAsyncSemaphore(
+  async (req: Request, res: Response) => {
+    const ipnData = req.body;
+    console.log('webhook data call ', ipnData.data);
+    if (ipnData.event === 'charge.success') {
+      const paymentReference = ipnData.data.reference;
+      console.log(`Payment successful for reference: ${paymentReference}`);
+
+      // Perform additional actions, such as updating your database, sending emails, etc.
+      const paymentType = ipnData?.data?.metadata?.payment_type;
+
+      if (paymentType === EPaymentType.addFunds) {
+        await CurrencyRequestService.payStackWebHook({
+          reference: paymentReference,
+        });
+      } else if (paymentType === EPaymentType.seller) {
+        await UpdateSellerAfterPay({
+          order_id: paymentReference,
+          payment_status: 'finished',
+          price_amount: config.sellerOneTimePayment,
+        });
+      }
+    }
+    // eslint-disable-next-line no-unused-vars
+
+    sendResponse<string>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'CurrencyRequest retrieved  successfully!',
+      data: 'succes',
+    });
+  }
+);
+const getSingleCurrencyRequestIpn: RequestHandler = catchAsyncSemaphore(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
     console.log('ipnData', ipnData);
@@ -135,7 +189,7 @@ const getSingleCurrencyRequest: RequestHandler = catchAsync(
   }
 );
 
-const updateCurrencyRequest: RequestHandler = catchAsync(
+const updateCurrencyRequest: RequestHandler = catchAsyncSemaphore(
   async (req: Request, res: Response) => {
     const id = req.params.id;
     const updateAbleData = req.body;
@@ -175,4 +229,6 @@ export const CurrencyRequestController = {
   deleteCurrencyRequest,
   createCurrencyRequestInvoice,
   getSingleCurrencyRequestIpn,
+  createCurrencyRequestWithPayStack,
+  payStackWebHook,
 };

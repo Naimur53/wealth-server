@@ -29,7 +29,7 @@ const createAccount = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     const user = req.user;
     let result = null;
     const accountType = (0, getAccountCategoryToType_1.accountCategoryToType)(AccountData.category);
-    if (user.role === client_1.UserRole.admin) {
+    if (user.role === client_1.UserRole.admin || user.role === client_1.UserRole.superAdmin) {
         result = yield account_service_1.AccountService.createAccount(Object.assign(Object.assign({}, AccountData), { ownById: user.userId, approvedForSale: client_1.EApprovedForSale.approved, accountType }));
         (0, sendEmailToEveryOne_1.default)({
             accountName: (result === null || result === void 0 ? void 0 : result.name) || '',

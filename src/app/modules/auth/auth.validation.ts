@@ -7,6 +7,7 @@ const createAuthZodSchema = z.object({
     password: z.string({ required_error: 'Password is required' }).min(8),
     name: z.string({ required_error: 'Name is required' }),
     role: z.nativeEnum(UserRole).default(UserRole.user).optional(),
+    paymentWithPaystack: z.boolean().default(false).optional(),
     txId: z.string({ required_error: 'Name is required' }).optional(),
   }),
 });

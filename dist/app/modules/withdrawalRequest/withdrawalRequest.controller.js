@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const pagination_1 = require("../../../constants/pagination");
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
+const catchAsyncSemaphore_1 = __importDefault(require("../../../shared/catchAsyncSemaphore"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const withdrawalRequest_constant_1 = require("./withdrawalRequest.constant");
@@ -93,7 +94,7 @@ const getSingleUserWithdrawalRequest = (0, catchAsync_1.default)((req, res) => _
         data: result,
     });
 }));
-const updateWithdrawalRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateWithdrawalRequest = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
     const updateAbleData = req.body;
     const result = yield withdrawalRequest_service_1.WithdrawalRequestService.updateWithdrawalRequest(id, updateAbleData);

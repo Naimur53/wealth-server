@@ -11,10 +11,10 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const cart_controller_1 = require("./cart.controller");
 const cart_validation_1 = require("./cart.validation");
 const router = express_1.default.Router();
-router.get('/', (0, auth_1.default)(client_1.UserRole.admin), cart_controller_1.CartController.getAllCart);
-router.get('/my-carts', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller), cart_controller_1.CartController.getSingleUserCarts);
+router.get('/', (0, auth_1.default)(client_1.UserRole.superAdmin), cart_controller_1.CartController.getAllCart);
+router.get('/my-carts', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller, client_1.UserRole.superAdmin), cart_controller_1.CartController.getSingleUserCarts);
 router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin), cart_controller_1.CartController.getSingleCart);
-router.post('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller), (0, validateRequest_1.default)(cart_validation_1.CartValidation.createValidation), cart_controller_1.CartController.createCart);
-router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller), (0, validateRequest_1.default)(cart_validation_1.CartValidation.updateValidation), cart_controller_1.CartController.updateCart);
-router.delete('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller), cart_controller_1.CartController.deleteCart);
+router.post('/', (0, auth_1.default)(client_1.UserRole.user, client_1.UserRole.seller), (0, validateRequest_1.default)(cart_validation_1.CartValidation.createValidation), cart_controller_1.CartController.createCart);
+router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller, client_1.UserRole.superAdmin), (0, validateRequest_1.default)(cart_validation_1.CartValidation.updateValidation), cart_controller_1.CartController.updateCart);
+router.delete('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller, client_1.UserRole.superAdmin), cart_controller_1.CartController.deleteCart);
 exports.CartRoutes = router;

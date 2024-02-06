@@ -14,15 +14,17 @@ const router = express_1.default.Router();
 router.get('/', 
 // auth(UserRole.admin, UserRole.seller, UserRole.user),
 currencyRequest_controller_1.CurrencyRequestController.getAllCurrencyRequest);
-router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user), currencyRequest_controller_1.CurrencyRequestController.getSingleCurrencyRequest);
+router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user, client_1.UserRole.superAdmin), currencyRequest_controller_1.CurrencyRequestController.getSingleCurrencyRequest);
 // router.post(
 //   '/',
 //   auth(UserRole.seller, UserRole.user),
 //   validateRequest(CurrencyRequestValidation.createValidation),
 //   CurrencyRequestController.createCurrencyRequest
 // );
+router.post('/paystack', (0, auth_1.default)(client_1.UserRole.seller, client_1.UserRole.user), (0, validateRequest_1.default)(currencyRequest_validation_1.CurrencyRequestValidation.createValidation), currencyRequest_controller_1.CurrencyRequestController.createCurrencyRequestWithPayStack);
 router.post('/', (0, auth_1.default)(client_1.UserRole.seller, client_1.UserRole.user), (0, validateRequest_1.default)(currencyRequest_validation_1.CurrencyRequestValidation.createValidation), currencyRequest_controller_1.CurrencyRequestController.createCurrencyRequestInvoice);
+router.post('/webhook', currencyRequest_controller_1.CurrencyRequestController.payStackWebHook);
 router.post('/nowpayments-ipn', currencyRequest_controller_1.CurrencyRequestController.getSingleCurrencyRequestIpn);
-router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin), (0, validateRequest_1.default)(currencyRequest_validation_1.CurrencyRequestValidation.updateValidation), currencyRequest_controller_1.CurrencyRequestController.updateCurrencyRequest);
+router.patch('/:id', (0, auth_1.default)(client_1.UserRole.superAdmin), (0, validateRequest_1.default)(currencyRequest_validation_1.CurrencyRequestValidation.updateValidation), currencyRequest_controller_1.CurrencyRequestController.updateCurrencyRequest);
 router.delete('/:id', currencyRequest_controller_1.CurrencyRequestController.deleteCurrencyRequest);
 exports.CurrencyRequestRoutes = router;

@@ -1,4 +1,4 @@
-import { EApprovedForSale, Orders, Prisma } from '@prisma/client';
+import { EApprovedForSale, Orders, Prisma, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import { round } from 'lodash';
 import config from '../../../config';
@@ -117,6 +117,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     select: {
       id: true,
       email: true,
+      role: true,
       Currency: { select: { amount: true, id: true } },
     },
   });
@@ -132,82 +133,98 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       Currency: { select: { amount: true, id: true } },
     },
   });
-
+  if (!isUserExist?.Currency?.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'something went wrong currency not found for this user!'
+    );
+  }
+  const serviceCharge =
+    (config.accountSellServiceCharge / 100) * isAccountExits.price;
+  const amountToCutFromTheBuyer = serviceCharge + isAccountExits.price;
+  if (amountToCutFromTheBuyer < isAccountExits.price) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Not enough currency left to by this account!'
+    );
+  }
+  if (!isSellerExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
+  }
+  if (!isSellerExist?.Currency?.amount) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'something went wrong currency not found for this seller!'
+    );
+  }
+  if (!isAdminExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
+    // return
+  }
+  if (!isAdminExist.Currency?.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'something went wrong currency not found for this seller!'
+    );
+  }
+  //
+  const adminFee = (config.accountSellPercentage / 100) * isAccountExits.price;
+  const sellerReceive = isAccountExits.price - adminFee;
+  const userAmount = round(
+    isUserExist.Currency.amount - amountToCutFromTheBuyer,
+    config.calculationMoneyRound
+  );
+  const sellerCAmount = round(
+    isSellerExist.Currency.amount + sellerReceive,
+    config.calculationMoneyRound
+  );
+  const newAmountForAdmin =
+    isSellerExist.role === UserRole.admin
+      ? round(
+          isAdminExist.Currency.amount + isAccountExits.price,
+          config.calculationMoneyRound
+        )
+      : round(
+          isAdminExist.Currency.amount + adminFee,
+          config.calculationMoneyRound
+        );
   const data = await prisma.$transaction(async tx => {
-    if (!isUserExist?.Currency?.id) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'something went wrong currency not found for this user!'
-      );
-    }
-    if (isUserExist.Currency.amount < isAccountExits.price) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'Not enough currency left to by this account!'
-      );
-    }
-    if (!isSellerExist) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
-    }
-    if (!isSellerExist?.Currency?.amount) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'something went wrong currency not found for this seller!'
-      );
-    }
-    if (!isAdminExist) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
-      // return
-    }
-    if (!isAdminExist.Currency?.id) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'something went wrong currency not found for this seller!'
-      );
-    }
-    //
-    const adminFee =
-      (config.accountSellPercentage / 100) * isAccountExits.price;
-    const sellerReceive = isAccountExits.price - adminFee;
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const removeCurrencyFromUser = await tx.currency.update({
       where: { ownById: isUserExist.id },
       data: {
-        amount: round(
-          isUserExist.Currency.amount - isAccountExits.price,
-          config.calculationMoneyRound
-        ),
+        amount: userAmount,
       },
     });
     console.log('remove from user', removeCurrencyFromUser);
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    const addCurrencyToSeller = await tx.currency.update({
-      where: { ownById: isAccountExits.ownById },
-      data: {
-        amount: round(
-          isSellerExist.Currency.amount + sellerReceive,
-          config.calculationMoneyRound
-        ),
-      },
-    });
-    console.log('add to seller', addCurrencyToSeller);
+    if (isSellerExist.role === UserRole.admin) {
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+      const addCurrencyToAdmin = await tx.currency.update({
+        where: { ownById: isAdminExist.id },
+        data: {
+          amount: newAmountForAdmin,
+        },
+      });
+    } else {
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+      const addCurrencyToSeller = await tx.currency.update({
+        where: { ownById: isAccountExits.ownById },
+        data: {
+          amount: sellerCAmount,
+        },
+      });
+      console.log('add to seller', addCurrencyToSeller);
 
-    const newAmountForAdmin = round(
-      isAdminExist.Currency.amount + adminFee,
-      config.calculationMoneyRound
-    );
-    console.log({ newAmountForAdmin });
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    const addCurrencyToAdmin = await tx.currency.update({
-      where: { ownById: isAdminExist.id },
-      data: {
-        amount: newAmountForAdmin,
-      },
-    });
-    console.log('after add to admi', addCurrencyToSeller);
-
+      console.log({ newAmountForAdmin });
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+      const addCurrencyToAdmin = await tx.currency.update({
+        where: { ownById: isAdminExist.id },
+        data: {
+          amount: newAmountForAdmin,
+        },
+      });
+    }
     //changer status of account is sold
-    console.log('update', payload.accountId);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     const update = await tx.account.update({
       where: { id: payload.accountId },

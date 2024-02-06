@@ -30,11 +30,18 @@ export default {
   calculationMoneyRound: parseInt(
     process.env.CALCULATION_MONEY_ROUND as string
   ),
+  accountSellServiceCharge: parseFloat(
+    process.env.ACCOUNT_SELL_SERVICE_CHARGE as string
+  ),
   accountSellPercentage: parseFloat(
     process.env.ACCOUNT_SELL_PERCENTAGE as string
   ),
+  paystackPaymentApiKey: process.env.PAYSTACK_PAYMENT_API_KEY,
   nowPaymentApiKey: process.env.NOW_PAYMENT_API_KEY,
   nowPaymentInvoiceUrl: process.env.NOW_PAYMENT_INVOICE_URL,
   baseServerUrl: process.env.BASER_SERVER_URL,
   mainLogo: process.env.MAIN_LOGO,
+  cloudName: process.env.CLOUD_NAME,
+  cloudApiKey: process.env.CLOUD_API_KEY,
+  cloudApiSecret: process.env.CLOUD_API_SECRET,
 };

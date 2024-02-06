@@ -34,8 +34,9 @@ const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, 
     };
     // eslint-disable-next-line no-unused-vars
     if (multi === null || multi === void 0 ? void 0 : multi.length) {
-        for (const recipient of to) {
-            const mailOptions = {
+        console.log(multi);
+        for (const recipient of multi) {
+            const mailOptionsPer = {
                 from: config_1.default.emailUser,
                 to: recipient,
                 subject,
@@ -44,7 +45,7 @@ const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, 
             };
             try {
                 // Send mail for each recipient
-                yield transport.sendMail(mailOptions);
+                yield transport.sendMail(mailOptionsPer);
                 console.log(`Email sent successfully to ${recipient}`);
             }
             catch (error) {

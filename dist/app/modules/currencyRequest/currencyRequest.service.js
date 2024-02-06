@@ -26,12 +26,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CurrencyRequestService = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
-const lodash_1 = require("lodash");
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
+const UpdateCurrencyByRequestAfterPay_1 = __importDefault(require("../../../helpers/UpdateCurrencyByRequestAfterPay"));
 const creeateInvoice_1 = __importDefault(require("../../../helpers/creeateInvoice"));
+const nowPaymentChecker_1 = __importDefault(require("../../../helpers/nowPaymentChecker"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const paystackPayment_1 = require("../../../helpers/paystackPayment");
 const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
+const common_1 = require("../../../interfaces/common");
 const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const currencyRequest_constant_1 = require("./currencyRequest.constant");
@@ -93,77 +96,94 @@ const createCurrencyRequest = (payload) => __awaiter(void 0, void 0, void 0, fun
     return newCurrencyRequest;
 });
 const createCurrencyRequestInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const newCurrencyRequest = yield prisma_1.default.currencyRequest.create({
-        data: Object.assign(Object.assign({}, payload), { message: 'auto', status: client_1.EStatusOfCurrencyRequest.pending }),
-        include: {
-            ownBy: true,
-        },
+    const newCurrencyRequest = prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield tx.currencyRequest.create({
+            data: Object.assign(Object.assign({}, payload), { message: 'auto', status: client_1.EStatusOfCurrencyRequest.pending }),
+            include: {
+                ownBy: true,
+            },
+        });
+        if (!newCurrencyRequest) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to create Invoie');
+        }
+        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+        const data = yield (0, creeateInvoice_1.default)({
+            price_amount: result.amount,
+            order_id: result.id,
+            ipn_callback_url: '/currency-request/nowpayments-ipn',
+            success_url: config_1.default.frontendUrl || '',
+            cancel_url: config_1.default.frontendUrl || '',
+            // additionalInfo: 'its adidinlal ',
+        });
+        return Object.assign(Object.assign({}, result), { url: data.invoice_url });
+    }));
+    return newCurrencyRequest;
+});
+const createCurrencyRequestWithPayStack = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const newCurrencyRequest = prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield tx.currencyRequest.create({
+            data: Object.assign(Object.assign({}, payload), { message: 'auto', status: client_1.EStatusOfCurrencyRequest.pending }),
+            include: {
+                ownBy: true,
+            },
+        });
+        if (!result) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to create Invoie');
+        }
+        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+        //   const data = await createNowPayInvoice({
+        //     price_amount: result.amount,
+        //     order_id: result.id,
+        //     ipn_callback_url: '/currency-request/nowpayments-ipn',
+        //     success_url: config.frontendUrl || '',
+        //     cancel_url: config.frontendUrl || '',
+        //     // additionalInfo: 'its adidinlal ',
+        //   });
+        const request = yield (0, paystackPayment_1.initiatePayment)(result.amount, result.ownBy.email, result.id, common_1.EPaymentType.addFunds, config_1.default.frontendUrl);
+        console.log(request.data, common_1.EPaymentType.addFunds);
+        return Object.assign(Object.assign({}, result), { url: request.data.authorization_url || '' });
+    }));
+    return newCurrencyRequest;
+});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const payStackWebHook = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    const order_id = data.reference;
+    const payment_status = 'finished';
+    const isCurrencyRequestExits = yield prisma_1.default.currencyRequest.findUnique({
+        where: { id: order_id },
     });
-    if (!newCurrencyRequest) {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to create Invoie');
+    if (!isCurrencyRequestExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'currency request not found!');
     }
-    const data = yield (0, creeateInvoice_1.default)({
-        price_amount: newCurrencyRequest.amount,
-        order_id: newCurrencyRequest.id,
-        ipn_callback_url: '/currency-request/nowpayments-ipn',
-        success_url: config_1.default.frontendUrl || '',
-        cancel_url: config_1.default.frontendUrl || '',
+    // change status of currency Request and add money to user
+    yield (0, UpdateCurrencyByRequestAfterPay_1.default)({
+        order_id,
+        payment_status,
+        price_amount: isCurrencyRequestExits.amount,
     });
-    console.log('res', data.invoice_url);
-    return Object.assign(Object.assign({}, newCurrencyRequest), { url: data.invoice_url });
+    // const result = await prisma.currencyRequest.findUnique({
+    //   where: {
+    //     id,
+    //   },
+    // });
+    // return result;
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('nowpayments-ipn data', data);
+    const { order_id, payment_status, price_amount } = data;
+    if (data.payment_status !== 'finished') {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry payment is not finished yet ');
+    }
+    console.log('before checker');
+    yield (0, nowPaymentChecker_1.default)(data.payment_id);
+    console.log('after checker');
+    yield (0, UpdateCurrencyByRequestAfterPay_1.default)({
+        order_id,
+        payment_status,
+        price_amount,
+    });
     // change status of currency Request and add money to user
-    try {
-        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-            // check is request exits
-            const isCurrencyRequestExits = yield tx.currencyRequest.findUnique({
-                where: { id: data.order_id },
-                include: {
-                    ownBy: { include: { Currency: true } },
-                },
-            });
-            if (!isCurrencyRequestExits || !isCurrencyRequestExits.ownBy) {
-                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong');
-            }
-            // user previous currency
-            const isUserCurrencyExist = yield tx.currency.findUnique({
-                where: { ownById: isCurrencyRequestExits.ownById },
-            });
-            if (!isUserCurrencyExist) {
-                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Currency not found!');
-            }
-            // change status to approved
-            if (isCurrencyRequestExits.status === client_1.EStatusOfCurrencyRequest.pending) {
-                //
-                yield tx.currencyRequest.update({
-                    where: { id: data.order_id },
-                    data: {
-                        status: client_1.EStatusOfCurrencyRequest.approved,
-                        paymentStatus: data.payment_status,
-                    },
-                });
-                // add money to user
-                yield tx.currency.update({
-                    where: { ownById: isCurrencyRequestExits.ownById },
-                    data: {
-                        amount: (0, lodash_1.round)(data.price_amount + isUserCurrencyExist.amount, config_1.default.calculationMoneyRound),
-                    },
-                });
-            }
-        }));
-    }
-    catch (err) {
-        (0, sendEmail_1.default)({ to: config_1.default.emailUser || '' }, {
-            subject: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.subject,
-            html: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.html({
-                failedSavedData: JSON.stringify(data),
-            }),
-        });
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went worg');
-    }
     // const result = await prisma.currencyRequest.findUnique({
     //   where: {
     //     id,
@@ -256,4 +276,6 @@ exports.CurrencyRequestService = {
     deleteCurrencyRequest,
     createCurrencyRequestInvoice,
     createCurrencyRequestIpn,
+    createCurrencyRequestWithPayStack,
+    payStackWebHook,
 };

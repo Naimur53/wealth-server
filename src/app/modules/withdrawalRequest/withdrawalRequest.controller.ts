@@ -6,6 +6,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
+import catchAsyncSemaphore from '../../../shared/catchAsyncSemaphore';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
 import { withdrawalRequestFilterAbleFields } from './withdrawalRequest.constant';
@@ -115,7 +116,7 @@ const getSingleUserWithdrawalRequest: RequestHandler = catchAsync(
   }
 );
 
-const updateWithdrawalRequest: RequestHandler = catchAsync(
+const updateWithdrawalRequest: RequestHandler = catchAsyncSemaphore(
   async (req: Request, res: Response) => {
     const id = req.params.id;
     const updateAbleData = req.body;

@@ -9,7 +9,9 @@ const createValidation = zod_1.z.object({
     }),
 });
 const updateValidation = zod_1.z.object({
-    body: zod_1.z.object({}),
+    body: zod_1.z.object({
+        amount: zod_1.z.number({ required_error: 'amount must be required' }),
+    }),
 });
 exports.CurrencyValidation = {
     createValidation,

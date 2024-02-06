@@ -10,6 +10,7 @@ import {
   TUserOverview,
 } from '../../../interfaces/common';
 import catchAsync from '../../../shared/catchAsync';
+import catchAsyncSemaphore from '../../../shared/catchAsyncSemaphore';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
 import { userFilterAbleFields } from './user.constant';
@@ -57,11 +58,11 @@ const getSingleUser: RequestHandler = catchAsync(
     });
   }
 );
-const sellerIpn: RequestHandler = catchAsync(
+const sellerIpn: RequestHandler = catchAsyncSemaphore(
   async (req: Request, res: Response) => {
     const data = req.body;
 
-    UserService.sellerIpn(data);
+    await UserService.sellerIpn(data);
 
     sendResponse<object>(res, {
       statusCode: httpStatus.OK,

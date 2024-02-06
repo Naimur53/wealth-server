@@ -7,7 +7,9 @@ const createValidation = z.object({
   }),
 });
 const updateValidation = z.object({
-  body: z.object({}),
+  body: z.object({
+    amount: z.number({ required_error: 'amount must be required' }),
+  }),
 });
 export const CurrencyValidation = {
   createValidation,

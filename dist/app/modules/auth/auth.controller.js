@@ -34,8 +34,8 @@ const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const auth_service_1 = require("./auth.service");
 const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = req.body;
-    const output = yield auth_service_1.AuthService.createUser(data);
+    const _a = req.body, { paymentWithPaystack } = _a, data = __rest(_a, ["paymentWithPaystack"]);
+    const output = yield auth_service_1.AuthService.createUser(data, paymentWithPaystack);
     const { refreshToken, refreshTokenSignup } = output, result = __rest(output, ["refreshToken", "refreshTokenSignup"]);
     if (output.user.role !== client_1.UserRole.seller) {
         yield (0, sendEmail_1.default)({ to: result.user.email }, {
@@ -45,15 +45,18 @@ const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
             }),
         });
     }
-    if (output.user.role == client_1.UserRole.seller) {
-        yield (0, sendEmail_1.default)({ to: config_1.default.emailUser }, {
-            subject: EmailTemplates_1.default.sellerRequest.subject,
-            html: EmailTemplates_1.default.sellerRequest.html({
-                userEmail: output.user.email,
-                txId: output.user.txId,
-            }),
-        });
-    }
+    // if (output.user.role == UserRole.seller) {
+    //   await sendEmail(
+    //     { to: config.emailUser as string },
+    //     {
+    //       subject: EmailTemplates.sellerRequest.subject,
+    //       html: EmailTemplates.sellerRequest.html({
+    //         userEmail: output.user.email,
+    //         txId: output.user.txId as string,
+    //       }),
+    //     }
+    //   );
+    // }
     // set refresh token into cookie
     const cookieOptions = {
         secure: config_1.default.env === 'production',

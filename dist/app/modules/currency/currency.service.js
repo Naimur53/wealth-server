@@ -25,6 +25,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CurrencyService = void 0;
 const http_status_1 = __importDefault(require("http-status"));
+const lodash_1 = require("lodash");
+const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
@@ -108,12 +110,44 @@ const getSingleCurrencyByUserId = (id) => __awaiter(void 0, void 0, void 0, func
     return result;
 });
 const updateCurrency = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.currency.update({
-        where: {
-            id,
-        },
-        data: payload,
+    let result;
+    const isCurrencyExits = yield prisma_1.default.currency.findUnique({
+        where: { ownById: id },
     });
+    const amountToAdd = payload.amount || 0;
+    if (!isCurrencyExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Currency not found!');
+    }
+    console.log(amountToAdd > 0);
+    if (amountToAdd > 0) {
+        result = yield prisma_1.default.currency.update({
+            where: {
+                ownById: id,
+            },
+            data: {
+                amount: (0, lodash_1.round)(isCurrencyExits.amount + amountToAdd, config_1.default.calculationMoneyRound),
+            },
+        });
+    }
+    else if (amountToAdd < 0) {
+        const newAmount = (0, lodash_1.round)(isCurrencyExits.amount + amountToAdd, config_1.default.calculationMoneyRound);
+        console.log(newAmount, isCurrencyExits.amount + amountToAdd);
+        // if new amount is less then 0 then not allow
+        if (newAmount < 0) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'New currency cannot be negative');
+        }
+        result = yield prisma_1.default.currency.update({
+            where: {
+                ownById: id,
+            },
+            data: {
+                amount: newAmount,
+            },
+        });
+    }
+    else {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong');
+    }
     return result;
 });
 const deleteCurrency = (id) => __awaiter(void 0, void 0, void 0, function* () {
