@@ -28,7 +28,15 @@ const updateValidation = z.object({
       .optional(),
   }),
 });
+
+const sendQueryValidation = z.object({
+  body: z.object({
+    description: z.string({ required_error: 'description is required' }),
+    queryType: z.string({ required_error: 'queryType is required' }),
+  }),
+});
 export const UserValidation = {
   createValidation,
   updateValidation,
+  sendQueryValidation,
 };

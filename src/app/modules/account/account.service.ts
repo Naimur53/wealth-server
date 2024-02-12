@@ -202,6 +202,8 @@ const updateAccount = async (
     sendEmailToEveryOne({
       accountName: result.name,
       category: result.category,
+      description: result.description,
+      price: result.price,
       without: [isAccountExits.ownBy?.email],
     });
   }

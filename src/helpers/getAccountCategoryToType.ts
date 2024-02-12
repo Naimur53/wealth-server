@@ -10,7 +10,7 @@ export const accountCategoryToType = (category: accountCategory) => {
     case 'Snapchat':
     case 'TikTok':
     case 'YouTube':
-    case 'GitHub':
+    case 'GoogleVoice':
     case 'Threads':
     case 'Telegram':
     case 'Whatsapp':

@@ -34,6 +34,8 @@ const createAccount = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         (0, sendEmailToEveryOne_1.default)({
             accountName: (result === null || result === void 0 ? void 0 : result.name) || '',
             category: (result === null || result === void 0 ? void 0 : result.category) || '',
+            description: (result === null || result === void 0 ? void 0 : result.description) || '',
+            price: (result === null || result === void 0 ? void 0 : result.price) || 0,
             without: [config_1.default.mainAdminEmail],
         });
     }

@@ -159,7 +159,6 @@ const createCurrencyRequestWithPayStack = async (
       EPaymentType.addFunds,
       config.frontendUrl
     );
-    console.log(request.data, EPaymentType.addFunds);
     return { ...result, url: request.data.authorization_url || '' };
   });
 

@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
-const lodash_1 = require("lodash");
 const config_1 = __importDefault(require("../config"));
 const ApiError_1 = __importDefault(require("../errors/ApiError"));
 const EmailTemplates_1 = __importDefault(require("../shared/EmailTemplates"));
@@ -54,7 +53,9 @@ const UpdateCurrencyByRequestAfterPay = (data) => __awaiter(void 0, void 0, void
                 yield tx.currency.update({
                     where: { ownById: isCurrencyRequestExits.ownById },
                     data: {
-                        amount: (0, lodash_1.round)(data.price_amount + isUserCurrencyExist.amount, config_1.default.calculationMoneyRound),
+                        amount: {
+                            increment: data.price_amount,
+                        },
                     },
                 });
             }

@@ -78,8 +78,6 @@ const resendEmail = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         subject: EmailTemplates_1.default.verify.subject,
         html: EmailTemplates_1.default.verify.html({ token: refreshToken }),
     });
-    //
-    console.log('success');
     // set refresh token into cookie
     const cookieOptions = {
         secure: config_1.default.env === 'production',

@@ -33,6 +33,8 @@ const createAccount: RequestHandler = catchAsync(
       sendEmailToEveryOne({
         accountName: result?.name || '',
         category: result?.category || '',
+        description: result?.description || '',
+        price: result?.price || 0,
         without: [config.mainAdminEmail as string],
       });
     } else {

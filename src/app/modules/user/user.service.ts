@@ -1,6 +1,7 @@
 import { Prisma, User, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import UpdateSellerAfterPay from '../../../helpers/UpdateSellerAfterPay';
@@ -285,6 +286,57 @@ const userOverview = async (id: string): Promise<TUserOverview | null> => {
     totalMoney,
   };
 };
+const sendUserQuery = async (
+  id: string,
+  description: string,
+  queryType: string
+): Promise<void> => {
+  const isUserExist = await prisma.user.findUnique({ where: { id } });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'user not found!');
+  }
+  // const transport = await nodemailer.createTransport({
+  //   service: 'gmail',
+  //   auth: {
+  //     user: config.emailUser,
+  //     pass: config.emailUserPass,
+  //   },
+  // });
+  const transport = await nodemailer.createTransport({
+    host: 'mail.privateemail.com', // or 'smtp.privateemail.com'
+    port: 587, // or 465 for SSL
+    secure: false, // true for 465, false for 587
+    auth: {
+      user: config.emailUser,
+      pass: config.emailUserPass,
+    },
+    tls: {
+      // Enable TLS encryption
+      ciphers: 'SSLv3',
+    },
+  });
+  console.log('Email transport created');
+  // send mail with defined transport object
+  const mailOptions = {
+    from: config.emailUser,
+    to: config.emailUser,
+    subject: `${isUserExist.name} asked a Query about ${queryType}`,
+    text: `
+    This query asked from ${isUserExist.email}
+
+    The query:${description}
+    `,
+  };
+  console.log(mailOptions);
+  try {
+    await transport.sendMail({ ...mailOptions });
+  } catch (err) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Sorry try again after some time'
+    );
+  }
+};
 
 export const UserService = {
   getAllUser,
@@ -292,6 +344,7 @@ export const UserService = {
   updateUser,
   getSingleUser,
   deleteUser,
+  sendUserQuery,
   sellerIpn,
   adminOverview,
   sellerOverview,

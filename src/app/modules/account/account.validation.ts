@@ -26,7 +26,7 @@ const updateValidation = z.object({
     approvedForSale: z.nativeEnum(EApprovedForSale).optional(),
     isSold: z.boolean().optional(),
     ownById: z.string().optional(),
-    preview: z.string().optional(),
+    preview: z.string().nullable().optional(),
   }),
 });
 export const AccountValidation = {

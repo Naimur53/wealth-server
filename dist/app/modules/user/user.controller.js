@@ -114,6 +114,18 @@ const userOverview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
+const sendUserQuery = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const des = req.body.description;
+    const queryType = req.body.queryType;
+    yield user_service_1.UserService.sendUserQuery(user.userId, des, queryType);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'User fetched successfully!',
+        data: 'send',
+    });
+}));
 exports.UserController = {
     getAllUser,
     createUser,
@@ -124,4 +136,5 @@ exports.UserController = {
     adminOverview,
     sellerOverview,
     userOverview,
+    sendUserQuery,
 };

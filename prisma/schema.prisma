@@ -47,7 +47,7 @@ enum accountCategory {
   Snapchat
   TikTok
   YouTube
-  GitHub
+  GoogleVoice
   Threads
   Telegram
   Whatsapp
@@ -64,6 +64,10 @@ enum accountCategory {
   Nord
   Vpn911
   Other
+  Netflix
+Apple
+TrustWallet
+AmazonPrimeVideos
 }
 
 enum accountType {

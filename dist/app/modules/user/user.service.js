@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const UpdateSellerAfterPay_1 = __importDefault(require("../../../helpers/UpdateSellerAfterPay"));
@@ -264,12 +265,58 @@ const userOverview = (id) => __awaiter(void 0, void 0, void 0, function* () {
         totalMoney,
     };
 });
+const sendUserQuery = (id, description, queryType) => __awaiter(void 0, void 0, void 0, function* () {
+    const isUserExist = yield prisma_1.default.user.findUnique({ where: { id } });
+    if (!isUserExist) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'user not found!');
+    }
+    // const transport = await nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     user: config.emailUser,
+    //     pass: config.emailUserPass,
+    //   },
+    // });
+    const transport = yield nodemailer_1.default.createTransport({
+        host: 'mail.privateemail.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: config_1.default.emailUser,
+            pass: config_1.default.emailUserPass,
+        },
+        tls: {
+            // Enable TLS encryption
+            ciphers: 'SSLv3',
+        },
+    });
+    console.log('Email transport created');
+    // send mail with defined transport object
+    const mailOptions = {
+        from: config_1.default.emailUser,
+        to: config_1.default.emailUser,
+        subject: `${isUserExist.name} asked a Query about ${queryType}`,
+        text: `
+    This query asked from ${isUserExist.email}
+
+    The query:${description}
+    `,
+    };
+    console.log(mailOptions);
+    try {
+        yield transport.sendMail(Object.assign({}, mailOptions));
+    }
+    catch (err) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry try again after some time');
+    }
+});
 exports.UserService = {
     getAllUser,
     createUser,
     updateUser,
     getSingleUser,
     deleteUser,
+    sendUserQuery,
     sellerIpn,
     adminOverview,
     sellerOverview,

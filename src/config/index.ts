@@ -18,7 +18,7 @@ export default {
   },
   emailUserPass: process.env.EMAIL_USER_PASS,
   emailUser: process.env.EMAIL_USER,
-  mainAdminEmail: process.env.EMAIL_USER,
+  mainAdminEmail: process.env.MAIN_ADMIN_EMAIL,
   frontendUrl: process.env.FRONT_END_URL,
   sellerOneTimePayment: parseFloat(
     process.env.SELLER_ONE_TIME_PAYMENT as string
@@ -36,6 +36,7 @@ export default {
   accountSellPercentage: parseFloat(
     process.env.ACCOUNT_SELL_PERCENTAGE as string
   ),
+  dollarRate: parseFloat(process.env.DOLLAR_RATE as string),
   paystackPaymentApiKey: process.env.PAYSTACK_PAYMENT_API_KEY,
   nowPaymentApiKey: process.env.NOW_PAYMENT_API_KEY,
   nowPaymentInvoiceUrl: process.env.NOW_PAYMENT_INVOICE_URL,

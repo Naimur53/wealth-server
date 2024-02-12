@@ -125,10 +125,9 @@ const updateCurrency = async (
         ownById: id,
       },
       data: {
-        amount: round(
-          isCurrencyExits.amount + amountToAdd,
-          config.calculationMoneyRound
-        ),
+        amount: {
+          increment: amountToAdd,
+        },
       },
     });
   } else if (amountToAdd < 0) {
@@ -149,7 +148,9 @@ const updateCurrency = async (
         ownById: id,
       },
       data: {
-        amount: newAmount,
+        amount: {
+          decrement: Math.abs(amountToAdd),
+        },
       },
     });
   } else {

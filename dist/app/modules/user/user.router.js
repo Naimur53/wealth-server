@@ -16,6 +16,7 @@ router.get('/admin/overview', (0, auth_1.default)(client_1.UserRole.admin, clien
 router.get('/seller/overview', (0, auth_1.default)(client_1.UserRole.seller), user_controller_1.UserController.sellerOverview);
 router.get('/user/overview', (0, auth_1.default)(client_1.UserRole.user), user_controller_1.UserController.userOverview);
 router.post('/nowpayments-ipn', user_controller_1.UserController.sellerIpn);
+router.post('/send-query', (0, validateRequest_1.default)(user_validation_1.UserValidation.sendQueryValidation), (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.superAdmin, client_1.UserRole.user), user_controller_1.UserController.sendUserQuery);
 router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.seller, client_1.UserRole.user), user_controller_1.UserController.getSingleUser);
 router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.user, client_1.UserRole.seller, client_1.UserRole.superAdmin), (0, validateRequest_1.default)(user_validation_1.UserValidation.updateValidation), user_controller_1.UserController.updateUser);
 router.delete('/:id', (0, auth_1.default)(client_1.UserRole.superAdmin), user_controller_1.UserController.deleteUser);

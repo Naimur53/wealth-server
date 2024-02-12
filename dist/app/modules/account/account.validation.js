@@ -28,7 +28,7 @@ const updateValidation = zod_1.z.object({
         approvedForSale: zod_1.z.nativeEnum(client_1.EApprovedForSale).optional(),
         isSold: zod_1.z.boolean().optional(),
         ownById: zod_1.z.string().optional(),
-        preview: zod_1.z.string().optional(),
+        preview: zod_1.z.string().nullable().optional(),
     }),
 });
 exports.AccountValidation = {

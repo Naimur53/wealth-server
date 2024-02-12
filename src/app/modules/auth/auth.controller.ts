@@ -69,8 +69,6 @@ const resendEmail: RequestHandler = catchAsync(
         html: EmailTemplates.verify.html({ token: refreshToken as string }),
       }
     );
-    //
-    console.log('success');
     // set refresh token into cookie
     const cookieOptions = {
       secure: config.env === 'production',

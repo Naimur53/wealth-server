@@ -184,6 +184,8 @@ const updateAccount = (id, payload, { id: reqUserId, role }) => __awaiter(void 0
         (0, sendEmailToEveryOne_1.default)({
             accountName: result.name,
             category: result.category,
+            description: result.description,
+            price: result.price,
             without: [(_a = isAccountExits.ownBy) === null || _a === void 0 ? void 0 : _a.email],
         });
     }

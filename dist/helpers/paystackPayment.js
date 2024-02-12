@@ -24,7 +24,7 @@ const initiatePayment = (amount, email, reference, paymentType, callbackUrl) => 
         const response = yield axios_1.default.post('https://api.paystack.co/transaction/initialize', 
         // Paystack uses values in kobo (1 NGN = 100 kobo)
         {
-            amount: amount * 100 * 1450,
+            amount: amount * 100 * config_1.default.dollarRate,
             email,
             reference,
             callback_url: callbackUrl,

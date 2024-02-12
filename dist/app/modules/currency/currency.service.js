@@ -125,7 +125,9 @@ const updateCurrency = (id, payload) => __awaiter(void 0, void 0, void 0, functi
                 ownById: id,
             },
             data: {
-                amount: (0, lodash_1.round)(isCurrencyExits.amount + amountToAdd, config_1.default.calculationMoneyRound),
+                amount: {
+                    increment: amountToAdd,
+                },
             },
         });
     }
@@ -141,7 +143,9 @@ const updateCurrency = (id, payload) => __awaiter(void 0, void 0, void 0, functi
                 ownById: id,
             },
             data: {
-                amount: newAmount,
+                amount: {
+                    decrement: Math.abs(amountToAdd),
+                },
             },
         });
     }

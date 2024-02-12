@@ -1,6 +1,8 @@
 import { InvoiceReturn } from '@nowpaymentsio/nowpayments-api-js/src/actions/create-invoice';
 import axios from 'axios';
+import httpStatus from 'http-status';
 import config from '../config';
+import ApiError from '../errors/ApiError';
 
 const createNowPayInvoice = async (invoice: {
   price_amount: number;
@@ -16,24 +18,30 @@ const createNowPayInvoice = async (invoice: {
   const sandboxApiUrl = config.nowPaymentInvoiceUrl || '';
 
   console.log({ nowPaymentsApiKey, sandboxApiUrl });
-  const response = await axios.post(
-    sandboxApiUrl,
-    {
-      ...invoice,
-      ipn_callback_url: invoice.ipn_callback_url
-        ? config.baseServerUrl + invoice.ipn_callback_url
-        : undefined,
-      price_currency: 'USD',
-      pay_currency: 'BTC',
-    },
-    {
-      headers: {
-        'x-api-key': nowPaymentsApiKey,
-        'Content-Type': 'application/json',
+  try {
+    const response = await axios.post(
+      sandboxApiUrl,
+      {
+        ...invoice,
+        price_amount: invoice.price_amount,
+        ipn_callback_url: invoice.ipn_callback_url
+          ? config.baseServerUrl + invoice.ipn_callback_url
+          : undefined,
+        price_currency: 'USD',
+        // pay_currency: 'BTC',
       },
-    }
-  );
-  console.log(response.data);
-  return response.data;
+      {
+        headers: {
+          'x-api-key': nowPaymentsApiKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (err) {
+    console.log(err);
+    throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
+  }
 };
 export default createNowPayInvoice;

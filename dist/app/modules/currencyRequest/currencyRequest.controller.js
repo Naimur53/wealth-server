@@ -99,7 +99,7 @@ const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result.data,
     });
 }));
-const payStackWebHook = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const payStackWebHook = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const ipnData = req.body;
     console.log('webhook data call ', ipnData.data);
@@ -129,7 +129,7 @@ const payStackWebHook = (0, catchAsyncSemaphore_1.default)((req, res) => __await
         data: 'succes',
     });
 }));
-const getSingleCurrencyRequestIpn = (0, catchAsyncSemaphore_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getSingleCurrencyRequestIpn = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const ipnData = req.body;
     console.log('ipnData', ipnData);
     // eslint-disable-next-line no-unused-vars

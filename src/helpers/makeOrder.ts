@@ -1,78 +1,13 @@
-import { EApprovedForSale, Orders, Prisma, UserRole } from '@prisma/client';
+import { EApprovedForSale, Orders, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import { round } from 'lodash';
-import config from '../../../config';
-import ApiError from '../../../errors/ApiError';
-import { paginationHelpers } from '../../../helpers/paginationHelper';
-import sendEmail from '../../../helpers/sendEmail';
-import { IGenericResponse } from '../../../interfaces/common';
-import { IPaginationOptions } from '../../../interfaces/pagination';
-import EmailTemplates from '../../../shared/EmailTemplates';
-import prisma from '../../../shared/prisma';
-import { ordersSearchableFields } from './orders.constant';
-import { IOrdersFilters } from './orders.interface';
+import config from '../config';
+import ApiError from '../errors/ApiError';
+import EmailTemplates from '../shared/EmailTemplates';
+import prisma from '../shared/prisma';
+import sendEmail from './sendEmail';
 
-const getAllOrders = async (
-  filters: IOrdersFilters,
-  paginationOptions: IPaginationOptions
-): Promise<IGenericResponse<Orders[]>> => {
-  const { page, limit, skip } =
-    paginationHelpers.calculatePagination(paginationOptions);
-
-  const { searchTerm, ...filterData } = filters;
-
-  const andCondition = [];
-
-  if (searchTerm) {
-    const searchAbleFields = ordersSearchableFields.map(single => {
-      const query = {
-        [single]: {
-          contains: searchTerm,
-          mode: 'insensitive',
-        },
-      };
-      return query;
-    });
-    andCondition.push({
-      OR: searchAbleFields,
-    });
-  }
-  if (Object.keys(filters).length) {
-    andCondition.push({
-      AND: Object.keys(filterData).map(key => ({
-        [key]: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          equals: (filterData as any)[key],
-        },
-      })),
-    });
-  }
-
-  const whereConditions: Prisma.OrdersWhereInput =
-    andCondition.length > 0 ? { AND: andCondition } : {};
-
-  const result = await prisma.orders.findMany({
-    where: whereConditions,
-    skip,
-    take: limit,
-    orderBy:
-      paginationOptions.sortBy && paginationOptions.sortOrder
-        ? {
-            [paginationOptions.sortBy]: paginationOptions.sortOrder,
-          }
-        : {
-            createdAt: 'desc',
-          },
-  });
-  const total = await prisma.orders.count();
-  const output = {
-    data: result,
-    meta: { page, limit, total },
-  };
-  return output;
-};
-
-const createOrders = async (payload: Orders): Promise<Orders | null> => {
+const makeOrder = async (payload: Orders) => {
   console.log('makking ', payload);
   const isAccountExits = await prisma.account.findUnique({
     where: {
@@ -133,7 +68,6 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       Currency: { select: { amount: true, id: true } },
     },
   });
-  console.log('admin', isAdminExist, { email: config.mainAdminEmail });
   if (!isUserExist?.Currency?.id) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -143,8 +77,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
   const serviceCharge =
     (config.accountSellServiceCharge / 100) * isAccountExits.price;
   const amountToCutFromTheBuyer = serviceCharge + isAccountExits.price;
-
-  if (amountToCutFromTheBuyer > isUserExist.Currency.amount) {
+  if (amountToCutFromTheBuyer < isAccountExits.price) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       'Not enough currency left to by this account!'
@@ -153,13 +86,13 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
   if (!isSellerExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
   }
-  if (!isSellerExist?.Currency) {
+  if (!isSellerExist?.Currency?.amount) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       'something went wrong currency not found for this seller!'
     );
   }
-  if (!isAdminExist?.id) {
+  if (!isAdminExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'user not found!');
     // return
   }
@@ -170,43 +103,41 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     );
   }
   //
-  const sellerFee = (config.accountSellPercentage / 100) * isAccountExits.price;
-  const sellerReceive = isAccountExits.price - sellerFee;
-
-  // const newAmountForAdmin =
-  //   isSellerExist.role === UserRole.admin
-  //     ? round(
-  //         isAdminExist.Currency.amount + isAccountExits.price,
-  //         config.calculationMoneyRound
-  //       )
-  //     : round(
-  //         isAdminExist.Currency.amount + adminFee,
-  //         config.calculationMoneyRound
-  //       );
+  const adminFee = (config.accountSellPercentage / 100) * isAccountExits.price;
+  const sellerReceive = isAccountExits.price - adminFee;
+  const userAmount = round(
+    isUserExist.Currency.amount - amountToCutFromTheBuyer,
+    config.calculationMoneyRound
+  );
+  const sellerCAmount = round(
+    isSellerExist.Currency.amount + sellerReceive,
+    config.calculationMoneyRound
+  );
+  const newAmountForAdmin =
+    isSellerExist.role === UserRole.admin
+      ? round(
+          isAdminExist.Currency.amount + isAccountExits.price,
+          config.calculationMoneyRound
+        )
+      : round(
+          isAdminExist.Currency.amount + adminFee,
+          config.calculationMoneyRound
+        );
   const data = await prisma.$transaction(async tx => {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     const removeCurrencyFromUser = await tx.currency.update({
       where: { ownById: isUserExist.id },
       data: {
-        amount: {
-          decrement: amountToCutFromTheBuyer,
-        },
+        amount: userAmount,
       },
     });
     console.log('remove from user', removeCurrencyFromUser);
-    const isAdmin = isSellerExist.role === UserRole.admin;
-    const isSuperAdmin = isSellerExist.role === UserRole.superAdmin;
-    if (isAdmin || isSuperAdmin) {
+    if (isSellerExist.role === UserRole.admin) {
       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       const addCurrencyToAdmin = await tx.currency.update({
         where: { ownById: isAdminExist.id },
         data: {
-          amount: {
-            increment: round(
-              isAccountExits.price + serviceCharge,
-              config.calculationMoneyRound
-            ),
-          },
+          amount: newAmountForAdmin,
         },
       });
     } else {
@@ -214,19 +145,17 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       const addCurrencyToSeller = await tx.currency.update({
         where: { ownById: isAccountExits.ownById },
         data: {
-          amount: {
-            increment: sellerReceive,
-          },
+          amount: sellerCAmount,
         },
       });
       console.log('add to seller', addCurrencyToSeller);
+
+      console.log({ newAmountForAdmin });
       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       const addCurrencyToAdmin = await tx.currency.update({
         where: { ownById: isAdminExist.id },
         data: {
-          amount: {
-            increment: round(sellerFee + serviceCharge),
-          },
+          amount: newAmountForAdmin,
         },
       });
     }
@@ -268,61 +197,4 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
   });
   return data;
 };
-
-const getSingleOrders = async (id: string): Promise<Orders | null> => {
-  const result = await prisma.orders.findUnique({
-    where: {
-      id,
-    },
-  });
-  return result;
-};
-const getMyOrders = async (id: string): Promise<Orders[] | null> => {
-  console.log({ id });
-  const result = await prisma.orders.findMany({
-    where: {
-      orderById: id,
-    },
-    include: {
-      account: {
-        include: {
-          ownBy: true,
-        },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  return result;
-};
-
-const updateOrders = async (
-  id: string,
-  payload: Partial<Orders>
-): Promise<Orders | null> => {
-  const result = await prisma.orders.update({
-    where: {
-      id,
-    },
-    data: payload,
-  });
-  return result;
-};
-
-const deleteOrders = async (id: string): Promise<Orders | null> => {
-  const result = await prisma.orders.delete({
-    where: { id },
-  });
-  if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Orders not found!');
-  }
-  return result;
-};
-
-export const OrdersService = {
-  getAllOrders,
-  createOrders,
-  updateOrders,
-  getSingleOrders,
-  deleteOrders,
-  getMyOrders,
-};
+export default makeOrder;

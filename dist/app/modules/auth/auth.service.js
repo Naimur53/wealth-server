@@ -114,7 +114,7 @@ const createUser = (user, paymentWithPaystack) => __awaiter(void 0, void 0, void
         newUser = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             let role = user.role === client_1.UserRole.seller ? client_1.UserRole.seller : client_1.UserRole.user;
             //gard for making super admin
-            if ((isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.email) === config_1.default.mainAdminEmail) {
+            if (user.email === config_1.default.mainAdminEmail) {
                 role = client_1.UserRole.superAdmin;
             }
             const newUserInfo = yield tx.user.create({

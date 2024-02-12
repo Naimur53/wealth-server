@@ -140,7 +140,6 @@ const createCurrencyRequestWithPayStack = (payload) => __awaiter(void 0, void 0,
         //     // additionalInfo: 'its adidinlal ',
         //   });
         const request = yield (0, paystackPayment_1.initiatePayment)(result.amount, result.ownBy.email, result.id, common_1.EPaymentType.addFunds, config_1.default.frontendUrl);
-        console.log(request.data, common_1.EPaymentType.addFunds);
         return Object.assign(Object.assign({}, result), { url: request.data.authorization_url || '' });
     }));
     return newCurrencyRequest;

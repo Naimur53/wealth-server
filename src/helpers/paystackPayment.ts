@@ -19,7 +19,7 @@ export const initiatePayment = async (
       'https://api.paystack.co/transaction/initialize',
       // Paystack uses values in kobo (1 NGN = 100 kobo)
       {
-        amount: amount * 100 * 1450,
+        amount: amount * 100 * config.dollarRate,
         email,
         reference,
         callback_url: callbackUrl,

@@ -10,84 +10,116 @@ const EmailTemplates = {
         text: undefined,
         html: (data) => {
             return `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Email Template</title>
+          <title>Email</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
           <style>
-            body {
-              background-color: #ffffff;
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-            }
-            .container {
-              margin: 0 auto;
-              padding: 20px 0 48px;
-            }
-            .logo {
-              margin: 0 auto;
-            }
-            .paragraph {
-              font-size: 16px;
-              line-height: 26px;
-            }
-            .btn-container {
-              text-align: center;
-              color:#fff;
-            }
-            .button {
-              padding: 12px 12px;
-              background-color: #2563eb;
-              border-radius: 3px;
-              color: #fff;
-              font-size: 16px;
-              text-decoration: none;
-              text-align: center;
-              display: block;
-            }
-            .hr {
-              border-color: #cccccc;
-              margin: 20px 0;
-            }
-            .footer {
-              color: #8898aa;
-              font-size: 12px;
-            }
-            .logo-wrap{
-                display:flex;
-                justify-content:center;
-            }
+              body {
+                  margin: 0;
+                  padding: 0;
+                  background-color: #f4f4f4;
+                  color: #000 !important;
+                  font-family: Arial, sans-serif;
+              }
+      
+              .email-box {
+                  background-color: white;
+                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                  padding: 20px;
+                  max-width: 400px;
+                  width: 100%;
+                  margin: 0 auto; 
+              }
+      
+               /* mobile screens */
+               @media (max-width: 768px) {
+                  .email-box {
+                      max-width: 300px; 
+                  }
+              }
+      
+              .title, p {
+                  text-align: center;
+              }
+      
+              .social-icons {
+                  text-align: center;
+                  margin: 20px 0; 
+                  color: white;
+              }
+      
+              .social-icons span {
+                  margin: 0 10px; 
+                  display: inline-block;
+                  background-color: rgb(255, 85, 0);
+                  border-radius: 50%;
+                  padding: 10px; 
+              }
+      
+              .social-icons span a{
+                  color: #fff;
+                  text-decoration: none;
+              }
+      
+              .account-name {
+                  font-weight: 700;
+                  font-size: 20px;
+                  padding-bottom: 10px;
+              }
+      
+              .btn {
+                  display: block;
+                  width: fit-content;
+                  padding: 12px 40px;
+                  margin: 30px auto;
+                  background-color: transparent;
+                  color: rgb(255, 85, 0);
+                  border-radius: 10px;
+                  outline: none;
+                  border: 1px solid rgb(255, 85, 0);
+                  text-decoration: none;
+              }
+              
+              .end {
+                  font-size: 14px;
+                  color: grey !important;
+                  padding-top: 20px;
+                  text-align: center;
+              }
           </style>
-        </head>
-        <body>
+      </head>
+      <body>
           <div class="container">
-            <div class="logo-wrap">
-            <img src="${config_1.default.mainLogo}" style="display:block" width="150" height="150" title='logo' alt="acctbazaar" class="logo"/>
-            </div>
-            src="${config_1.default.mainLogo}"
-    
-            <p class="paragraph">Hi there,</p>
-            <p class="paragraph">
-              Welcome to acctbazaar, the marketplace for
-              high quality digital goods. Use the button below
-              to Login.
-            </p>
-            <div class="btn-container">
-              <a href="${config_1.default.frontendUrl}/verify?token=${data === null || data === void 0 ? void 0 : data.token}" style="color:#fff" class="button">Verify</a>
-            </div>
-            <p class="paragraph">
-              Best,<br>
-              The acctbazaar team
-            </p>
-            <hr class="hr">
-            <p class="footer">
-              If you did not request this email, you can
-              safely ignore it.
-            </p>
+              <div class="email-box">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
+                      <tr>
+                          <td style="text-align: center;">
+                              <img src="${config_1.default.mainLogo}" width="50" height="50" alt="" style="vertical-align: middle; margin-right: -15px;">
+                              <h3 style="display: inline; margin: 0; padding-left: 10px;">Acctbazaar</h3>
+                          </td>
+                      </tr>
+                  </table>
+                  <h2 class="title">Verify Your Account</h2> <br>
+                  <h3>Hi there,</h3>
+                  <p>Welcome to Acctbazaar, Your Premier P2P Marketplace for Social Media Accounts.</p>
+                  <div class="email-box-content">
+                  <a href="${config_1.default.frontendUrl}/verify?token=${data === null || data === void 0 ? void 0 : data.token}" class="btn">Verify</a>
+                      <p class="end">
+                          This is an automatically generated email please do not reply to this email. 
+                          If you face any issues, please contact us at support@acctbazaar.com
+                      </p>
+                     
+                      <p class="end">Copyright &copy; 2024 Acctbazaar Ltd.</p>
+                  </div>
+              </div>
           </div>
-        </body>
-        </html>`;
+      </body>
+      </html>
+        `;
         },
     },
     requestForCurrencyToAdmin: {
@@ -425,156 +457,242 @@ const EmailTemplates = {
     <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Requested</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #000 !important;
+            font-family: Arial, sans-serif;
+        }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+        .email-box {
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 400px; /* Default max-width for larger devices */
+            width: 100%;
+            margin: 0 auto;
+        }
 
-    .header {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
+        /* Adjust styles for mobile screens */
+        @media (max-width: 768px) {
+            .email-box {
+                max-width: 300px; /* Smaller max-width for mobile screens */
+            }
+        }
 
-    .content {
-      text-align: center;
-      margin-top: 2rem;
-    }
+        .title, p {
+            text-align: center;
+        }
 
-    .seller-info {
-      margin-top: 5px;
-    }
+        .box-row {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
 
-    .transaction-id {
-      font-weight: bold;
-    }
+        .account-name {
+            font-weight: 700;
+            font-size: 20px;
+            padding-bottom: 10px;
+        }
 
-    .visit-site-button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 8px 20px;
-      background-color: #2563eb;
-      color: #fff;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-  </style>
+        .social-icons {
+            text-align: center;
+            margin: 20px 0; 
+            color: white;
+        }
+
+        .social-icons span {
+            margin: 0 10px; 
+            display: inline-block;
+            background-color: rgb(255, 85, 0);
+            border-radius: 50%;
+            padding: 10px; 
+        }
+
+        .social-icons span a{
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .btn {
+            display: block;
+            width: fit-content;
+            padding: 12px 40px;
+            margin: 30px auto;
+            background-color: transparent;
+            color: rgb(255, 85, 0);
+            border-radius: 10px;
+            outline: none;
+            border: 1px solid rgb(255, 85, 0);
+            text-decoration: none;
+        }
+        
+        .end {
+            font-size: 14px;
+            color: grey !important;
+            padding-top: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Now ${data.accountName} account is your's </h1>
+    <div class="container">
+        <div class="email-box">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
+                <tr>
+                    <td style="text-align: center;">
+                        <img src="${config_1.default.mainLogo}" width="50" height="50" alt="" style="vertical-align: middle; margin-right: -15px;">
+                        <h3 style="display: inline; margin: 0; padding-left: 10px;">Acctbazaar</h3>
+                    </td>
+                </tr>
+            </table>
+            <h2 class="title">Congratulations!</h2>
+            <p>You successfully purchased ${data.accountName}.</p>
+            <div class="email-box-content">
+                <a href="${config_1.default.frontendUrl}/dashboard/myOrders" class="btn">View</a>
+                <p class="end">
+                    This is an automatically generated email please do not reply to this email. 
+                    If you face any issues, please contact us at support@acctbazaar.com
+                </p>
+                <hr>
+               
+                <p class="end">Copyright &copy; 2024 Acctbazaar Ltd.</p>
+            </div>
+        </div>
     </div>
-    <div class="content">
-      <p class="seller-info">
-      you have successfully purchased ${data.accountName}
-      <span style="font-weight:bold">
-      <br/>
-      Username: ${data.accountUserName}
-      <br/>
-      Password: ${data.accountPassword}
-      </span>
-      </p> 
-      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
-    </div>
-  </div>
 </body>
 </html>
-
     `,
     },
     newAccountAdded: {
         subject: 'New account added on Acctbazaar ',
+        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
         html: (data) => `
     <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Requested</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .header {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .content {
-      text-align: center;
-      margin-top: 2rem;
-    }
-
-    .seller-info {
-      margin-top: 5px;
-    }
-
-    .transaction-id {
-      font-weight: bold;
-    }
-
-    .visit-site-button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 8px 20px;
-      background-color: #2563eb;
-      color: #fff;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>New ${data.category} account added on Acctbazaar </h1>
-    </div>
-    <div class="content">
-      <p class="seller-info">
-      Account name: <span style="font-weight:bold"> ${data.accountName} </span> 
-      <br/>
-      
-      </p> 
-      <a href="${config_1.default.frontendUrl}" style="color:#fff" class="visit-site-button">Visit site</a>
-    </div>
-  </div>
-</body>
-</html>
-
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f4;
+                color: #000 !important;
+                font-family: Arial, sans-serif;
+            }
+    
+            .email-box {
+                background-color: white;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                padding: 20px;
+                max-width: 400px;
+                width: 100%;
+                margin: 0 auto; 
+                /* border: 1px solid  #000; */
+            }
+    
+             /* mobile screens */
+             @media (max-width: 768px) {
+                .email-box {
+                    max-width: 300px; 
+                }
+            }
+    
+            .title, p {
+                text-align: center;
+            }
+    
+            .box-row {
+                background-color: #f0f0f0;
+                padding: 10px;
+                border-radius: 10px;
+                margin-top: 20px;
+            }
+    
+            .account-name {
+                font-weight: 700;
+                font-size: 20px;
+                padding-bottom: 10px;
+            }
+    
+            .social-icons {
+                text-align: center;
+                margin: 20px 0; 
+                color: white;
+            }
+    
+            .social-icons span {
+                margin: 0 10px; 
+                display: inline-block;
+                background-color: rgb(255, 85, 0);
+                border-radius: 50%;
+                padding: 10px; 
+            }
+    
+            .social-icons span a{
+                color: #fff;
+                text-decoration: none;
+            }
+    
+    
+            .btn {
+                display: block;
+                width: fit-content;
+                padding: 12px 40px;
+                margin: 30px auto;
+                background-color: transparent;
+                color: rgb(255, 85, 0);
+                border-radius: 10px;
+                outline: none;
+                border: 1px solid rgb(255, 85, 0);
+                text-decoration: none; /* Use this for <a> based buttons */
+            }
+            
+            .end {
+                font-size: 14px;
+                color: grey !important;
+                padding-top: 20px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="email-box">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="${config_1.default.mainLogo}" width="50" height="50" alt="" style="vertical-align: middle; margin-right: -15px;">
+                            <h3 style="display: inline; margin: 0; padding-left: 10px;">Acctbazaar</h3>
+                        </td>
+                    </tr>
+                </table>
+                <h2 class="title">Discover Latest Accounts</h2>
+                <p>Dive into our latest treasures! Sign into your account and discover what's new.</p>
+                <div class="email-box-content">
+                    <a href="${config_1.default.frontendUrl}" class="btn">View</a>
+                    <p class="end">
+                        This is an automatically generated email please do not reply to this email. 
+                        If you face any issues, please contact us at support@acctbazaar.com
+                    </p>
+                    <hr> 
+                    <p class="end">Copyright &copy; 2024 Acctbazaar Ltd.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
     `,
     },
     currencyRequestPaymentSuccessButFailed: {

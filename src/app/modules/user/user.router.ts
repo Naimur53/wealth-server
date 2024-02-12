@@ -24,6 +24,12 @@ router.get(
 );
 router.get('/user/overview', auth(UserRole.user), UserController.userOverview);
 router.post('/nowpayments-ipn', UserController.sellerIpn);
+router.post(
+  '/send-query',
+  validateRequest(UserValidation.sendQueryValidation),
+  auth(UserRole.admin, UserRole.seller, UserRole.superAdmin, UserRole.user),
+  UserController.sendUserQuery
+);
 router.get(
   '/:id',
   auth(UserRole.admin, UserRole.seller, UserRole.user),

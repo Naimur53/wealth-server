@@ -238,22 +238,18 @@ const updateWithdrawalRequest = async (
 
       // give few percentage to admin
 
-      const currentAdminCurrency = isAdminExits.Currency.amount;
-
       const amountToWithDraw = isWithdrawalRequestExits.amount;
 
       const adminFee = (config.withdrawalPercentage / 100) * amountToWithDraw;
-      const roundedAdminFee = round(adminFee, 3);
-      const roundedAdminCurrency = round(
-        currentAdminCurrency + roundedAdminFee,
-        config.calculationMoneyRound
-      );
+      const roundedAdminFee = round(adminFee, config.calculationMoneyRound);
 
       // give money to admin
       await tx.currency.update({
         where: { ownById: isAdminExits.id },
         data: {
-          amount: roundedAdminCurrency,
+          amount: {
+            increment: roundedAdminFee,
+          },
         },
       });
 
@@ -275,15 +271,14 @@ const updateWithdrawalRequest = async (
         throw new ApiError(httpStatus.BAD_REQUEST, 'User currency not found!');
       }
 
-      const totalMoney = round(
-        isUserCurrencyExist.amount + isWithdrawalRequestExits.amount,
-        config.calculationMoneyRound
-      );
-
       // update user money
       await tx.currency.update({
         where: { ownById: isUserCurrencyExist.ownById },
-        data: { amount: totalMoney },
+        data: {
+          amount: {
+            increment: isWithdrawalRequestExits.amount,
+          },
+        },
       });
       return await tx.withdrawalRequest.update({
         where: {
@@ -322,15 +317,10 @@ const deleteWithdrawalRequest = async (
         throw new ApiError(httpStatus.BAD_REQUEST, 'User currency not found!');
       }
 
-      const totalMoney = round(
-        isUserCurrencyExist.amount + isWithdrawalRequestExits.amount,
-        config.calculationMoneyRound
-      );
-
       // update user money
       await tx.currency.update({
         where: { ownById: isUserCurrencyExist.ownById },
-        data: { amount: totalMoney },
+        data: { amount: { increment: isWithdrawalRequestExits.amount } },
       });
       return await tx.withdrawalRequest.delete({
         where: { id },

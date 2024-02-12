@@ -142,6 +142,22 @@ const userOverview: RequestHandler = catchAsync(
   }
 );
 
+const sendUserQuery: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as JwtPayload;
+    const des = req.body.description;
+    const queryType = req.body.queryType;
+    await UserService.sendUserQuery(user.userId, des, queryType);
+
+    sendResponse<string>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User fetched successfully!',
+      data: 'send',
+    });
+  }
+);
+
 export const UserController = {
   getAllUser,
   createUser,
@@ -152,4 +168,5 @@ export const UserController = {
   adminOverview,
   sellerOverview,
   userOverview,
+  sendUserQuery,
 };

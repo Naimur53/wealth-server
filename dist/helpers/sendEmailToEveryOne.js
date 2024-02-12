@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const EmailTemplates_1 = __importDefault(require("../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../shared/prisma"));
 const sendEmail_1 = __importDefault(require("./sendEmail"));
-const sendEmailToEveryOne = ({ accountName, category, without, }) => __awaiter(void 0, void 0, void 0, function* () {
+const sendEmailToEveryOne = ({ accountName, category, description, price, without, }) => __awaiter(void 0, void 0, void 0, function* () {
     const allEmail = yield prisma_1.default.user.findMany({
         where: {
             AND: [
@@ -36,7 +36,12 @@ const sendEmailToEveryOne = ({ accountName, category, without, }) => __awaiter(v
     const allEmailString = allEmail.map(single => single.email);
     (0, sendEmail_1.default)({ to: 'da', multi: allEmailString }, {
         subject: EmailTemplates_1.default.newAccountAdded.subject,
-        html: EmailTemplates_1.default.newAccountAdded.html({ accountName, category }),
+        html: EmailTemplates_1.default.newAccountAdded.html({
+            accountName,
+            category,
+            description,
+            price,
+        }),
     });
 });
 exports.default = sendEmailToEveryOne;

@@ -116,7 +116,7 @@ const createUser = async (
       let role: UserRole =
         user.role === UserRole.seller ? UserRole.seller : UserRole.user;
       //gard for making super admin
-      if (isUserExist?.email === config.mainAdminEmail) {
+      if (user.email === config.mainAdminEmail) {
         role = UserRole.superAdmin;
       }
 

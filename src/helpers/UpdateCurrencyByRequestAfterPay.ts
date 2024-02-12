@@ -1,6 +1,5 @@
 import { EStatusOfCurrencyRequest } from '@prisma/client';
 import httpStatus from 'http-status';
-import { round } from 'lodash';
 import config from '../config';
 import ApiError from '../errors/ApiError';
 import EmailTemplates from '../shared/EmailTemplates';
@@ -45,10 +44,9 @@ const UpdateCurrencyByRequestAfterPay = async (data: {
         await tx.currency.update({
           where: { ownById: isCurrencyRequestExits.ownById },
           data: {
-            amount: round(
-              data.price_amount + isUserCurrencyExist.amount,
-              config.calculationMoneyRound
-            ),
+            amount: {
+              increment: data.price_amount,
+            },
           },
         });
       }

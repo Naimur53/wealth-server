@@ -5,13 +5,12 @@ import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
-import catchAsyncSemaphore from '../../../shared/catchAsyncSemaphore';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
 import { ordersFilterAbleFields } from './orders.constant';
 import { OrdersService } from './orders.service';
 
-const createOrders: RequestHandler = catchAsyncSemaphore(
+const createOrders: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const OrdersData = req.body;
     const user = req.user as JwtPayload;

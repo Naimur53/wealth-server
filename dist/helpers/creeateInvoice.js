@@ -13,22 +13,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
+const http_status_1 = __importDefault(require("http-status"));
 const config_1 = __importDefault(require("../config"));
+const ApiError_1 = __importDefault(require("../errors/ApiError"));
 const createNowPayInvoice = (invoice) => __awaiter(void 0, void 0, void 0, function* () {
     const nowPaymentsApiKey = config_1.default.nowPaymentApiKey || ''; // Use your sandbox API key
     console.log(invoice);
     // Use the sandbox API URL
     const sandboxApiUrl = config_1.default.nowPaymentInvoiceUrl || '';
     console.log({ nowPaymentsApiKey, sandboxApiUrl });
-    const response = yield axios_1.default.post(sandboxApiUrl, Object.assign(Object.assign({}, invoice), { ipn_callback_url: invoice.ipn_callback_url
-            ? config_1.default.baseServerUrl + invoice.ipn_callback_url
-            : undefined, price_currency: 'USD', pay_currency: 'BTC' }), {
-        headers: {
-            'x-api-key': nowPaymentsApiKey,
-            'Content-Type': 'application/json',
-        },
-    });
-    console.log(response.data);
-    return response.data;
+    try {
+        const response = yield axios_1.default.post(sandboxApiUrl, Object.assign(Object.assign({}, invoice), { price_amount: invoice.price_amount, ipn_callback_url: invoice.ipn_callback_url
+                ? config_1.default.baseServerUrl + invoice.ipn_callback_url
+                : undefined, price_currency: 'USD' }), {
+            headers: {
+                'x-api-key': nowPaymentsApiKey,
+                'Content-Type': 'application/json',
+            },
+        });
+        console.log(response.data);
+        return response.data;
+    }
+    catch (err) {
+        console.log(err);
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong');
+    }
 });
 exports.default = createNowPayInvoice;

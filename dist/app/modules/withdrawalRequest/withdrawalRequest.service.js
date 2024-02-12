@@ -198,16 +198,16 @@ const updateWithdrawalRequest = (id, payload) => __awaiter(void 0, void 0, void 
                 throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Admin not found or admin currency not found');
             }
             // give few percentage to admin
-            const currentAdminCurrency = isAdminExits.Currency.amount;
             const amountToWithDraw = isWithdrawalRequestExits.amount;
             const adminFee = (config_1.default.withdrawalPercentage / 100) * amountToWithDraw;
-            const roundedAdminFee = (0, lodash_1.round)(adminFee, 3);
-            const roundedAdminCurrency = (0, lodash_1.round)(currentAdminCurrency + roundedAdminFee, config_1.default.calculationMoneyRound);
+            const roundedAdminFee = (0, lodash_1.round)(adminFee, config_1.default.calculationMoneyRound);
             // give money to admin
             yield tx.currency.update({
                 where: { ownById: isAdminExits.id },
                 data: {
-                    amount: roundedAdminCurrency,
+                    amount: {
+                        increment: roundedAdminFee,
+                    },
                 },
             });
             return yield tx.withdrawalRequest.update({
@@ -228,11 +228,14 @@ const updateWithdrawalRequest = (id, payload) => __awaiter(void 0, void 0, void 
             if (!isUserCurrencyExist) {
                 throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User currency not found!');
             }
-            const totalMoney = (0, lodash_1.round)(isUserCurrencyExist.amount + isWithdrawalRequestExits.amount, config_1.default.calculationMoneyRound);
             // update user money
             yield tx.currency.update({
                 where: { ownById: isUserCurrencyExist.ownById },
-                data: { amount: totalMoney },
+                data: {
+                    amount: {
+                        increment: isWithdrawalRequestExits.amount,
+                    },
+                },
             });
             return yield tx.withdrawalRequest.update({
                 where: {
@@ -262,11 +265,10 @@ const deleteWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, functi
             if (!isUserCurrencyExist) {
                 throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User currency not found!');
             }
-            const totalMoney = (0, lodash_1.round)(isUserCurrencyExist.amount + isWithdrawalRequestExits.amount, config_1.default.calculationMoneyRound);
             // update user money
             yield tx.currency.update({
                 where: { ownById: isUserCurrencyExist.ownById },
-                data: { amount: totalMoney },
+                data: { amount: { increment: isWithdrawalRequestExits.amount } },
             });
             return yield tx.withdrawalRequest.delete({
                 where: { id },

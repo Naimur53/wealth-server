@@ -124,7 +124,7 @@ const getAllCurrencyRequest = catchAsync(
   }
 );
 
-const payStackWebHook: RequestHandler = catchAsyncSemaphore(
+const payStackWebHook: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
     console.log('webhook data call ', ipnData.data);
@@ -157,7 +157,7 @@ const payStackWebHook: RequestHandler = catchAsyncSemaphore(
     });
   }
 );
-const getSingleCurrencyRequestIpn: RequestHandler = catchAsyncSemaphore(
+const getSingleCurrencyRequestIpn: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
     console.log('ipnData', ipnData);
