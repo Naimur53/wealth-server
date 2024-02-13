@@ -22,7 +22,6 @@ const prisma_1 = __importDefault(require("../shared/prisma"));
 const sendEmail_1 = __importDefault(require("./sendEmail"));
 const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
-    console.log('makking ', payload);
     const isAccountExits = yield prisma_1.default.account.findUnique({
         where: {
             id: payload.accountId,
@@ -62,7 +61,6 @@ const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
             Currency: { select: { amount: true, id: true } },
         },
     });
-    console.log('seller', isSellerExist);
     // the only 10 percent will receive by admin and expect the 10 percent seller will receive
     // get admin info
     const isAdminExist = yield prisma_1.default.user.findFirst({
@@ -110,7 +108,6 @@ const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
                 amount: userAmount,
             },
         });
-        console.log('remove from user', removeCurrencyFromUser);
         if (isSellerExist.role === client_1.UserRole.admin) {
             // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
             const addCurrencyToAdmin = yield tx.currency.update({
@@ -128,8 +125,6 @@ const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
                     amount: sellerCAmount,
                 },
             });
-            console.log('add to seller', addCurrencyToSeller);
-            console.log({ newAmountForAdmin });
             // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
             const addCurrencyToAdmin = yield tx.currency.update({
                 where: { ownById: isAdminExist.id },
@@ -144,7 +139,6 @@ const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
             where: { id: payload.accountId },
             data: { isSold: true },
         });
-        console.log({ payload });
         const newOrders = yield tx.orders.create({
             data: payload,
         });
@@ -153,7 +147,7 @@ const makeOrder = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         }
         return newOrders;
     }));
-    (0, sendEmail_1.default)({ to: isUserExist.email }, {
+    yield (0, sendEmail_1.default)({ to: isUserExist.email }, {
         subject: EmailTemplates_1.default.orderSuccessful.subject,
         html: EmailTemplates_1.default.orderSuccessful.html({
             accountName: isAccountExits.name,

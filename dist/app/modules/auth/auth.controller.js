@@ -131,7 +131,6 @@ const verifySignupToken = (0, catchAsync_1.default)((req, res) => __awaiter(void
     if (!token) {
         new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Token not found');
     }
-    console.log(token);
     const result = yield auth_service_1.AuthService.verifySignupToken(token);
     // set refresh token into cookie
     const cookieOptions = {

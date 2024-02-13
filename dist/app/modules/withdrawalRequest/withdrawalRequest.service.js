@@ -35,7 +35,6 @@ const withdrawalRequest_constant_1 = require("./withdrawalRequest.constant");
 const getAllWithdrawalRequest = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
     const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
-    console.log(filterData);
     const andCondition = [];
     if (searchTerm) {
         const searchAbleFields = withdrawalRequest_constant_1.withdrawalRequestSearchableFields.map(single => {
@@ -252,7 +251,6 @@ const deleteWithdrawalRequest = (id) => __awaiter(void 0, void 0, void 0, functi
     const isWithdrawalRequestExits = yield prisma_1.default.withdrawalRequest.findUnique({
         where: { id },
     });
-    console.log(isWithdrawalRequestExits, id);
     if (!isWithdrawalRequestExits) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Not found!');
     }

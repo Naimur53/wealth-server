@@ -22,7 +22,6 @@ const getAllWithdrawalRequest = async (
     paginationHelpers.calculatePagination(paginationOptions);
 
   const { searchTerm, ...filterData } = filters;
-  console.log(filterData);
   const andCondition = [];
 
   if (searchTerm) {
@@ -301,7 +300,6 @@ const deleteWithdrawalRequest = async (
   const isWithdrawalRequestExits = await prisma.withdrawalRequest.findUnique({
     where: { id },
   });
-  console.log(isWithdrawalRequestExits, id);
 
   if (!isWithdrawalRequestExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Not found!');

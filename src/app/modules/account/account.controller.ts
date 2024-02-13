@@ -3,10 +3,8 @@ import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
-import config from '../../../config';
 import { paginationFields } from '../../../constants/pagination';
 import { accountCategoryToType } from '../../../helpers/getAccountCategoryToType';
-import sendEmailToEveryOne from '../../../helpers/sendEmailToEveryOne';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -30,13 +28,13 @@ const createAccount: RequestHandler = catchAsync(
         accountType,
       });
 
-      sendEmailToEveryOne({
-        accountName: result?.name || '',
-        category: result?.category || '',
-        description: result?.description || '',
-        price: result?.price || 0,
-        without: [config.mainAdminEmail as string],
-      });
+      // await sendEmailToEveryOne({
+      //   accountName: result?.name || '',
+      //   category: result?.category || '',
+      //   description: result?.description || '',
+      //   price: result?.price || 0,
+      //   without: [config.mainAdminEmail as string],
+      // });
     } else {
       result = await AccountService.createAccount({
         ...AccountData,
@@ -67,7 +65,11 @@ const getAllAccount = catchAsync(async (req: Request, res: Response) => {
   sendResponse<
     Omit<
       Account,
-      'username' | 'password' | 'additionalEmail' | 'additionalPassword'
+      | 'username'
+      | 'password'
+      | 'additionalEmail'
+      | 'additionalPassword'
+      | 'additionalDescription'
     >[]
   >(res, {
     statusCode: httpStatus.OK,

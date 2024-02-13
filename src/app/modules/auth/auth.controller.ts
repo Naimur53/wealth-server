@@ -59,7 +59,6 @@ const createUser: RequestHandler = catchAsync(
 const resendEmail: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.params;
-
     const output = await AuthService.resendEmail(email || '');
     const { refreshToken, ...result } = output;
     await sendEmail(
@@ -133,7 +132,6 @@ const verifySignupToken = catchAsync(async (req: Request, res: Response) => {
   if (!token) {
     new ApiError(httpStatus.BAD_REQUEST, 'Token not found');
   }
-  console.log(token);
   const result = await AuthService.verifySignupToken(token as string);
 
   // set refresh token into cookie

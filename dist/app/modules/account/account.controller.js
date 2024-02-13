@@ -15,10 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AccountController = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
-const config_1 = __importDefault(require("../../../config"));
 const pagination_1 = require("../../../constants/pagination");
 const getAccountCategoryToType_1 = require("../../../helpers/getAccountCategoryToType");
-const sendEmailToEveryOne_1 = __importDefault(require("../../../helpers/sendEmailToEveryOne"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
@@ -31,13 +29,13 @@ const createAccount = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     const accountType = (0, getAccountCategoryToType_1.accountCategoryToType)(AccountData.category);
     if (user.role === client_1.UserRole.admin || user.role === client_1.UserRole.superAdmin) {
         result = yield account_service_1.AccountService.createAccount(Object.assign(Object.assign({}, AccountData), { ownById: user.userId, approvedForSale: client_1.EApprovedForSale.approved, accountType }));
-        (0, sendEmailToEveryOne_1.default)({
-            accountName: (result === null || result === void 0 ? void 0 : result.name) || '',
-            category: (result === null || result === void 0 ? void 0 : result.category) || '',
-            description: (result === null || result === void 0 ? void 0 : result.description) || '',
-            price: (result === null || result === void 0 ? void 0 : result.price) || 0,
-            without: [config_1.default.mainAdminEmail],
-        });
+        // await sendEmailToEveryOne({
+        //   accountName: result?.name || '',
+        //   category: result?.category || '',
+        //   description: result?.description || '',
+        //   price: result?.price || 0,
+        //   without: [config.mainAdminEmail as string],
+        // });
     }
     else {
         result = yield account_service_1.AccountService.createAccount(Object.assign(Object.assign({}, AccountData), { ownById: user.userId, approvedForSale: client_1.EApprovedForSale.pending, accountType }));

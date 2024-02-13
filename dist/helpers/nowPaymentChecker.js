@@ -21,7 +21,6 @@ const nowPaymentChecker = (payment_id) => __awaiter(void 0, void 0, void 0, func
     const defaultUrl = config_1.default.nowPaymentInvoiceUrl || '';
     const url = defaultUrl.replace('/invoice', '/payment');
     const outputUrl = url + '/' + payment_id;
-    console.log(outputUrl);
     try {
         const ouputof = yield axios_1.default.get(outputUrl, {
             headers: {
@@ -29,7 +28,6 @@ const nowPaymentChecker = (payment_id) => __awaiter(void 0, void 0, void 0, func
                 'Content-Type': 'application/json',
             },
         });
-        console.log('outputof', ouputof.data);
     }
     catch (err) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Something went wrong');

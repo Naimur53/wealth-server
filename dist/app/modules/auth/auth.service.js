@@ -177,7 +177,6 @@ const createUser = (user, paymentWithPaystack) => __awaiter(void 0, void 0, void
 });
 const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { email: givenEmail, password } = payload;
-    console.log(givenEmail);
     const isUserExist = yield prisma_1.default.user.findFirst({
         where: { email: givenEmail },
     });
@@ -260,7 +259,6 @@ const verifySignupToken = (token) => __awaiter(void 0, void 0, void 0, function*
     }
     const { userId } = verifiedToken;
     // checking deleted user's refresh token
-    console.log('the token', userId);
     const isUserExist = yield prisma_1.default.user.findUnique({ where: { id: userId } });
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User does not exist');

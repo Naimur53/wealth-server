@@ -1,5 +1,7 @@
+import httpStatus from 'http-status';
 import nodemailer from 'nodemailer';
 import config from '../config';
+import ApiError from '../errors/ApiError';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const sendEmail = async (
   { to, multi }: { to: string; multi?: string[] },
@@ -25,7 +27,6 @@ const sendEmail = async (
       ciphers: 'SSLv3',
     },
   });
-  console.log('Email transport created');
   // send mail with defined transport object
   const mailOptions = {
     from: config.emailUser,
@@ -36,7 +37,6 @@ const sendEmail = async (
   };
   // eslint-disable-next-line no-unused-vars
   if (multi?.length) {
-    console.log(multi);
     for (const recipient of multi) {
       const mailOptionsPer = {
         from: config.emailUser,
@@ -49,20 +49,24 @@ const sendEmail = async (
       try {
         // Send mail for each recipient
         await transport.sendMail({ ...mailOptionsPer });
-        console.log(`Email sent successfully to ${recipient}`);
+        // console.log(`Email sent successfully to ${recipient}`);
       } catch (error) {
-        console.error(`Error sending email to ${recipient}:`, error);
+        // console.error(`Error sending email to ${recipient}:`, error);
       }
     }
   } else {
-    await transport.sendMail({ ...mailOptions }, (e, b) => {
-      console.log(e, b);
-      if (e) {
-        console.log('something went wrong to send email');
-      } else {
-        console.log('Email sent successfully');
-      }
-    });
+    try {
+      // console.log(mailOptions);
+
+      await transport.sendMail({ ...mailOptions });
+    } catch (err) {
+      // console.log(err);
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Sorry sending email is not available this time'
+      );
+    }
+    // console.log('its the main success after send to one email');
   }
 };
 export default sendEmail;

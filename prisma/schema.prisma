@@ -94,6 +94,7 @@ model Account {
   preview         String?
   additionalEmail         String?
   additionalPassword         String?
+  additionalDescription         String?
   category        accountCategory
   accountType     accountType      @default(SocialMedia)
   approvedForSale EApprovedForSale @default(pending)

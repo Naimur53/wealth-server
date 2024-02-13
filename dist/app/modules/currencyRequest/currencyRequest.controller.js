@@ -102,10 +102,8 @@ const getAllCurrencyRequest = (0, catchAsync_1.default)((req, res) => __awaiter(
 const payStackWebHook = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const ipnData = req.body;
-    console.log('webhook data call ', ipnData.data);
     if (ipnData.event === 'charge.success') {
         const paymentReference = ipnData.data.reference;
-        console.log(`Payment successful for reference: ${paymentReference}`);
         // Perform additional actions, such as updating your database, sending emails, etc.
         const paymentType = (_b = (_a = ipnData === null || ipnData === void 0 ? void 0 : ipnData.data) === null || _a === void 0 ? void 0 : _a.metadata) === null || _b === void 0 ? void 0 : _b.payment_type;
         if (paymentType === common_1.EPaymentType.addFunds) {
@@ -131,7 +129,6 @@ const payStackWebHook = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
 }));
 const getSingleCurrencyRequestIpn = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const ipnData = req.body;
-    console.log('ipnData', ipnData);
     // eslint-disable-next-line no-unused-vars
     yield currencyRequest_service_1.CurrencyRequestService.createCurrencyRequestIpn(ipnData);
     (0, sendResponse_1.default)(res, {

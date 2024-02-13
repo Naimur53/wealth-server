@@ -52,7 +52,7 @@ const UpdateCurrencyByRequestAfterPay = async (data: {
       }
     });
   } catch (err) {
-    sendEmail(
+    await sendEmail(
       { to: config.emailUser || '' },
       {
         subject: EmailTemplates.currencyRequestPaymentSuccessButFailed.subject,

@@ -169,14 +169,11 @@ const payStackWebHook = (data) => __awaiter(void 0, void 0, void 0, function* ()
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('nowpayments-ipn data', data);
     const { order_id, payment_status, price_amount } = data;
     if (data.payment_status !== 'finished') {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry payment is not finished yet ');
     }
-    console.log('before checker');
     yield (0, nowPaymentChecker_1.default)(data.payment_id);
-    console.log('after checker');
     yield (0, UpdateCurrencyByRequestAfterPay_1.default)({
         order_id,
         payment_status,

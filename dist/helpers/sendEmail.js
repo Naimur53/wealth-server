@@ -12,8 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const http_status_1 = __importDefault(require("http-status"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const config_1 = __importDefault(require("../config"));
+const ApiError_1 = __importDefault(require("../errors/ApiError"));
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, void 0, void 0, function* () {
     // const transport = await nodemailer.createTransport({
@@ -36,7 +38,6 @@ const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, 
             ciphers: 'SSLv3',
         },
     });
-    console.log('Email transport created');
     // send mail with defined transport object
     const mailOptions = {
         from: config_1.default.emailUser,
@@ -47,7 +48,6 @@ const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, 
     };
     // eslint-disable-next-line no-unused-vars
     if (multi === null || multi === void 0 ? void 0 : multi.length) {
-        console.log(multi);
         for (const recipient of multi) {
             const mailOptionsPer = {
                 from: config_1.default.emailUser,
@@ -59,23 +59,23 @@ const sendEmail = ({ to, multi }, { subject, html, text }) => __awaiter(void 0, 
             try {
                 // Send mail for each recipient
                 yield transport.sendMail(Object.assign({}, mailOptionsPer));
-                console.log(`Email sent successfully to ${recipient}`);
+                // console.log(`Email sent successfully to ${recipient}`);
             }
             catch (error) {
-                console.error(`Error sending email to ${recipient}:`, error);
+                // console.error(`Error sending email to ${recipient}:`, error);
             }
         }
     }
     else {
-        yield transport.sendMail(Object.assign({}, mailOptions), (e, b) => {
-            console.log(e, b);
-            if (e) {
-                console.log('something went wrong to send email');
-            }
-            else {
-                console.log('Email sent successfully');
-            }
-        });
+        try {
+            // console.log(mailOptions);
+            yield transport.sendMail(Object.assign({}, mailOptions));
+        }
+        catch (err) {
+            // console.log(err);
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry sending email is not available this time');
+        }
+        // console.log('its the main success after send to one email');
     }
 });
 exports.default = sendEmail;

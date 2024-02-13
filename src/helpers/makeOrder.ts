@@ -8,7 +8,6 @@ import prisma from '../shared/prisma';
 import sendEmail from './sendEmail';
 
 const makeOrder = async (payload: Orders) => {
-  console.log('makking ', payload);
   const isAccountExits = await prisma.account.findUnique({
     where: {
       id: payload.accountId,
@@ -56,7 +55,6 @@ const makeOrder = async (payload: Orders) => {
       Currency: { select: { amount: true, id: true } },
     },
   });
-  console.log('seller', isSellerExist);
 
   // the only 10 percent will receive by admin and expect the 10 percent seller will receive
   // get admin info
@@ -131,7 +129,6 @@ const makeOrder = async (payload: Orders) => {
         amount: userAmount,
       },
     });
-    console.log('remove from user', removeCurrencyFromUser);
     if (isSellerExist.role === UserRole.admin) {
       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       const addCurrencyToAdmin = await tx.currency.update({
@@ -148,9 +145,6 @@ const makeOrder = async (payload: Orders) => {
           amount: sellerCAmount,
         },
       });
-      console.log('add to seller', addCurrencyToSeller);
-
-      console.log({ newAmountForAdmin });
       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       const addCurrencyToAdmin = await tx.currency.update({
         where: { ownById: isAdminExist.id },
@@ -165,7 +159,6 @@ const makeOrder = async (payload: Orders) => {
       where: { id: payload.accountId },
       data: { isSold: true },
     });
-    console.log({ payload });
     const newOrders = await tx.orders.create({
       data: payload,
     });
@@ -175,7 +168,7 @@ const makeOrder = async (payload: Orders) => {
     }
     return newOrders;
   });
-  sendEmail(
+  await sendEmail(
     { to: isUserExist.email },
     {
       subject: EmailTemplates.orderSuccessful.subject,

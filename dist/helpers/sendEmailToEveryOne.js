@@ -34,7 +34,7 @@ const sendEmailToEveryOne = ({ accountName, category, description, price, withou
         },
     });
     const allEmailString = allEmail.map(single => single.email);
-    (0, sendEmail_1.default)({ to: 'da', multi: allEmailString }, {
+    yield (0, sendEmail_1.default)({ to: 'da', multi: allEmailString }, {
         subject: EmailTemplates_1.default.newAccountAdded.subject,
         html: EmailTemplates_1.default.newAccountAdded.html({
             accountName,

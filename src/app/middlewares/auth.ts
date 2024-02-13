@@ -29,7 +29,6 @@ const auth =
           isBlocked: true,
         },
       });
-      console.log({ requiredRoles });
       if (!queryUser) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'User not found!');
       }

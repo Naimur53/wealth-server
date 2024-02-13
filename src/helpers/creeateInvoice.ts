@@ -13,11 +13,9 @@ const createNowPayInvoice = async (invoice: {
   cancel_url: string;
 }): Promise<InvoiceReturn> => {
   const nowPaymentsApiKey = config.nowPaymentApiKey || ''; // Use your sandbox API key
-  console.log(invoice);
   // Use the sandbox API URL
   const sandboxApiUrl = config.nowPaymentInvoiceUrl || '';
 
-  console.log({ nowPaymentsApiKey, sandboxApiUrl });
   try {
     const response = await axios.post(
       sandboxApiUrl,
@@ -37,10 +35,8 @@ const createNowPayInvoice = async (invoice: {
         },
       }
     );
-    console.log(response.data);
     return response.data;
   } catch (err) {
-    console.log(err);
     throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
   }
 };

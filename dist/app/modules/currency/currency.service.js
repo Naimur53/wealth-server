@@ -118,7 +118,6 @@ const updateCurrency = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     if (!isCurrencyExits) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Currency not found!');
     }
-    console.log(amountToAdd > 0);
     if (amountToAdd > 0) {
         result = yield prisma_1.default.currency.update({
             where: {
@@ -133,7 +132,6 @@ const updateCurrency = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     }
     else if (amountToAdd < 0) {
         const newAmount = (0, lodash_1.round)(isCurrencyExits.amount + amountToAdd, config_1.default.calculationMoneyRound);
-        console.log(newAmount, isCurrencyExits.amount + amountToAdd);
         // if new amount is less then 0 then not allow
         if (newAmount < 0) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'New currency cannot be negative');

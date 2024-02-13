@@ -191,7 +191,6 @@ const payStackWebHook = async (data: any): Promise<void> => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createCurrencyRequestIpn = async (data: any): Promise<void> => {
-  console.log('nowpayments-ipn data', data);
   const { order_id, payment_status, price_amount } = data;
   if (data.payment_status !== 'finished') {
     throw new ApiError(
@@ -199,9 +198,7 @@ const createCurrencyRequestIpn = async (data: any): Promise<void> => {
       'Sorry payment is not finished yet '
     );
   }
-  console.log('before checker');
   await nowPaymentChecker(data.payment_id);
-  console.log('after checker');
 
   await UpdateCurrencyByRequestAfterPay({
     order_id,

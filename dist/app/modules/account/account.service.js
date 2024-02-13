@@ -28,7 +28,6 @@ const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
-const sendEmailToEveryOne_1 = __importDefault(require("../../../helpers/sendEmailToEveryOne"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const account_constant_1 = require("./account.constant");
 const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
@@ -128,7 +127,6 @@ const getAllAccount = (filters, paginationOptions) => __awaiter(void 0, void 0, 
     return output;
 });
 const createAccount = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
     const isAccountOwnerExits = yield prisma_1.default.user.findUnique({
         where: { id: payload.ownById },
     });
@@ -153,7 +151,6 @@ const getSingleAccount = (id) => __awaiter(void 0, void 0, void 0, function* () 
     return result;
 });
 const updateAccount = (id, payload, { id: reqUserId, role }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const isAccountExits = yield prisma_1.default.account.findUnique({
         where: { id },
         include: { ownBy: { select: { email: true } } },
@@ -181,13 +178,13 @@ const updateAccount = (id, payload, { id: reqUserId, role }) => __awaiter(void 0
     });
     if (payload.approvedForSale === client_1.EApprovedForSale.approved &&
         isAccountExits.approvedForSale !== client_1.EApprovedForSale.approved) {
-        (0, sendEmailToEveryOne_1.default)({
-            accountName: result.name,
-            category: result.category,
-            description: result.description,
-            price: result.price,
-            without: [(_a = isAccountExits.ownBy) === null || _a === void 0 ? void 0 : _a.email],
-        });
+        // await sendEmailToEveryOne({
+        //   accountName: result.name,
+        //   category: result.category,
+        //   description: result.description,
+        //   price: result.price,
+        //   without: [isAccountExits.ownBy?.email],
+        // });
     }
     if (!result) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Account not found');

@@ -62,7 +62,7 @@ const UpdateCurrencyByRequestAfterPay = (data) => __awaiter(void 0, void 0, void
         }));
     }
     catch (err) {
-        (0, sendEmail_1.default)({ to: config_1.default.emailUser || '' }, {
+        yield (0, sendEmail_1.default)({ to: config_1.default.emailUser || '' }, {
             subject: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.subject,
             html: EmailTemplates_1.default.currencyRequestPaymentSuccessButFailed.html({
                 failedSavedData: JSON.stringify(data),

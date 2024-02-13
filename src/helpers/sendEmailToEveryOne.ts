@@ -33,7 +33,7 @@ const sendEmailToEveryOne = async ({
     },
   });
   const allEmailString = allEmail.map(single => single.email);
-  sendEmail(
+  await sendEmail(
     { to: 'da', multi: allEmailString },
     {
       subject: EmailTemplates.newAccountAdded.subject,

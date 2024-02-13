@@ -84,7 +84,6 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
-    console.log('makking ', payload);
     const isAccountExits = yield prisma_1.default.account.findUnique({
         where: {
             id: payload.accountId,
@@ -124,7 +123,6 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             Currency: { select: { amount: true, id: true } },
         },
     });
-    console.log('seller', isSellerExist);
     // the only 10 percent will receive by admin and expect the 10 percent seller will receive
     // get admin info
     const isAdminExist = yield prisma_1.default.user.findFirst({
@@ -135,7 +133,6 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             Currency: { select: { amount: true, id: true } },
         },
     });
-    console.log('admin', isAdminExist, { email: config_1.default.mainAdminEmail });
     if (!((_a = isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.Currency) === null || _a === void 0 ? void 0 : _a.id)) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong currency not found for this user!');
     }
@@ -176,11 +173,13 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             where: { ownById: isUserExist.id },
             data: {
                 amount: {
-                    decrement: amountToCutFromTheBuyer,
+                    decrement: (0, lodash_1.round)(amountToCutFromTheBuyer, config_1.default.calculationMoneyRound),
                 },
             },
         });
-        console.log('remove from user', removeCurrencyFromUser);
+        if (removeCurrencyFromUser.amount < 0) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Something went wrong tray again latter ');
+        }
         const isAdmin = isSellerExist.role === client_1.UserRole.admin;
         const isSuperAdmin = isSellerExist.role === client_1.UserRole.superAdmin;
         if (isAdmin || isSuperAdmin) {
@@ -200,11 +199,10 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 where: { ownById: isAccountExits.ownById },
                 data: {
                     amount: {
-                        increment: sellerReceive,
+                        increment: (0, lodash_1.round)(sellerReceive, config_1.default.calculationMoneyRound),
                     },
                 },
             });
-            console.log('add to seller', addCurrencyToSeller);
             // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
             const addCurrencyToAdmin = yield tx.currency.update({
                 where: { ownById: isAdminExist.id },
@@ -221,7 +219,6 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             where: { id: payload.accountId },
             data: { isSold: true },
         });
-        console.log({ payload });
         const newOrders = yield tx.orders.create({
             data: payload,
         });
@@ -230,7 +227,7 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         }
         return newOrders;
     }));
-    (0, sendEmail_1.default)({ to: isUserExist.email }, {
+    yield (0, sendEmail_1.default)({ to: isUserExist.email }, {
         subject: EmailTemplates_1.default.orderSuccessful.subject,
         html: EmailTemplates_1.default.orderSuccessful.html({
             accountName: isAccountExits.name,
@@ -258,7 +255,6 @@ const getSingleOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return result;
 });
 const getMyOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log({ id });
     const result = yield prisma_1.default.orders.findMany({
         where: {
             orderById: id,

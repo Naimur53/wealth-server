@@ -73,7 +73,6 @@ const getAllOrders = async (
 };
 
 const createOrders = async (payload: Orders): Promise<Orders | null> => {
-  console.log('makking ', payload);
   const isAccountExits = await prisma.account.findUnique({
     where: {
       id: payload.accountId,
@@ -121,7 +120,6 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       Currency: { select: { amount: true, id: true } },
     },
   });
-  console.log('seller', isSellerExist);
 
   // the only 10 percent will receive by admin and expect the 10 percent seller will receive
   // get admin info
@@ -133,7 +131,6 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       Currency: { select: { amount: true, id: true } },
     },
   });
-  console.log('admin', isAdminExist, { email: config.mainAdminEmail });
   if (!isUserExist?.Currency?.id) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -189,11 +186,19 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       where: { ownById: isUserExist.id },
       data: {
         amount: {
-          decrement: amountToCutFromTheBuyer,
+          decrement: round(
+            amountToCutFromTheBuyer,
+            config.calculationMoneyRound
+          ),
         },
       },
     });
-    console.log('remove from user', removeCurrencyFromUser);
+    if (removeCurrencyFromUser.amount < 0) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Something went wrong tray again latter '
+      );
+    }
     const isAdmin = isSellerExist.role === UserRole.admin;
     const isSuperAdmin = isSellerExist.role === UserRole.superAdmin;
     if (isAdmin || isSuperAdmin) {
@@ -215,11 +220,10 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
         where: { ownById: isAccountExits.ownById },
         data: {
           amount: {
-            increment: sellerReceive,
+            increment: round(sellerReceive, config.calculationMoneyRound),
           },
         },
       });
-      console.log('add to seller', addCurrencyToSeller);
       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       const addCurrencyToAdmin = await tx.currency.update({
         where: { ownById: isAdminExist.id },
@@ -236,7 +240,6 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       where: { id: payload.accountId },
       data: { isSold: true },
     });
-    console.log({ payload });
     const newOrders = await tx.orders.create({
       data: payload,
     });
@@ -246,7 +249,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     }
     return newOrders;
   });
-  sendEmail(
+  await sendEmail(
     { to: isUserExist.email },
     {
       subject: EmailTemplates.orderSuccessful.subject,
@@ -278,7 +281,6 @@ const getSingleOrders = async (id: string): Promise<Orders | null> => {
   return result;
 };
 const getMyOrders = async (id: string): Promise<Orders[] | null> => {
-  console.log({ id });
   const result = await prisma.orders.findMany({
     where: {
       orderById: id,

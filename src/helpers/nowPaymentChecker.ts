@@ -8,7 +8,6 @@ const nowPaymentChecker = async (payment_id: number) => {
   const defaultUrl = config.nowPaymentInvoiceUrl || '';
   const url = defaultUrl.replace('/invoice', '/payment');
   const outputUrl = url + '/' + payment_id;
-  console.log(outputUrl);
   try {
     const ouputof = await axios.get(outputUrl, {
       headers: {
@@ -16,7 +15,6 @@ const nowPaymentChecker = async (payment_id: number) => {
         'Content-Type': 'application/json',
       },
     });
-    console.log('outputof', ouputof.data);
   } catch (err) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Something went wrong');
   }

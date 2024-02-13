@@ -69,7 +69,6 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         });
     }
     const whereConditions = andCondition.length > 0 ? { AND: andCondition } : {};
-    console.log({ page, limit, skip }, whereConditions);
     const result = yield prisma_1.default.user.findMany({
         where: whereConditions,
         skip,
@@ -126,7 +125,6 @@ const getSingleUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sellerIpn = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('nowpayments-ipn data', data);
     if (data.payment_status !== 'finished') {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Sorry payment is not finished yet ');
     }
@@ -150,7 +148,6 @@ const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, voi
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'user not found');
     }
-    console.log(rest, isUserExist);
     const isRoleExits = rest.role;
     const isRoleNotMatch = isUserExist.role !== rest.role;
     const isRequestedUSerNotSuperAdmin = requestedUser.role !== client_1.UserRole.superAdmin;
@@ -169,7 +166,7 @@ const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, voi
     });
     // if admin update a seller verification send email
     if (payload.isApprovedForSeller && result.role === client_1.UserRole.seller) {
-        (0, sendEmail_1.default)({ to: result.email }, {
+        yield (0, sendEmail_1.default)({ to: result.email }, {
             subject: EmailTemplates_1.default.sellerRequestAccepted.subject,
             html: EmailTemplates_1.default.sellerRequestAccepted.html(),
         });
@@ -178,7 +175,6 @@ const updateUser = (id, payload, requestedUser) => __awaiter(void 0, void 0, voi
 });
 const deleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log(id);
         // Inside the transaction, perform your database operations
         // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
         const deleteAccount = yield tx.account.deleteMany({
@@ -290,7 +286,6 @@ const sendUserQuery = (id, description, queryType) => __awaiter(void 0, void 0, 
             ciphers: 'SSLv3',
         },
     });
-    console.log('Email transport created');
     // send mail with defined transport object
     const mailOptions = {
         from: config_1.default.emailUser,
@@ -302,7 +297,6 @@ const sendUserQuery = (id, description, queryType) => __awaiter(void 0, void 0, 
     The query:${description}
     `,
     };
-    console.log(mailOptions);
     try {
         yield transport.sendMail(Object.assign({}, mailOptions));
     }

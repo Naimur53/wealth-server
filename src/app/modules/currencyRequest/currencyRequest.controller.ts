@@ -127,10 +127,8 @@ const getAllCurrencyRequest = catchAsync(
 const payStackWebHook: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
-    console.log('webhook data call ', ipnData.data);
     if (ipnData.event === 'charge.success') {
       const paymentReference = ipnData.data.reference;
-      console.log(`Payment successful for reference: ${paymentReference}`);
 
       // Perform additional actions, such as updating your database, sending emails, etc.
       const paymentType = ipnData?.data?.metadata?.payment_type;
@@ -160,7 +158,6 @@ const payStackWebHook: RequestHandler = catchAsync(
 const getSingleCurrencyRequestIpn: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
-    console.log('ipnData', ipnData);
 
     // eslint-disable-next-line no-unused-vars
     await CurrencyRequestService.createCurrencyRequestIpn(ipnData);

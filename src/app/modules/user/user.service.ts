@@ -63,7 +63,6 @@ const getAllUser = async (
 
   const whereConditions: Prisma.UserWhereInput =
     andCondition.length > 0 ? { AND: andCondition } : {};
-  console.log({ page, limit, skip }, whereConditions);
   const result = await prisma.user.findMany({
     where: whereConditions,
     skip,
@@ -124,7 +123,6 @@ const getSingleUser = async (id: string): Promise<User | null> => {
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sellerIpn = async (data: any): Promise<void> => {
-  console.log('nowpayments-ipn data', data);
   if (data.payment_status !== 'finished') {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -157,7 +155,6 @@ const updateUser = async (
   if (!isUserExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'user not found');
   }
-  console.log(rest, isUserExist);
   const isRoleExits = rest.role;
   const isRoleNotMatch = isUserExist.role !== rest.role;
   const isRequestedUSerNotSuperAdmin =
@@ -185,7 +182,7 @@ const updateUser = async (
 
   // if admin update a seller verification send email
   if (payload.isApprovedForSeller && result.role === UserRole.seller) {
-    sendEmail(
+    await sendEmail(
       { to: result.email },
       {
         subject: EmailTemplates.sellerRequestAccepted.subject,
@@ -198,7 +195,6 @@ const updateUser = async (
 
 const deleteUser = async (id: string): Promise<User | null> => {
   return await prisma.$transaction(async tx => {
-    console.log(id);
     // Inside the transaction, perform your database operations
 
     // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
@@ -315,7 +311,6 @@ const sendUserQuery = async (
       ciphers: 'SSLv3',
     },
   });
-  console.log('Email transport created');
   // send mail with defined transport object
   const mailOptions = {
     from: config.emailUser,
@@ -327,7 +322,6 @@ const sendUserQuery = async (
     The query:${description}
     `,
   };
-  console.log(mailOptions);
   try {
     await transport.sendMail({ ...mailOptions });
   } catch (err) {

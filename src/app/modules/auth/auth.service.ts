@@ -210,7 +210,6 @@ const createUser = async (
 
 const loginUser = async (payload: ILogin): Promise<ILoginResponse> => {
   const { email: givenEmail, password } = payload;
-  console.log(givenEmail);
   const isUserExist = await prisma.user.findFirst({
     where: { email: givenEmail },
   });
@@ -337,7 +336,6 @@ const verifySignupToken = async (
 
   const { userId } = verifiedToken;
   // checking deleted user's refresh token
-  console.log('the token', userId);
 
   const isUserExist = await prisma.user.findUnique({ where: { id: userId } });
   if (!isUserExist) {

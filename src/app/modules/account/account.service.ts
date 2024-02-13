@@ -2,7 +2,6 @@ import { Account, EApprovedForSale, Prisma, UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
-import sendEmailToEveryOne from '../../../helpers/sendEmailToEveryOne';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
@@ -16,7 +15,11 @@ const getAllAccount = async (
   IGenericResponse<
     Omit<
       Account,
-      'username' | 'password' | 'additionalEmail' | 'additionalPassword'
+      | 'username'
+      | 'password'
+      | 'additionalEmail'
+      | 'additionalPassword'
+      | 'additionalDescription'
     >[]
   >
 > => {
@@ -125,8 +128,6 @@ const getAllAccount = async (
 };
 
 const createAccount = async (payload: Account): Promise<Account | null> => {
-  console.log(payload);
-
   const isAccountOwnerExits = await prisma.user.findUnique({
     where: { id: payload.ownById },
   });
@@ -199,13 +200,13 @@ const updateAccount = async (
     payload.approvedForSale === EApprovedForSale.approved &&
     isAccountExits.approvedForSale !== EApprovedForSale.approved
   ) {
-    sendEmailToEveryOne({
-      accountName: result.name,
-      category: result.category,
-      description: result.description,
-      price: result.price,
-      without: [isAccountExits.ownBy?.email],
-    });
+    // await sendEmailToEveryOne({
+    //   accountName: result.name,
+    //   category: result.category,
+    //   description: result.description,
+    //   price: result.price,
+    //   without: [isAccountExits.ownBy?.email],
+    // });
   }
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Account not found');

@@ -118,7 +118,6 @@ const updateCurrency = async (
   if (!isCurrencyExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Currency not found!');
   }
-  console.log(amountToAdd > 0);
   if (amountToAdd > 0) {
     result = await prisma.currency.update({
       where: {
@@ -135,7 +134,6 @@ const updateCurrency = async (
       isCurrencyExits.amount + amountToAdd,
       config.calculationMoneyRound
     );
-    console.log(newAmount, isCurrencyExits.amount + amountToAdd);
     // if new amount is less then 0 then not allow
     if (newAmount < 0) {
       throw new ApiError(
