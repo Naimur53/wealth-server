@@ -8,15 +8,8 @@ import UpdateSellerAfterPay from '../../../helpers/UpdateSellerAfterPay';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
 import nowPaymentChecker from '../../../helpers/nowPaymentChecker';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
-import sendEmail from '../../../helpers/sendEmail';
-import {
-  IGenericResponse,
-  TAdminOverview,
-  TSellerOverview,
-  TUserOverview,
-} from '../../../interfaces/common';
+import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
-import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
 import { userSearchableFields } from './user.constant';
 import { IUserFilters } from './user.interface';
@@ -86,16 +79,8 @@ const getAllUser = async (
       createdAt: true,
       updatedAt: true,
       isBlocked: true,
-      isApprovedForSeller: true,
-      txId: true,
-      shouldSendEmail: true,
+      status: true,
       phoneNumber: true,
-      isPaidForSeller: true,
-      Currency: {
-        select: {
-          amount: true,
-        },
-      },
     },
   });
   const total = await prisma.user.count();
@@ -145,7 +130,7 @@ const updateUser = async (
   requestedUser: JwtPayload
 ): Promise<User | null> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-  const { password, isPaidForSeller, isApprovedForSeller, ...rest } = payload;
+  const { password, status, ...rest } = payload;
   let genarateBycryptPass;
   if (password) {
     genarateBycryptPass = await createBycryptPassword(password);
@@ -167,8 +152,11 @@ const updateUser = async (
     );
   }
 
-  if (requestedUser.role !== UserRole.admin && payload.isApprovedForSeller) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'only admin can verify seller ');
+  if (requestedUser.role === UserRole.user && payload.status) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'only admin and super admin can verify seller '
+    );
   }
 
   const result = await prisma.user.update({
@@ -180,16 +168,6 @@ const updateUser = async (
       : rest,
   });
 
-  // if admin update a seller verification send email
-  if (payload.isApprovedForSeller && result.role === UserRole.seller) {
-    await sendEmail(
-      { to: result.email },
-      {
-        subject: EmailTemplates.sellerRequestAccepted.subject,
-        html: EmailTemplates.sellerRequestAccepted.html(),
-      }
-    );
-  }
   return result;
 };
 
@@ -198,90 +176,71 @@ const deleteUser = async (id: string): Promise<User | null> => {
     // Inside the transaction, perform your database operations
 
     // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteAccount = await tx.account.deleteMany({
+    const deleteAccount = await tx.verificationOtp.deleteMany({
       where: { ownById: id },
     });
-    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteOrder = await tx.orders.deleteMany({
-      where: { orderById: id },
-    });
-    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteCarts = await tx.cart.deleteMany({
-      where: { ownById: id },
-    });
-    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteCurrency = await tx.currency.deleteMany({
-      where: { ownById: id },
-    });
-    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteCurrencyRequest = await tx.currencyRequest.deleteMany({
-      where: { ownById: id },
-    });
-    // eslint-disable-next-line no-unused-vars, , @typescript-eslint/no-unused-vars
-    const deleteWithdrawalRequest = await tx.withdrawalRequest.deleteMany({
-      where: { ownById: id },
-    });
+
     const deleteUser = await tx.user.delete({ where: { id } });
     return deleteUser;
   });
 };
 
-const adminOverview = async (): Promise<TAdminOverview | null> => {
-  const totalAccount = await prisma.account.count();
-  const totalSoldAccount = await prisma.account.count({
-    where: { isSold: true },
-  });
-  const totalUser = await prisma.account.count();
-  const mainAdmin = await prisma.user.findUnique({
-    where: { email: config.mainAdminEmail },
-    include: {
-      Currency: { select: { amount: true } },
-    },
-  });
-  if (!mainAdmin) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Main admin Not found!');
-  }
-  const totalEarning = mainAdmin.Currency?.amount || 0;
-  return {
-    totalAccount,
-    totalSoldAccount,
-    totalUser,
-    totalEarning,
-  };
-};
-const sellerOverview = async (id: string): Promise<TSellerOverview | null> => {
-  const totalAccount = await prisma.account.count({ where: { ownById: id } });
-  const totalSoldAccount = await prisma.account.count({
-    where: { isSold: true, ownById: id },
-  });
-  const totalOrder = await prisma.orders.count({ where: { orderById: id } });
-  const currency = await prisma.currency.findUnique({
-    where: { ownById: id },
-  });
-  const totalMoney = currency?.amount || 0;
-  return {
-    totalAccount,
-    totalSoldAccount,
-    totalOrder,
-    totalMoney,
-  };
-};
-const userOverview = async (id: string): Promise<TUserOverview | null> => {
-  const totalOrder = await prisma.orders.count({ where: { orderById: id } });
-  const totalAccountOnCart = await prisma.cart.count({
-    where: { ownById: id },
-  });
-  // const totalOrder = await prisma.account.count({ where: { ownById: id } });
-  const currency = await prisma.currency.findUnique({
-    where: { ownById: id },
-  });
-  const totalMoney = currency?.amount || 0;
-  return {
-    totalOrder,
-    totalAccountOnCart,
-    totalMoney,
-  };
-};
+// const adminOverview = async (): Promise<TAdminOverview | null> => {
+//   const totalAccount = await prisma.account.count();
+//   const totalSoldAccount = await prisma.account.count({
+//     where: { isSold: true },
+//   });
+//   const totalUser = await prisma.account.count();
+//   const mainAdmin = await prisma.user.findUnique({
+//     where: { email: config.mainAdminEmail },
+//     include: {
+//       Currency: { select: { amount: true } },
+//     },
+//   });
+//   if (!mainAdmin) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, 'Main admin Not found!');
+//   }
+//   const totalEarning = mainAdmin.Currency?.amount || 0;
+//   return {
+//     totalAccount,
+//     totalSoldAccount,
+//     totalUser,
+//     totalEarning,
+//   };
+// };
+// const sellerOverview = async (id: string): Promise<TSellerOverview | null> => {
+//   const totalAccount = await prisma.account.count({ where: { ownById: id } });
+//   const totalSoldAccount = await prisma.account.count({
+//     where: { isSold: true, ownById: id },
+//   });
+//   const totalOrder = await prisma.orders.count({ where: { orderById: id } });
+//   const currency = await prisma.currency.findUnique({
+//     where: { ownById: id },
+//   });
+//   const totalMoney = currency?.amount || 0;
+//   return {
+//     totalAccount,
+//     totalSoldAccount,
+//     totalOrder,
+//     totalMoney,
+//   };
+// };
+// const userOverview = async (id: string): Promise<TUserOverview | null> => {
+//   const totalOrder = await prisma.orders.count({ where: { orderById: id } });
+//   const totalAccountOnCart = await prisma.cart.count({
+//     where: { ownById: id },
+//   });
+//   // const totalOrder = await prisma.account.count({ where: { ownById: id } });
+//   const currency = await prisma.currency.findUnique({
+//     where: { ownById: id },
+//   });
+//   const totalMoney = currency?.amount || 0;
+//   return {
+//     totalOrder,
+//     totalAccountOnCart,
+//     totalMoney,
+//   };
+// };
 const sendUserQuery = async (
   id: string,
   description: string,
@@ -291,26 +250,26 @@ const sendUserQuery = async (
   if (!isUserExist) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'user not found!');
   }
-  // const transport = await nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: config.emailUser,
-  //     pass: config.emailUserPass,
-  //   },
-  // });
   const transport = await nodemailer.createTransport({
-    host: 'mail.privateemail.com', // or 'smtp.privateemail.com'
-    port: 587, // or 465 for SSL
-    secure: false, // true for 465, false for 587
+    service: 'gmail',
     auth: {
       user: config.emailUser,
       pass: config.emailUserPass,
     },
-    tls: {
-      // Enable TLS encryption
-      ciphers: 'SSLv3',
-    },
   });
+  // const transport = await nodemailer.createTransport({
+  //   host: 'mail.privateemail.com', // or 'smtp.privateemail.com'
+  //   port: 587, // or 465 for SSL
+  //   secure: false, // true for 465, false for 587
+  //   auth: {
+  //     user: config.emailUser,
+  //     pass: config.emailUserPass,
+  //   },
+  //   tls: {
+  //     // Enable TLS encryption
+  //     ciphers: 'SSLv3',
+  //   },
+  // });
   // send mail with defined transport object
   const mailOptions = {
     from: config.emailUser,
@@ -340,7 +299,7 @@ export const UserService = {
   deleteUser,
   sendUserQuery,
   sellerIpn,
-  adminOverview,
-  sellerOverview,
-  userOverview,
+  // adminOverview,
+  // sellerOverview,
+  // userOverview,
 };

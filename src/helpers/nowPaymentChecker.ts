@@ -9,6 +9,7 @@ const nowPaymentChecker = async (payment_id: number) => {
   const url = defaultUrl.replace('/invoice', '/payment');
   const outputUrl = url + '/' + payment_id;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     const ouputof = await axios.get(outputUrl, {
       headers: {
         'x-api-key': nowPaymentsApiKey,

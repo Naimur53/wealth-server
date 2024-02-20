@@ -8,13 +8,12 @@ import { UserService } from '../user/user.service';
 
 const getProfile: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
-    const { userId, role } = req.user as JwtPayload;
-    console.log(userId, role);
+    const { userId } = req.user as JwtPayload;
     const result = await UserService.getSingleUser(userId);
     sendResponse<User>(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'User fetched   successfully',
+      message: 'User fetched successfully',
       data: result,
     });
   }

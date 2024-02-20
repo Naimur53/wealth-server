@@ -1,6 +1,6 @@
 import config from '../config';
 type IHtmlData = {
-  token?: string;
+  token?: number;
   userName?: string;
   userEmail?: string;
   userProfileImg?: string;
@@ -116,7 +116,7 @@ const EmailTemplates = {
                   <h3>Hi there,</h3>
                   <p>Welcome to Acctbazaar, Your Premier P2P Marketplace for Social Media Accounts.</p>
                   <div class="email-box-content">
-                  <a href="${config.frontendUrl}/verify?token=${data?.token}" class="btn">Verify</a>
+                  ${data?.token}
                       <p class="end">
                           This is an automatically generated email please do not reply to this email. 
                           If you face any issues, please contact us at support@acctbazaar.com

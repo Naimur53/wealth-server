@@ -6,9 +6,8 @@ const createAuthZodSchema = z.object({
     email: z.string({ required_error: 'Email is required' }),
     password: z.string({ required_error: 'Password is required' }).min(8),
     name: z.string({ required_error: 'Name is required' }),
+    phoneNumber: z.string({ required_error: 'Phone Number is required' }),
     role: z.nativeEnum(UserRole).default(UserRole.user).optional(),
-    paymentWithPaystack: z.boolean().default(false).optional(),
-    txId: z.string({ required_error: 'Name is required' }).optional(),
   }),
 });
 const loginZodSchema = z.object({
@@ -24,9 +23,32 @@ const refreshTokenZodSchema = z.object({
     }),
   }),
 });
+const verifyToken = z.object({
+  body: z.object({
+    token: z.number({ required_error: 'Token is required' }),
+  }),
+});
+const verifyForgotToken = z.object({
+  body: z.object({
+    token: z.number({ required_error: 'Token is required' }),
+    email: z.string({ required_error: 'Email is required' }),
+  }),
+});
+const changePassword = z.object({
+  body: z.object({
+    token: z.number({ required_error: 'Token is required' }),
+    email: z.string({ required_error: 'Email is required' }),
+    password: z
+      .string({ required_error: 'Password is required' })
+      .min(8, { message: 'Password must be at least 8 characters long' }),
+  }),
+});
 
 export const AuthValidation = {
   createAuthZodSchema,
   refreshTokenZodSchema,
   loginZodSchema,
+  verifyToken,
+  changePassword,
+  verifyForgotToken,
 };

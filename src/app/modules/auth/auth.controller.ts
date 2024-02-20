@@ -1,7 +1,7 @@
-import { UserRole } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import sendEmail from '../../../helpers/sendEmail';
@@ -13,35 +13,20 @@ import { AuthService } from './auth.service';
 
 const createUser: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
-    const { paymentWithPaystack, ...data } = req.body;
+    const data = req.body;
 
-    const output = await AuthService.createUser(data, paymentWithPaystack);
-    const { refreshToken, refreshTokenSignup, ...result } = output;
+    const output = await AuthService.createUser(data);
+    const { refreshToken, otp, ...result } = output;
 
-    if (output.user.role !== UserRole.seller) {
-      await sendEmail(
-        { to: result.user.email },
-        {
-          subject: EmailTemplates.verify.subject,
-          html: EmailTemplates.verify.html({
-            token: refreshTokenSignup as string,
-          }),
-        }
-      );
-    }
-    // if (output.user.role == UserRole.seller) {
-    //   await sendEmail(
-    //     { to: config.emailUser as string },
-    //     {
-    //       subject: EmailTemplates.sellerRequest.subject,
-    //       html: EmailTemplates.sellerRequest.html({
-    //         userEmail: output.user.email,
-    //         txId: output.user.txId as string,
-    //       }),
-    //     }
-    //   );
-    // }
-    // set refresh token into cookie
+    await sendEmail(
+      { to: result.user.email },
+      {
+        subject: EmailTemplates.verify.subject,
+        html: EmailTemplates.verify.html({
+          token: otp,
+        }),
+      }
+    );
     const cookieOptions = {
       secure: config.env === 'production',
       httpOnly: true,
@@ -60,12 +45,12 @@ const resendEmail: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.params;
     const output = await AuthService.resendEmail(email || '');
-    const { refreshToken, ...result } = output;
+    const { refreshToken, otp, ...result } = output;
     await sendEmail(
       { to: result.user.email },
       {
         subject: EmailTemplates.verify.subject,
-        html: EmailTemplates.verify.html({ token: refreshToken as string }),
+        html: EmailTemplates.verify.html({ token: otp }),
       }
     );
     // set refresh token into cookie
@@ -78,8 +63,31 @@ const resendEmail: RequestHandler = catchAsync(
     sendResponse<ILoginResponse>(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'user created successfully!',
+      message: 'Opt send successfully',
       data: result,
+    });
+  }
+);
+const sendForgotEmail: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const { email } = req.params;
+    const output = await AuthService.sendForgotEmail(email || '');
+    const { otp } = output;
+
+    // set refresh token into cookie
+    const cookieOptions = {
+      secure: config.env === 'production',
+      httpOnly: true,
+    };
+
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+    sendResponse<{ otp: number }>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Opt send successfully',
+      data: {
+        otp,
+      },
     });
   }
 );
@@ -98,7 +106,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse<ILoginResponse>(res, {
     statusCode: 200,
     success: true,
-    message: 'User lohggedin successfully !',
+    message: 'User logged successfully !',
     data: {
       accessToken: result.accessToken,
       user: result.user,
@@ -128,11 +136,12 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 const verifySignupToken = catchAsync(async (req: Request, res: Response) => {
-  const { token } = req.params;
+  const { token } = req.body;
+  const user = req.user as JwtPayload;
   if (!token) {
     new ApiError(httpStatus.BAD_REQUEST, 'Token not found');
   }
-  const result = await AuthService.verifySignupToken(token as string);
+  const result = await AuthService.verifySignupToken(token, user.userId);
 
   // set refresh token into cookie
 
@@ -146,15 +155,59 @@ const verifySignupToken = catchAsync(async (req: Request, res: Response) => {
   sendResponse<IRefreshTokenResponse>(res, {
     statusCode: 200,
     success: true,
-    message: 'New access token generated successfully !',
+    message: 'Token verify successfully',
     data: result,
   });
 });
 
+const verifyForgotToken = catchAsync(async (req: Request, res: Response) => {
+  const { token, email } = req.body;
+  if (!token) {
+    new ApiError(httpStatus.BAD_REQUEST, 'Token not found');
+  }
+  if (!email) {
+    new ApiError(httpStatus.BAD_REQUEST, 'Email not found');
+  }
+  const result = await AuthService.verifyForgotToken(token, email);
+
+  // set refresh token
+
+  sendResponse<{ token: number; isValidate: boolean }>(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Token verify successfully',
+    data: result,
+  });
+});
+
+const changePassword: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const data = req.body;
+
+    const output = await AuthService.changePassword(data);
+    const { refreshToken, ...result } = output;
+
+    const cookieOptions = {
+      secure: config.env === 'production',
+      httpOnly: true,
+    };
+
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+    sendResponse<ILoginResponse>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'user created successfully!',
+      data: result,
+    });
+  }
+);
 export const AuthController = {
   createUser,
   loginUser,
   refreshToken,
   verifySignupToken,
   resendEmail,
+  sendForgotEmail,
+  verifyForgotToken,
+  changePassword,
 };
