@@ -1,5 +1,5 @@
 
-        export type ISavedFlipingFilters = {
+        export type ISavedFlippingFilters = {
             searchTerm?: string;
           }; 
         

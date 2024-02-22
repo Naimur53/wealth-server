@@ -9,7 +9,7 @@ import { z } from 'zod';
           body: z.object({ 
           }),
         });
-        export const SavedFlipingValidation = {
+        export const SavedFlippingValidation = {
           createValidation,
           updateValidation,
         };

@@ -1,4 +1,4 @@
-import { SavedFliping } from '@prisma/client';
+import { FlippingOrders } from '@prisma/client';
         import { Request, Response } from 'express';
         import { RequestHandler } from 'express-serve-static-core';
         import httpStatus from 'http-status';
@@ -6,99 +6,99 @@ import { SavedFliping } from '@prisma/client';
         import catchAsync from '../../../shared/catchAsync';
         import pick from '../../../shared/pick';
         import sendResponse from '../../../shared/sendResponse';
-        import { SavedFlipingService } from './savedFliping.service';
-        import { savedFlipingFilterAbleFields } from './savedFliping.constant';
-        const createSavedFliping: RequestHandler = catchAsync(
+        import { FlippingOrdersService } from './flippingOrders.service';
+        import { flippingOrdersFilterAbleFields } from './flippingOrders.constant';
+        const createFlippingOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
-            const SavedFlipingData = req.body;
+            const FlippingOrdersData = req.body;
         
-            const result = await SavedFlipingService.createSavedFliping(
-              SavedFlipingData
+            const result = await FlippingOrdersService.createFlippingOrders(
+              FlippingOrdersData
             );
-            sendResponse<SavedFliping>(res, {
+            sendResponse<FlippingOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'SavedFliping Created successfully!',
+              message: 'FlippingOrders Created successfully!',
               data: result,
             });
           }
         );
         
-        const getAllSavedFliping = catchAsync(
+        const getAllFlippingOrders = catchAsync(
           async (req: Request, res: Response) => {
             const filters = pick(req.query, [
               'searchTerm',
-              ...savedFlipingFilterAbleFields,
+              ...flippingOrdersFilterAbleFields,
             ]);
             const paginationOptions = pick(req.query, paginationFields);
         
-            const result = await SavedFlipingService.getAllSavedFliping(
+            const result = await FlippingOrdersService.getAllFlippingOrders(
               filters,
               paginationOptions
             );
         
-            sendResponse<SavedFliping[]>(res, {
+            sendResponse<FlippingOrders[]>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'SavedFliping retrieved successfully !',
+              message: 'FlippingOrders retrieved successfully !',
               meta: result.meta,
               data: result.data,
             });
           }
         );
         
-        const getSingleSavedFliping: RequestHandler = catchAsync(
+        const getSingleFlippingOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
         
-            const result = await SavedFlipingService.getSingleSavedFliping(id);
+            const result = await FlippingOrdersService.getSingleFlippingOrders(id);
         
-            sendResponse<SavedFliping>(res, {
+            sendResponse<FlippingOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'SavedFliping retrieved  successfully!',
+              message: 'FlippingOrders retrieved  successfully!',
               data: result,
             });
           }
         );
         
-        const updateSavedFliping: RequestHandler = catchAsync(
+        const updateFlippingOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
             const updateAbleData = req.body;
         
-            const result = await SavedFlipingService.updateSavedFliping(
+            const result = await FlippingOrdersService.updateFlippingOrders(
               id,
               updateAbleData
             );
         
-            sendResponse<SavedFliping>(res, {
+            sendResponse<FlippingOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'SavedFliping Updated successfully!',
+              message: 'FlippingOrders Updated successfully!',
               data: result,
             });
           }
         );
-        const deleteSavedFliping: RequestHandler = catchAsync(
+        const deleteFlippingOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
         
-            const result = await SavedFlipingService.deleteSavedFliping(id);
+            const result = await FlippingOrdersService.deleteFlippingOrders(id);
         
-            sendResponse<SavedFliping>(res, {
+            sendResponse<FlippingOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'SavedFliping deleted successfully!',
+              message: 'FlippingOrders deleted successfully!',
               data: result,
             });
           }
         );
         
-        export const SavedFlipingController = {
-          getAllSavedFliping,
-          createSavedFliping,
-          updateSavedFliping,
-          getSingleSavedFliping,
-          deleteSavedFliping,
+        export const FlippingOrdersController = {
+          getAllFlippingOrders,
+          createFlippingOrders,
+          updateFlippingOrders,
+          getSingleFlippingOrders,
+          deleteFlippingOrders,
         };

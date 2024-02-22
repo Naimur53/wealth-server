@@ -6,6 +6,8 @@ import { CrowdFundRoutes } from '../modules/crowdFund/crowdFund.router';
 import { CrowdFundOrdersRoutes } from '../modules/crowdFundOrders/crowdFundOrders.router';
 import { FeedbackRoutes } from '../modules/feedback/feedback.router';
 import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
+import { FlippingRoutes } from '../modules/flipping/flipping.router';
+import { FlippingOrdersRoutes } from '../modules/flippingOrders/flippingOrders.router';
 import { LocationRoutes } from '../modules/location/location.router';
 import { MessaageRoutes } from '../modules/messaage/messaage.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
@@ -13,7 +15,7 @@ import { PropertryOrdersRoutes } from '../modules/propertryOrders/propertryOrder
 import { PropertyRoutes } from '../modules/property/property.router';
 import { PropertyStateRoutes } from '../modules/propertyState/propertyState.router';
 import { SavedCrowdFundRoutes } from '../modules/savedCrowdFund/savedCrowdFund.router';
-import { SavedFlipingRoutes } from '../modules/savedFliping/savedFliping.router';
+import { SavedFlippingRoutes } from '../modules/savedFlipping/savedFlipping.router';
 import { SavedPropertryRoutes } from '../modules/savedPropertry/savedPropertry.router';
 import { SeenMessageRoutes } from '../modules/seenMessage/seenMessage.router';
 import { UserRoutes } from '../modules/user/user.router';
@@ -84,10 +86,19 @@ const moduleRoutes = [
   },
 
   {
-    path: '/savedFliping',
-    route: SavedFlipingRoutes,
+    path: '/savedFlipping',
+    route: SavedFlippingRoutes,
   },
 
+  {
+    path: '/flipping',
+    route: FlippingRoutes,
+  },
+
+  {
+    path: '/flippingOrders',
+    route: FlippingOrdersRoutes,
+  },
   {
     path: '/feedback',
     route: FeedbackRoutes,

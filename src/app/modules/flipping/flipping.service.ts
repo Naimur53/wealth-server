@@ -1,17 +1,17 @@
-import { SavedFliping, Prisma } from '@prisma/client';
+import { Flipping, Prisma } from '@prisma/client';
         import httpStatus from 'http-status';
         import ApiError from '../../../errors/ApiError';
         import { paginationHelpers } from '../../../helpers/paginationHelper';
         import { IGenericResponse } from '../../../interfaces/common';
         import { IPaginationOptions } from '../../../interfaces/pagination';
         import prisma from '../../../shared/prisma';
-        import { savedFlipingSearchableFields } from './savedFliping.constant';
-        import { ISavedFlipingFilters } from './savedFliping.interface';
+        import { flippingSearchableFields } from './flipping.constant';
+        import { IFlippingFilters } from './flipping.interface';
         
-        const getAllSavedFliping = async (
-          filters: ISavedFlipingFilters,
+        const getAllFlipping = async (
+          filters: IFlippingFilters,
           paginationOptions: IPaginationOptions
-        ): Promise<IGenericResponse<SavedFliping[]>> => {
+        ): Promise<IGenericResponse<Flipping[]>> => {
           const { page, limit, skip } =
             paginationHelpers.calculatePagination(paginationOptions);
         
@@ -20,7 +20,7 @@ import { SavedFliping, Prisma } from '@prisma/client';
           const andCondition = [];
         
           if (searchTerm) {
-            const searchAbleFields = savedFlipingSearchableFields.map(single => {
+            const searchAbleFields = flippingSearchableFields.map(single => {
               const query = {
                 [single]: {
                   contains: searchTerm,
@@ -43,10 +43,10 @@ import { SavedFliping, Prisma } from '@prisma/client';
             });
           }
         
-          const whereConditions: Prisma.SavedFlipingWhereInput =
+          const whereConditions: Prisma.FlippingWhereInput =
             andCondition.length > 0 ? { AND: andCondition } : {};
         
-          const result = await prisma.savedFliping.findMany({
+          const result = await prisma.flipping.findMany({
             where: whereConditions,
             skip,
             take: limit,
@@ -59,7 +59,7 @@ import { SavedFliping, Prisma } from '@prisma/client';
                     createdAt: 'desc',
                   },
           });
-          const total = await prisma.savedFliping.count();
+          const total = await prisma.flipping.count();
           const output = {
             data: result,
             meta: { page, limit, total },
@@ -67,19 +67,19 @@ import { SavedFliping, Prisma } from '@prisma/client';
           return output;
         };
         
-        const createSavedFliping = async (
-          payload: SavedFliping
-        ): Promise<SavedFliping | null> => {
-          const newSavedFliping = await prisma.savedFliping.create({
+        const createFlipping = async (
+          payload: Flipping
+        ): Promise<Flipping | null> => {
+          const newFlipping = await prisma.flipping.create({
             data: payload,
           });
-          return newSavedFliping;
+          return newFlipping;
         };
         
-        const getSingleSavedFliping = async (
+        const getSingleFlipping = async (
           id: string
-        ): Promise<SavedFliping | null> => {
-          const result = await prisma.savedFliping.findUnique({
+        ): Promise<Flipping | null> => {
+          const result = await prisma.flipping.findUnique({
             where: {
               id,
             },
@@ -87,11 +87,11 @@ import { SavedFliping, Prisma } from '@prisma/client';
           return result;
         };
         
-        const updateSavedFliping = async (
+        const updateFlipping = async (
           id: string,
-          payload: Partial<SavedFliping>
-        ): Promise<SavedFliping | null> => {
-          const result = await prisma.savedFliping.update({
+          payload: Partial<Flipping>
+        ): Promise<Flipping | null> => {
+          const result = await prisma.flipping.update({
             where: {
               id,
             },
@@ -100,22 +100,22 @@ import { SavedFliping, Prisma } from '@prisma/client';
           return result;
         };
         
-        const deleteSavedFliping = async (
+        const deleteFlipping = async (
           id: string
-        ): Promise<SavedFliping | null> => {
-          const result = await prisma.savedFliping.delete({
+        ): Promise<Flipping | null> => {
+          const result = await prisma.flipping.delete({
             where: { id },
           });
           if (!result) {
-            throw new ApiError(httpStatus.NOT_FOUND, 'SavedFliping not found!');
+            throw new ApiError(httpStatus.NOT_FOUND, 'Flipping not found!');
           }
           return result;
         };
         
-        export const SavedFlipingService = {
-          getAllSavedFliping,
-          createSavedFliping,
-          updateSavedFliping,
-          getSingleSavedFliping,
-          deleteSavedFliping,
+        export const FlippingService = {
+          getAllFlipping,
+          createFlipping,
+          updateFlipping,
+          getSingleFlipping,
+          deleteFlipping,
         };
