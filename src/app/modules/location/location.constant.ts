@@ -1,9 +1,2 @@
-
-        export const locationSearchableFields = [ 
-          
-        ];
-        export const locationFilterAbleFields = [
-            
-          ];
-          
-        
+export const locationSearchableFields = ['name'];
+export const locationFilterAbleFields = ['name'];

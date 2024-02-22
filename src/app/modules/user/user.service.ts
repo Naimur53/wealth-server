@@ -81,6 +81,9 @@ const getAllUser = async (
       isBlocked: true,
       status: true,
       phoneNumber: true,
+      dateOfBath: true,
+      gender: true,
+      location: true,
     },
   });
   const total = await prisma.user.count();
