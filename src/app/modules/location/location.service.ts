@@ -81,10 +81,16 @@ const createLocation = async (payload: Location): Promise<Location | null> => {
   return newLocation;
 };
 
-const getSingleLocation = async (id: string): Promise<Location | null> => {
+const getSingleLocation = async (
+  id: string,
+  extraInfo: { flipping: boolean; crowdFund: boolean; property: boolean }
+): Promise<Location | null> => {
   const result = await prisma.location.findUnique({
     where: {
       id,
+    },
+    include: {
+      ...extraInfo,
     },
   });
   return result;

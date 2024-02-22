@@ -43,8 +43,12 @@ const getAllLocation = catchAsync(async (req: Request, res: Response) => {
 const getSingleLocation: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const id = req.params.id;
-
-    const result = await LocationService.getSingleLocation(id);
+    const { flipping, property, crowdFund } = req.body;
+    const result = await LocationService.getSingleLocation(id, {
+      flipping: Boolean(flipping),
+      property: Boolean(property),
+      crowdFund: Boolean(crowdFund),
+    });
 
     sendResponse<Location>(res, {
       statusCode: httpStatus.OK,

@@ -41,8 +41,8 @@ model User {
   savedPropertry  SavedPropertry[]
   savedCrowdFund  SavedCrowdFund[]
   crowdFundOrders CrowdFundOrders[]
-  savedFliping    SavedFliping[]
-  flipingOrders   FlipingOrders[]
+  savedflipping    SavedFlipping[]
+  flippingOrders   FlippingOrders[]
   feedback        Feedback[]
   messaage        Messaage[]
   seenMessage     SeenMessage?
@@ -76,7 +76,7 @@ model Location {
   updatedAt DateTime   @updatedAt
   property  Property[]
   crowFund  CrowdFund[]
-  fliping   Fliping[]
+  flipping   Flipping[]
 }
 
 // single currenct loctoin property start ---------------------------------------
@@ -130,8 +130,8 @@ model SavedPropertry {
   ownBy      User     @relation(fields: [ownById], references: [id])
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id])
-  fliping    Fliping? @relation(fields: [flipingId], references: [id])
-  flipingId  String?
+  flipping    Flipping? @relation(fields: [flippingId], references: [id])
+  flippingId  String?
 }
 
 model PropertryOrders {
@@ -175,7 +175,7 @@ model Bank {
   logoOfBank      String
   propertryOrders PropertryOrders[]
   crowdFundOrders CrowdFundOrders[]
-  flipingOrders   FlipingOrders[]
+  flippingOrders   FlippingOrders[]
 }
 
 enum EBankType {
@@ -233,8 +233,8 @@ model CrowdFundOrders {
 
 // ------------------------------------ crowd fund end 
 
-// fliping area 
-model Fliping {
+// flipping area 
+model Flipping {
   id             String           @id @default(uuid())
   thumbnail      String
   title          String
@@ -249,23 +249,23 @@ model Fliping {
   type           EPropertyType
   locationId     String
   location       Location         @relation(fields: [locationId], references: [id])
-  savedFliping   SavedFliping[]
-  flipingOrders  FlipingOrders?
+  savedFlipping   SavedFlipping[]
+  flippingOrders  FlippingOrders?
   savedPropertry SavedPropertry[]
 }
 
-model SavedFliping {
+model SavedFlipping {
   id        String  @id @unique @default(uuid())
   ownById   String
   ownBy     User    @relation(fields: [ownById], references: [id])
-  flipingId String
-  fliping   Fliping @relation(fields: [flipingId], references: [id])
+  flippingId String
+  flipping   Flipping @relation(fields: [flippingId], references: [id])
 }
 
-model FlipingOrders {
+model FlippingOrders {
   id                String       @id @unique @default(uuid())
-  flipingId         String       @unique
-  fliping           Fliping      @relation(fields: [flipingId], references: [id])
+  flippingId         String       @unique
+  flipping           Flipping      @relation(fields: [flippingId], references: [id])
   bankName          String?
   bankAccountNumber String?
   paymentReceiptUrl String?

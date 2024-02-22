@@ -6,8 +6,6 @@ import { CrowdFundRoutes } from '../modules/crowdFund/crowdFund.router';
 import { CrowdFundOrdersRoutes } from '../modules/crowdFundOrders/crowdFundOrders.router';
 import { FeedbackRoutes } from '../modules/feedback/feedback.router';
 import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
-import { FlipingRoutes } from '../modules/fliping/fliping.router';
-import { FlipingOrdersRoutes } from '../modules/flipingOrders/flipingOrders.router';
 import { LocationRoutes } from '../modules/location/location.router';
 import { MessaageRoutes } from '../modules/messaage/messaage.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
@@ -86,18 +84,8 @@ const moduleRoutes = [
   },
 
   {
-    path: '/fliping',
-    route: FlipingRoutes,
-  },
-
-  {
     path: '/savedFliping',
     route: SavedFlipingRoutes,
-  },
-
-  {
-    path: '/flipingOrders',
-    route: FlipingOrdersRoutes,
   },
 
   {

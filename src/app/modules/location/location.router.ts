@@ -5,7 +5,11 @@ import { LocationValidation } from './location.validation';
 const router = express.Router();
 
 router.get('/', LocationController.getAllLocation);
-router.get('/:id', LocationController.getSingleLocation);
+router.get(
+  '/:id',
+  validateRequest(LocationValidation.getSingleLocation),
+  LocationController.getSingleLocation
+);
 
 router.post(
   '/',
