@@ -85,15 +85,12 @@ const getSingleLocation = async (
   id: string,
   extraInfo: { flipping: boolean; crowdFund: boolean; property: boolean }
 ): Promise<Location | null> => {
-  console.log(extraInfo);
   const result = await prisma.location.findUnique({
     where: {
       id,
     },
     include: {
-      flipping: false,
-      property: false,
-      crowdFund: true,
+      ...extraInfo,
     },
   });
   return result;

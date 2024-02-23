@@ -97,7 +97,7 @@ model Property {
   type             EPropertyType
   location         Location         @relation(fields: [locationId], references: [id])
   propertyState    PropertyState[]
-  order            PropertryOrders?
+  order             PropertryOrders?
   savedPropertry   SavedPropertry[]
 }
 
