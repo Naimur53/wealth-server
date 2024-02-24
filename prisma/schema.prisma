@@ -94,7 +94,8 @@ model Property {
   videoUrl         String
   images           String[]
   locationId       String
-   createdAt DateTime   @default(now())
+  createdAt DateTime   @default(now())
+  status  EPropertyStatus @default(available)
   updatedAt DateTime   @updatedAt
   type             EPropertyType
   location         Location         @relation(fields: [locationId], references: [id])
@@ -103,9 +104,11 @@ model Property {
   savedPropertry   SavedPropertry[]
 }
 
-enum EPropertySoldStatus {
+enum EPropertyStatus {
   sold
   available
+  pending
+  denied
 }
 
 enum EPropertyType {
@@ -202,6 +205,7 @@ model CrowdFund {
   type            EPropertyType
   images          String[]
   locationId      String
+  status          EPropertyStatus @default(available)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
    location         Location         @relation(fields: [locationId], references: [id])
@@ -251,6 +255,9 @@ model Flipping {
   videoUrl       String
   images         String[]
   type           EPropertyType
+    status          EPropertyStatus @default(pending)
+     createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
   locationId     String
   location       Location         @relation(fields: [locationId], references: [id])
   savedFlipping   SavedFlipping[]

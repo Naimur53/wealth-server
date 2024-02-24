@@ -1,4 +1,4 @@
-import { EPropertyType } from '@prisma/client';
+import { EPropertyStatus, EPropertyType } from '@prisma/client';
 import { z } from 'zod';
 
 const createValidation = z.object({
@@ -8,6 +8,9 @@ const createValidation = z.object({
     description: z.string({ required_error: 'description is required' }),
     rooms: z.number().optional(),
     size: z.string({ required_error: 'size is required' }),
+    status: z
+      .enum(Object.keys(EPropertyStatus) as [string, ...string[]])
+      .optional(),
     floor: z.string().optional(),
     targetFund: z.number({ required_error: 'target fund is required' }),
     fundRaised: z
