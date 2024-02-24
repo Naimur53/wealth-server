@@ -148,6 +148,7 @@ model PropertyOrders {
   bankAccountNumber String?
   paymentReceiptUrl String?
   paystackId        String?
+  paystackUrl        String?
   wealthBankId      String?
   wealthBank        Bank?        @relation(fields: [wealthBankId], references: [id])
   orderById         String
@@ -155,7 +156,7 @@ model PropertyOrders {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   status            EOrderStatus @default(pending)
-  paymentType       EPaymentType
+  paymentType       EOrderPaymentType
 }
 
 enum EOrderStatus {
@@ -164,7 +165,7 @@ enum EOrderStatus {
   denied
 }
 
-enum EPaymentType {
+enum EOrderPaymentType {
   paystack
   manual
 }
@@ -237,7 +238,7 @@ model CrowdFundOrders {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   status            EOrderStatus @default(pending)
-  paymentType       EPaymentType
+  paymentType       EOrderPaymentType
 }
 
 // ------------------------------------ crowd fund end 
@@ -292,7 +293,7 @@ model FlippingOrders {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   status            EOrderStatus @default(pending)
-  paymentType       EPaymentType
+  paymentType       EOrderPaymentType
 }
 
 // feed back 

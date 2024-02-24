@@ -1,9 +1,2 @@
-
-        export const bankSearchableFields = [ 
-          
-        ];
-        export const bankFilterAbleFields = [
-            
-          ];
-          
-        
+export const bankSearchableFields = ['name'];
+export const bankFilterAbleFields = ['name', 'typeOfBank'];

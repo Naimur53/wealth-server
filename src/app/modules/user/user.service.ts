@@ -156,12 +156,12 @@ const updateUser = async (
     );
   }
 
-  if (requestedUser.role === UserRole.user && payload.status) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'only admin and super admin can verify seller '
-    );
-  }
+  // if (requestedUser.role === UserRole.user && payload.status) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     'only admin and super admin can verify seller '
+  //   );
+  // }
 
   const result = await prisma.user.update({
     where: {
