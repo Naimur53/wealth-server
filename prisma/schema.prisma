@@ -196,7 +196,7 @@ model CrowdFund {
   rooms           Int?
   size            String
   floor           String?
-  tragetFund      Float
+  targetFund      Float
   fundRaised      Float             @default(0)
   streetLocation  String
   videoUrl        String
