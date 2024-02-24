@@ -12,8 +12,10 @@ const getAllLocation = async (
   filters: ILocationFilters,
   paginationOptions: IPaginationOptions
 ): Promise<IGenericResponse<Location[]>> => {
-  const { page, limit, skip } =
-    paginationHelpers.calculatePagination(paginationOptions);
+  const { page, limit, skip } = paginationHelpers.calculatePagination({
+    ...paginationOptions,
+    limit: paginationOptions.limit || 100,
+  });
 
   const { searchTerm, ...filterData } = filters;
 
