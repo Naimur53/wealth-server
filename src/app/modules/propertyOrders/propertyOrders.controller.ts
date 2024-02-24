@@ -1,4 +1,4 @@
-import { PropertryOrders } from '@prisma/client';
+import { PropertyOrders } from '@prisma/client';
         import { Request, Response } from 'express';
         import { RequestHandler } from 'express-serve-static-core';
         import httpStatus from 'http-status';
@@ -6,99 +6,99 @@ import { PropertryOrders } from '@prisma/client';
         import catchAsync from '../../../shared/catchAsync';
         import pick from '../../../shared/pick';
         import sendResponse from '../../../shared/sendResponse';
-        import { PropertryOrdersService } from './propertryOrders.service';
-        import { propertryOrdersFilterAbleFields } from './propertryOrders.constant';
-        const createPropertryOrders: RequestHandler = catchAsync(
+        import { PropertyOrdersService } from './propertyOrders.service';
+        import { propertyOrdersFilterAbleFields } from './propertyOrders.constant';
+        const createPropertyOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
-            const PropertryOrdersData = req.body;
+            const PropertyOrdersData = req.body;
         
-            const result = await PropertryOrdersService.createPropertryOrders(
-              PropertryOrdersData
+            const result = await PropertyOrdersService.createPropertyOrders(
+              PropertyOrdersData
             );
-            sendResponse<PropertryOrders>(res, {
+            sendResponse<PropertyOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'PropertryOrders Created successfully!',
+              message: 'PropertyOrders Created successfully!',
               data: result,
             });
           }
         );
         
-        const getAllPropertryOrders = catchAsync(
+        const getAllPropertyOrders = catchAsync(
           async (req: Request, res: Response) => {
             const filters = pick(req.query, [
               'searchTerm',
-              ...propertryOrdersFilterAbleFields,
+              ...propertyOrdersFilterAbleFields,
             ]);
             const paginationOptions = pick(req.query, paginationFields);
         
-            const result = await PropertryOrdersService.getAllPropertryOrders(
+            const result = await PropertyOrdersService.getAllPropertyOrders(
               filters,
               paginationOptions
             );
         
-            sendResponse<PropertryOrders[]>(res, {
+            sendResponse<PropertyOrders[]>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'PropertryOrders retrieved successfully !',
+              message: 'PropertyOrders retrieved successfully !',
               meta: result.meta,
               data: result.data,
             });
           }
         );
         
-        const getSinglePropertryOrders: RequestHandler = catchAsync(
+        const getSinglePropertyOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
         
-            const result = await PropertryOrdersService.getSinglePropertryOrders(id);
+            const result = await PropertyOrdersService.getSinglePropertyOrders(id);
         
-            sendResponse<PropertryOrders>(res, {
+            sendResponse<PropertyOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'PropertryOrders retrieved  successfully!',
+              message: 'PropertyOrders retrieved  successfully!',
               data: result,
             });
           }
         );
         
-        const updatePropertryOrders: RequestHandler = catchAsync(
+        const updatePropertyOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
             const updateAbleData = req.body;
         
-            const result = await PropertryOrdersService.updatePropertryOrders(
+            const result = await PropertyOrdersService.updatePropertyOrders(
               id,
               updateAbleData
             );
         
-            sendResponse<PropertryOrders>(res, {
+            sendResponse<PropertyOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'PropertryOrders Updated successfully!',
+              message: 'PropertyOrders Updated successfully!',
               data: result,
             });
           }
         );
-        const deletePropertryOrders: RequestHandler = catchAsync(
+        const deletePropertyOrders: RequestHandler = catchAsync(
           async (req: Request, res: Response) => {
             const id = req.params.id;
         
-            const result = await PropertryOrdersService.deletePropertryOrders(id);
+            const result = await PropertyOrdersService.deletePropertyOrders(id);
         
-            sendResponse<PropertryOrders>(res, {
+            sendResponse<PropertyOrders>(res, {
               statusCode: httpStatus.OK,
               success: true,
-              message: 'PropertryOrders deleted successfully!',
+              message: 'PropertyOrders deleted successfully!',
               data: result,
             });
           }
         );
         
-        export const PropertryOrdersController = {
-          getAllPropertryOrders,
-          createPropertryOrders,
-          updatePropertryOrders,
-          getSinglePropertryOrders,
-          deletePropertryOrders,
+        export const PropertyOrdersController = {
+          getAllPropertyOrders,
+          createPropertyOrders,
+          updatePropertyOrders,
+          getSinglePropertyOrders,
+          deletePropertyOrders,
         };

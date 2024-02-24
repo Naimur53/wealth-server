@@ -1,5 +1,5 @@
 
-        export type IPropertryOrdersFilters = {
+        export type IPropertyOrdersFilters = {
             searchTerm?: string;
           }; 
         

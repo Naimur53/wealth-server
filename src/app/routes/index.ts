@@ -11,8 +11,8 @@ import { FlippingOrdersRoutes } from '../modules/flippingOrders/flippingOrders.r
 import { LocationRoutes } from '../modules/location/location.router';
 import { MessaageRoutes } from '../modules/messaage/messaage.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
-import { PropertryOrdersRoutes } from '../modules/propertryOrders/propertryOrders.router';
 import { PropertyRoutes } from '../modules/property/property.router';
+import { PropertyOrdersRoutes } from '../modules/propertyOrders/propertyOrders.router';
 import { PropertyStateRoutes } from '../modules/propertyState/propertyState.router';
 import { SavedCrowdFundRoutes } from '../modules/savedCrowdFund/savedCrowdFund.router';
 import { SavedFlippingRoutes } from '../modules/savedFlipping/savedFlipping.router';
@@ -56,8 +56,8 @@ const moduleRoutes = [
   },
 
   {
-    path: '/propertryOrders',
-    route: PropertryOrdersRoutes,
+    path: '/propertyOrders',
+    route: PropertyOrdersRoutes,
   },
 
   {

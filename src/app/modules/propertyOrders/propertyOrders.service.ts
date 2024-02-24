@@ -1,17 +1,17 @@
-import { PropertryOrders, Prisma } from '@prisma/client';
+import { PropertyOrders, Prisma } from '@prisma/client';
         import httpStatus from 'http-status';
         import ApiError from '../../../errors/ApiError';
         import { paginationHelpers } from '../../../helpers/paginationHelper';
         import { IGenericResponse } from '../../../interfaces/common';
         import { IPaginationOptions } from '../../../interfaces/pagination';
         import prisma from '../../../shared/prisma';
-        import { propertryOrdersSearchableFields } from './propertryOrders.constant';
-        import { IPropertryOrdersFilters } from './propertryOrders.interface';
+        import { propertyOrdersSearchableFields } from './propertyOrders.constant';
+        import { IPropertyOrdersFilters } from './propertyOrders.interface';
         
-        const getAllPropertryOrders = async (
-          filters: IPropertryOrdersFilters,
+        const getAllPropertyOrders = async (
+          filters: IPropertyOrdersFilters,
           paginationOptions: IPaginationOptions
-        ): Promise<IGenericResponse<PropertryOrders[]>> => {
+        ): Promise<IGenericResponse<PropertyOrders[]>> => {
           const { page, limit, skip } =
             paginationHelpers.calculatePagination(paginationOptions);
         
@@ -20,7 +20,7 @@ import { PropertryOrders, Prisma } from '@prisma/client';
           const andCondition = [];
         
           if (searchTerm) {
-            const searchAbleFields = propertryOrdersSearchableFields.map(single => {
+            const searchAbleFields = propertyOrdersSearchableFields.map(single => {
               const query = {
                 [single]: {
                   contains: searchTerm,
@@ -43,10 +43,10 @@ import { PropertryOrders, Prisma } from '@prisma/client';
             });
           }
         
-          const whereConditions: Prisma.PropertryOrdersWhereInput =
+          const whereConditions: Prisma.PropertyOrdersWhereInput =
             andCondition.length > 0 ? { AND: andCondition } : {};
         
-          const result = await prisma.propertryOrders.findMany({
+          const result = await prisma.propertyOrders.findMany({
             where: whereConditions,
             skip,
             take: limit,
@@ -59,7 +59,7 @@ import { PropertryOrders, Prisma } from '@prisma/client';
                     createdAt: 'desc',
                   },
           });
-          const total = await prisma.propertryOrders.count();
+          const total = await prisma.propertyOrders.count();
           const output = {
             data: result,
             meta: { page, limit, total },
@@ -67,19 +67,19 @@ import { PropertryOrders, Prisma } from '@prisma/client';
           return output;
         };
         
-        const createPropertryOrders = async (
-          payload: PropertryOrders
-        ): Promise<PropertryOrders | null> => {
-          const newPropertryOrders = await prisma.propertryOrders.create({
+        const createPropertyOrders = async (
+          payload: PropertyOrders
+        ): Promise<PropertyOrders | null> => {
+          const newPropertyOrders = await prisma.propertyOrders.create({
             data: payload,
           });
-          return newPropertryOrders;
+          return newPropertyOrders;
         };
         
-        const getSinglePropertryOrders = async (
+        const getSinglePropertyOrders = async (
           id: string
-        ): Promise<PropertryOrders | null> => {
-          const result = await prisma.propertryOrders.findUnique({
+        ): Promise<PropertyOrders | null> => {
+          const result = await prisma.propertyOrders.findUnique({
             where: {
               id,
             },
@@ -87,11 +87,11 @@ import { PropertryOrders, Prisma } from '@prisma/client';
           return result;
         };
         
-        const updatePropertryOrders = async (
+        const updatePropertyOrders = async (
           id: string,
-          payload: Partial<PropertryOrders>
-        ): Promise<PropertryOrders | null> => {
-          const result = await prisma.propertryOrders.update({
+          payload: Partial<PropertyOrders>
+        ): Promise<PropertyOrders | null> => {
+          const result = await prisma.propertyOrders.update({
             where: {
               id,
             },
@@ -100,22 +100,22 @@ import { PropertryOrders, Prisma } from '@prisma/client';
           return result;
         };
         
-        const deletePropertryOrders = async (
+        const deletePropertyOrders = async (
           id: string
-        ): Promise<PropertryOrders | null> => {
-          const result = await prisma.propertryOrders.delete({
+        ): Promise<PropertyOrders | null> => {
+          const result = await prisma.propertyOrders.delete({
             where: { id },
           });
           if (!result) {
-            throw new ApiError(httpStatus.NOT_FOUND, 'PropertryOrders not found!');
+            throw new ApiError(httpStatus.NOT_FOUND, 'PropertyOrders not found!');
           }
           return result;
         };
         
-        export const PropertryOrdersService = {
-          getAllPropertryOrders,
-          createPropertryOrders,
-          updatePropertryOrders,
-          getSinglePropertryOrders,
-          deletePropertryOrders,
+        export const PropertyOrdersService = {
+          getAllPropertyOrders,
+          createPropertyOrders,
+          updatePropertyOrders,
+          getSinglePropertyOrders,
+          deletePropertyOrders,
         };

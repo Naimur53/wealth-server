@@ -38,7 +38,7 @@ model User {
   isChampion        Boolean           @default(false)
   status          EUserStatus       @default(pending)
   verificationOtp VerificationOtp[]
-  propertryOrders PropertryOrders[]
+  propertryOrders PropertyOrders[]
   savedPropertry  SavedPropertry[]
   savedCrowdFund  SavedCrowdFund[]
   crowdFundOrders CrowdFundOrders[]
@@ -101,7 +101,7 @@ model Property {
   type           EPropertyType
   location       Location         @relation(fields: [locationId], references: [id])
   propertyState  PropertyState[]
-  order          PropertryOrders?
+  order          PropertyOrders?
   savedPropertry SavedPropertry[]
 }
 
@@ -140,7 +140,7 @@ model SavedPropertry {
   flippingId String?
 }
 
-model PropertryOrders {
+model PropertyOrders {
   id                String       @id @unique @default(uuid())
   propertyId        String       @unique
   property          Property     @relation(fields: [propertyId], references: [id])
@@ -179,7 +179,7 @@ model Bank {
   updatedAt       DateTime          @updatedAt
   typeOfBank      EBankType
   logoOfBank      String
-  propertryOrders PropertryOrders[]
+  propertryOrders PropertyOrders[]
   crowdFundOrders CrowdFundOrders[]
   flippingOrders  FlippingOrders[]
 }
