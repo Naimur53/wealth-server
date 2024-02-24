@@ -8,8 +8,7 @@ datasource db {
 }
 
 enum UserRole {
-  user
-  champion
+  user 
   admin
   superAdmin
 }
@@ -36,6 +35,7 @@ model User {
   profileImg      String?           @default("/assets/demo-user.png")
   isVerified      Boolean           @default(false)
   isBlocked       Boolean?
+  isChampion        Boolean           @default(false)
   status          EUserStatus       @default(pending)
   verificationOtp VerificationOtp[]
   propertryOrders PropertryOrders[]
@@ -78,8 +78,7 @@ model Location {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   property  Property[]
-  crowdFund CrowdFund[]
-  flipping  Flipping[]
+  crowdFund CrowdFund[] 
 }
 
 // single currenct loctoin property start ---------------------------------------
@@ -262,8 +261,9 @@ model Flipping {
   updatedAt      DateTime         @updatedAt
   ownById        String
   ownBy          User             @relation(fields: [ownById], references: [id])
-  locationId     String
-  location       Location         @relation(fields: [locationId], references: [id])
+  location     String
+  emergencyContact String?
+  emergencyEmail String?
   savedFlipping  SavedFlipping[]
   flippingOrders FlippingOrders?
   savedPropertry SavedPropertry[]

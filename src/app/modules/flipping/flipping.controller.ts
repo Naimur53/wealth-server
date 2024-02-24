@@ -1,7 +1,8 @@
-import { Flipping } from '@prisma/client';
+import { EPropertyStatus, Flipping } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
@@ -11,8 +12,13 @@ import { FlippingService } from './flipping.service';
 const createFlipping: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const FlippingData = req.body;
-
-    const result = await FlippingService.createFlipping(FlippingData);
+    const user = req.user as JwtPayload;
+    const id = user.userId;
+    const result = await FlippingService.createFlipping({
+      ...FlippingData,
+      ownById: id,
+      status: EPropertyStatus.pending,
+    });
     sendResponse<Flipping>(res, {
       statusCode: httpStatus.OK,
       success: true,

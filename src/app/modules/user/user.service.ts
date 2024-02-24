@@ -84,6 +84,7 @@ const getAllUser = async (
       dateOfBath: true,
       gender: true,
       location: true,
+      isChampion: true,
     },
   });
   const total = await prisma.user.count();

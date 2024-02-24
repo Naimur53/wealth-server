@@ -69,12 +69,6 @@ const getAllFlipping = async (
 };
 
 const createFlipping = async (payload: Flipping): Promise<Flipping | null> => {
-  const isLocationExist = await prisma.location.findUnique({
-    where: { id: payload.locationId },
-  });
-  if (!isLocationExist) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Location Id is not valid');
-  }
   const newFlipping = await prisma.flipping.create({
     data: { ...payload, status: 'pending' },
   });
