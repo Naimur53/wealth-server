@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
 }
- 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -42,11 +42,12 @@ model User {
   savedPropertry  SavedPropertry[]
   savedCrowdFund  SavedCrowdFund[]
   crowdFundOrders CrowdFundOrders[]
-  savedflipping    SavedFlipping[]
-  flippingOrders   FlippingOrders[]
+  savedflipping   SavedFlipping[]
+  flippingOrders  FlippingOrders[]
   feedback        Feedback[]
   messaage        Messaage[]
   seenMessage     SeenMessage?
+  Flipping        Flipping[]
 }
 
 enum EUserStatus {
@@ -71,38 +72,38 @@ enum EVerificationOtp {
 
 // for location and property
 model Location {
-  id        String     @id @default(uuid())
-  name      String     @unique
+  id        String      @id @default(uuid())
+  name      String      @unique
   imgUrl    String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   property  Property[]
-  crowdFund  CrowdFund[]
-  flipping   Flipping[]
+  crowdFund CrowdFund[]
+  flipping  Flipping[]
 }
 
 // single currenct loctoin property start ---------------------------------------
 model Property {
-  id               String           @id @default(uuid())
-  thumbnail        String
-  title            String
-  description      String
-  rooms            Int?
-  size             String
-  floor            String? 
-  price            Float
-  streetLocation   String
-  videoUrl         String
-  images           String[]
-  locationId       String
-  createdAt DateTime   @default(now())
-  status  EPropertyStatus @default(available)
-  updatedAt DateTime   @updatedAt
-  type             EPropertyType
-  location         Location         @relation(fields: [locationId], references: [id])
-  propertyState    PropertyState[]
-  order             PropertryOrders?
-  savedPropertry   SavedPropertry[]
+  id             String           @id @default(uuid())
+  thumbnail      String
+  title          String
+  description    String
+  rooms          Int?
+  size           String
+  floor          String?
+  price          Float
+  streetLocation String
+  videoUrl       String
+  images         String[]
+  locationId     String
+  createdAt      DateTime         @default(now())
+  status         EPropertyStatus  @default(available)
+  updatedAt      DateTime         @updatedAt
+  type           EPropertyType
+  location       Location         @relation(fields: [locationId], references: [id])
+  propertyState  PropertyState[]
+  order          PropertryOrders?
+  savedPropertry SavedPropertry[]
 }
 
 enum EPropertyStatus {
@@ -131,13 +132,13 @@ model PropertyState {
 }
 
 model SavedPropertry {
-  id         String   @id @unique @default(uuid())
+  id         String    @id @unique @default(uuid())
   ownById    String
-  ownBy      User     @relation(fields: [ownById], references: [id])
+  ownBy      User      @relation(fields: [ownById], references: [id])
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id])
-  flipping    Flipping? @relation(fields: [flippingId], references: [id])
-  flippingId  String?
+  property   Property  @relation(fields: [propertyId], references: [id])
+  flipping   Flipping? @relation(fields: [flippingId], references: [id])
+  flippingId String?
 }
 
 model PropertryOrders {
@@ -181,7 +182,7 @@ model Bank {
   logoOfBank      String
   propertryOrders PropertryOrders[]
   crowdFundOrders CrowdFundOrders[]
-  flippingOrders   FlippingOrders[]
+  flippingOrders  FlippingOrders[]
 }
 
 enum EBankType {
@@ -206,10 +207,10 @@ model CrowdFund {
   type            EPropertyType
   images          String[]
   locationId      String
-  status          EPropertyStatus @default(available)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-   location         Location         @relation(fields: [locationId], references: [id])
+  status          EPropertyStatus   @default(available)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  location        Location          @relation(fields: [locationId], references: [id])
   savedCrowdFund  SavedCrowdFund[]
   crowdFundOrders CrowdFundOrders[]
 }
@@ -256,28 +257,30 @@ model Flipping {
   videoUrl       String
   images         String[]
   type           EPropertyType
-    status          EPropertyStatus @default(pending)
-     createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  status         EPropertyStatus  @default(pending)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  ownById        String
+  ownBy          User             @relation(fields: [ownById], references: [id])
   locationId     String
   location       Location         @relation(fields: [locationId], references: [id])
-  savedFlipping   SavedFlipping[]
-  flippingOrders  FlippingOrders?
+  savedFlipping  SavedFlipping[]
+  flippingOrders FlippingOrders?
   savedPropertry SavedPropertry[]
 }
 
 model SavedFlipping {
-  id        String  @id @unique @default(uuid())
-  ownById   String
-  ownBy     User    @relation(fields: [ownById], references: [id])
+  id         String   @id @unique @default(uuid())
+  ownById    String
+  ownBy      User     @relation(fields: [ownById], references: [id])
   flippingId String
   flipping   Flipping @relation(fields: [flippingId], references: [id])
 }
 
 model FlippingOrders {
   id                String       @id @unique @default(uuid())
-  flippingId         String       @unique
-  flipping           Flipping      @relation(fields: [flippingId], references: [id])
+  flippingId        String       @unique
+  flipping          Flipping     @relation(fields: [flippingId], references: [id])
   bankName          String?
   bankAccountNumber String?
   paymentReceiptUrl String?
