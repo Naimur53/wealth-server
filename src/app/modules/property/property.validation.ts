@@ -9,9 +9,7 @@ const createValidation = z.object({
     rooms: z.number().optional(),
     size: z.string({ required_error: 'size is required' }),
     floor: z.string().optional(),
-    annualisedReturn: z.number({
-      required_error: 'annualisedReturn is required',
-    }),
+
     price: z.number({ required_error: 'price is required' }),
     streetLocation: z.string({ required_error: 'streetLocation is required' }),
     videoUrl: z.string({ required_error: 'videoUrl is required' }),
@@ -30,11 +28,7 @@ const updateValidation = z.object({
     rooms: z.number().optional().optional(),
     size: z.string({ required_error: 'size is required' }).optional(),
     floor: z.string().optional(),
-    annualisedReturn: z
-      .number({
-        required_error: 'annualisedReturn is required',
-      })
-      .optional(),
+
     price: z.number({ required_error: 'price is required' }).optional(),
     streetLocation: z
       .string({ required_error: 'streetLocation is required' })

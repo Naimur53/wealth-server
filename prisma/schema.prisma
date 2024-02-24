@@ -88,8 +88,7 @@ model Property {
   description      String
   rooms            Int?
   size             String
-  floor            String?
-  annualisedReturn Float
+  floor            String? 
   price            Float
   streetLocation   String
   videoUrl         String
@@ -203,7 +202,7 @@ model CrowdFund {
   type            EPropertyType
   images          String[]
   locationId      String
-    createdAt         DateTime     @default(now())
+  createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
    location         Location         @relation(fields: [locationId], references: [id])
   savedCrowdFund  SavedCrowdFund[]
