@@ -1,3 +1,4 @@
+import { EPropertyType } from '@prisma/client';
 import { z } from 'zod';
 
 const createValidation = z.object({
@@ -16,7 +17,7 @@ const createValidation = z.object({
     videoUrl: z.string({ required_error: 'videoUrl is required' }),
     images: z.array(z.string()),
     locationId: z.string({ required_error: 'locationId is required' }),
-    type: z.enum(['apartment', 'house', 'condo']),
+    type: z.enum(Object.keys(EPropertyType) as [string, ...string[]]),
   }),
 });
 const updateValidation = z.object({

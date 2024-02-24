@@ -69,6 +69,12 @@ const getAllProperty = async (
 };
 
 const createProperty = async (payload: Property): Promise<Property | null> => {
+  const isLocationExist = await prisma.location.findUnique({
+    where: { id: payload.locationId },
+  });
+  if (!isLocationExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Location Id is not valid');
+  }
   const newProperty = await prisma.property.create({
     data: payload,
   });
