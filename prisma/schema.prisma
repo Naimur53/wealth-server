@@ -286,6 +286,7 @@ model FlippingOrders {
   bankAccountNumber String?
   paymentReceiptUrl String?
   paystackId        String?
+  paystackUrl        String?
   wealthBankId      String?
   wealthBank        Bank?        @relation(fields: [wealthBankId], references: [id])
   orderById         String
