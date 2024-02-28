@@ -1,10 +1,10 @@
-import { EOrderPaymentType, EOrderStatus } from '@prisma/client';
+import { EOrderPaymentType, EOrderRefName, EOrderStatus } from '@prisma/client';
 import { z } from 'zod';
 
 const createValidation = z.object({
   body: z.object({
     propertyId: z.string({ required_error: 'propertyId is required' }),
-
+    amount: z.number().optional(),
     bankName: z.string().optional(),
     bankAccountNumber: z.string().optional(),
     paymentReceiptUrl: z.string().optional(),
@@ -13,6 +13,7 @@ const createValidation = z.object({
     paymentType: z.enum(
       Object.keys(EOrderPaymentType) as [string, ...string[]]
     ),
+    refName: z.enum(Object.keys(EOrderRefName) as [string, ...string[]]),
   }),
 });
 const updateValidation = z.object({
@@ -33,7 +34,7 @@ const updateValidation = z.object({
       .optional(),
   }),
 });
-export const PropertyOrdersValidation = {
+export const OrdersValidation = {
   createValidation,
   updateValidation,
 };

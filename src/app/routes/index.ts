@@ -3,16 +3,14 @@ import { AuthRoutes } from '../modules/auth/auth.route';
 import { BankRoutes } from '../modules/bank/bank.router';
 import { ChatGroupRoutes } from '../modules/chatGroup/chatGroup.router';
 import { CrowdFundRoutes } from '../modules/crowdFund/crowdFund.router';
-import { CrowdFundOrdersRoutes } from '../modules/crowdFundOrders/crowdFundOrders.router';
 import { FeedbackRoutes } from '../modules/feedback/feedback.router';
 import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
 import { FlippingRoutes } from '../modules/flipping/flipping.router';
-import { FlippingOrdersRoutes } from '../modules/flippingOrders/flippingOrders.router';
 import { LocationRoutes } from '../modules/location/location.router';
-import { MessaageRoutes } from '../modules/messaage/messaage.router';
+import { MessageRoutes } from '../modules/message/message.router';
+import { OrdersRoutes } from '../modules/orders/orders.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
 import { PropertyRoutes } from '../modules/property/property.router';
-import { PropertyOrdersRoutes } from '../modules/propertyOrders/propertyOrders.router';
 import { PropertyStateRoutes } from '../modules/propertyState/propertyState.router';
 import { SavedCrowdFundRoutes } from '../modules/savedCrowdFund/savedCrowdFund.router';
 import { SavedFlippingRoutes } from '../modules/savedFlipping/savedFlipping.router';
@@ -56,8 +54,8 @@ const moduleRoutes = [
   },
 
   {
-    path: '/propertyOrders',
-    route: PropertyOrdersRoutes,
+    path: '/orders',
+    route: OrdersRoutes,
   },
 
   {
@@ -76,11 +74,6 @@ const moduleRoutes = [
   },
 
   {
-    path: '/crowdFundOrders',
-    route: CrowdFundOrdersRoutes,
-  },
-
-  {
     path: '/savedPropertry',
     route: SavedPropertryRoutes,
   },
@@ -96,10 +89,6 @@ const moduleRoutes = [
   },
 
   {
-    path: '/flippingOrders',
-    route: FlippingOrdersRoutes,
-  },
-  {
     path: '/feedback',
     route: FeedbackRoutes,
   },
@@ -110,8 +99,8 @@ const moduleRoutes = [
   },
 
   {
-    path: '/messaage',
-    route: MessaageRoutes,
+    path: '/message',
+    route: MessageRoutes,
   },
 
   {

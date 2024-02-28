@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum UserRole {
-  user 
+  user
   admin
   superAdmin
 }
@@ -35,17 +35,15 @@ model User {
   profileImg      String?           @default("/assets/demo-user.png")
   isVerified      Boolean           @default(false)
   isBlocked       Boolean?
-  isChampion        Boolean           @default(false)
+  isChampion      Boolean           @default(false)
   status          EUserStatus       @default(pending)
   verificationOtp VerificationOtp[]
-  propertryOrders PropertyOrders[]
+  propertryOrders Orders[]
   savedPropertry  SavedPropertry[]
   savedCrowdFund  SavedCrowdFund[]
-  crowdFundOrders CrowdFundOrders[]
   savedflipping   SavedFlipping[]
-  flippingOrders  FlippingOrders[]
   feedback        Feedback[]
-  messaage        Messaage[]
+  messaage        Message[]
   seenMessage     SeenMessage?
   Flipping        Flipping[]
 }
@@ -78,7 +76,7 @@ model Location {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   property  Property[]
-  crowdFund CrowdFund[] 
+  crowdFund CrowdFund[]
 }
 
 // single currenct loctoin property start ---------------------------------------
@@ -101,7 +99,7 @@ model Property {
   type           EPropertyType
   location       Location         @relation(fields: [locationId], references: [id])
   propertyState  PropertyState[]
-  order          PropertyOrders?
+  order          Orders[]
   savedPropertry SavedPropertry[]
 }
 
@@ -140,22 +138,29 @@ model SavedPropertry {
   flippingId String?
 }
 
-model PropertyOrders {
-  id                String       @id @unique @default(uuid())
-  propertyId        String       @unique
-  property          Property     @relation(fields: [propertyId], references: [id])
+model Orders {
+  id                String            @id @unique @default(uuid())
+  isPaid            Boolean           @default(false)
+  amount            Float
+  propertyId        String?
+  property          Property?         @relation(fields: [propertyId], references: [id])
+  crowdFundId       String?
+  crowdFund         CrowdFund?        @relation(fields: [crowdFundId], references: [id])
+  flippingId        String?
+  flipping          Flipping?         @relation(fields: [flippingId], references: [id])
+  refName           EOrderRefName
   bankName          String?
   bankAccountNumber String?
   paymentReceiptUrl String?
   paystackId        String?
-  paystackUrl        String?
+  paystackUrl       String?
   wealthBankId      String?
-  wealthBank        Bank?        @relation(fields: [wealthBankId], references: [id])
+  wealthBank        Bank?             @relation(fields: [wealthBankId], references: [id])
   orderById         String
-  orderBy           User         @relation(fields: [orderById], references: [id])
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  status            EOrderStatus @default(pending)
+  orderBy           User              @relation(fields: [orderById], references: [id])
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  status            EOrderStatus      @default(pending)
   paymentType       EOrderPaymentType
 }
 
@@ -163,6 +168,12 @@ enum EOrderStatus {
   pending
   success
   denied
+}
+
+enum EOrderRefName {
+  crowdFund
+  flipping
+  property
 }
 
 enum EOrderPaymentType {
@@ -174,15 +185,13 @@ enum EOrderPaymentType {
 
 // Bank
 model Bank {
-  id              String            @id @unique @default(uuid())
+  id              String    @id @unique @default(uuid())
   name            String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   typeOfBank      EBankType
   logoOfBank      String
-  propertryOrders PropertyOrders[]
-  crowdFundOrders CrowdFundOrders[]
-  flippingOrders  FlippingOrders[]
+  propertryOrders Orders[]
 }
 
 enum EBankType {
@@ -193,26 +202,26 @@ enum EBankType {
 //  single crowd funding start ----------------------------------------
 
 model CrowdFund {
-  id              String            @id @default(uuid())
-  thumbnail       String
-  title           String
-  description     String
-  rooms           Int?
-  size            String
-  floor           String?
-  targetFund      Float
-  fundRaised      Float             @default(0)
-  streetLocation  String
-  videoUrl        String
-  type            EPropertyType
-  images          String[]
-  locationId      String
-  status          EPropertyStatus   @default(available)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  location        Location          @relation(fields: [locationId], references: [id])
-  savedCrowdFund  SavedCrowdFund[]
-  crowdFundOrders CrowdFundOrders[]
+  id             String           @id @default(uuid())
+  thumbnail      String
+  title          String
+  description    String
+  rooms          Int?
+  size           String
+  floor          String?
+  targetFund     Float
+  fundRaised     Float            @default(0)
+  streetLocation String
+  videoUrl       String
+  type           EPropertyType
+  images         String[]
+  locationId     String
+  status         EPropertyStatus  @default(available)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  location       Location         @relation(fields: [locationId], references: [id])
+  savedCrowdFund SavedCrowdFund[]
+  Orders         Orders[]
 }
 
 model SavedCrowdFund {
@@ -223,51 +232,33 @@ model SavedCrowdFund {
   crowdFund   CrowdFund @relation(fields: [crowdFundId], references: [id])
 }
 
-model CrowdFundOrders {
-  id                String       @id @unique @default(uuid())
-  crowdFundId       String
-  crowdFund         CrowdFund    @relation(fields: [crowdFundId], references: [id])
-  bankName          String?
-  bankAccountNumber String?
-  paymentReceiptUrl String?
-  paystackId        String?
-  wealthBankId      String?
-  wealthBank        Bank?        @relation(fields: [wealthBankId], references: [id])
-  orderById         String
-  orderBy           User         @relation(fields: [orderById], references: [id])
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  status            EOrderStatus @default(pending)
-  paymentType       EOrderPaymentType
-}
-
 // ------------------------------------ crowd fund end 
 
 // flipping area 
 model Flipping {
-  id             String           @id @default(uuid())
-  thumbnail      String
-  title          String
-  description    String
-  rooms          Int?
-  size           String
-  floor          String?
-  price          Float
-  streetLocation String
-  videoUrl       String
-  images         String[]
-  type           EPropertyType
-  status         EPropertyStatus  @default(pending)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  ownById        String
-  ownBy          User             @relation(fields: [ownById], references: [id])
-  location     String
+  id               String           @id @default(uuid())
+  thumbnail        String
+  title            String
+  description      String
+  rooms            Int?
+  size             String
+  floor            String?
+  price            Float
+  streetLocation   String
+  videoUrl         String
+  images           String[]
+  type             EPropertyType
+  status           EPropertyStatus  @default(pending)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  ownById          String
+  ownBy            User             @relation(fields: [ownById], references: [id])
+  location         String
   emergencyContact String?
-  emergencyEmail String?
-  savedFlipping  SavedFlipping[]
-  flippingOrders FlippingOrders?
-  savedPropertry SavedPropertry[]
+  emergencyEmail   String?
+  savedFlipping    SavedFlipping[]
+  savedPropertry   SavedPropertry[]
+  Orders           Orders[]
 }
 
 model SavedFlipping {
@@ -278,72 +269,57 @@ model SavedFlipping {
   flipping   Flipping @relation(fields: [flippingId], references: [id])
 }
 
-model FlippingOrders {
-  id                String       @id @unique @default(uuid())
-  flippingId        String       @unique
-  flipping          Flipping     @relation(fields: [flippingId], references: [id])
-  bankName          String?
-  bankAccountNumber String?
-  paymentReceiptUrl String?
-  paystackId        String?
-  paystackUrl        String?
-  wealthBankId      String?
-  wealthBank        Bank?        @relation(fields: [wealthBankId], references: [id])
-  orderById         String
-  orderBy           User         @relation(fields: [orderById], references: [id])
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  status            EOrderStatus @default(pending)
-  paymentType       EOrderPaymentType
-}
-
 // feed back 
 model Feedback {
-  id        String   @id @unique @default(uuid())
-  createdAt DateTime @default(now())
-  rating    Int
-  ownById   String
-  ownBy     User     @relation(fields: [ownById], references: [id])
+  id          String   @id @unique @default(uuid())
+  createdAt   DateTime @default(now())
+  rating      Int
+  description String
+  ownById     String
+  ownBy       User     @relation(fields: [ownById], references: [id])
 }
 
 //  chat group 
 
 model ChatGroup {
-  id        String         @id @unique @default(uuid())
-  thumbnail String
-  name      String
-  type      EChatGroupType
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  messaage  Messaage[]
+  id          String         @id @unique @default(uuid())
+  thumbnail   String
+  name        String
+  type        EChatGroupType
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  messaage    Message[]
+  SeenMessage SeenMessage[]
 }
 
 enum EChatGroupType {
   public
-  private
+  admin
+  champion
 }
 
 // single message 
 
-model Messaage {
+model Message {
   id          String    @id @unique @default(uuid())
   chatGroupId String
   chatGroup   ChatGroup @relation(fields: [chatGroupId], references: [id])
 
-  text        String?
-  image       String?
-  sendById    String
-  sendBy      User          @relation(fields: [sendById], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  seenMessage SeenMessage[]
+  text      String?
+  image     String?
+  sendById  String
+  sendBy    User     @relation(fields: [sendById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SeenMessage {
-  id        String   @id @unique @default(uuid())
-  messageId String
-  message   Messaage @relation(fields: [messageId], references: [id])
-  seenById  String   @unique
-  seenBy    User     @relation(fields: [seenById], references: [id])
-  createdAt DateTime @default(now())
+  id        String    @id @unique @default(uuid())
+  groupId   String
+  chatGroup ChatGroup @relation(fields: [groupId], references: [id])
+  seenById  String    @unique
+  seenBy    User      @relation(fields: [seenById], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastSeen  DateTime
 }

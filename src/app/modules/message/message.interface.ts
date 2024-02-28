@@ -1,5 +1,5 @@
 
-        export type IMessaageFilters = {
+        export type IMessageFilters = {
             searchTerm?: string;
           }; 
         
