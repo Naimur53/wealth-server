@@ -74,7 +74,7 @@ const moduleRoutes = [
   },
 
   {
-    path: '/savedPropertry',
+    path: '/savedProperty',
     route: SavedPropertryRoutes,
   },
 
