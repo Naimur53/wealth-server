@@ -5,3 +5,4 @@ export const propertyFilterAbleFields = [
   'title',
   'locationId',
 ];
+export const propertyFilterByPrice = ['maxPrice', 'minPrice'];

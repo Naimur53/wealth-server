@@ -5,20 +5,21 @@ import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
+import currentTime from '../../../utils/currentTime';
 import { messageSearchableFields } from './message.constant';
 import { IMessageFilters } from './message.interface';
 
 const getAllMessage = async (
   filters: IMessageFilters,
-  paginationOptions: IPaginationOptions
+  paginationOptions: IPaginationOptions,
+  groupId: string,
+  userId: string
 ): Promise<IGenericResponse<Message[]>> => {
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
-
   const { searchTerm, ...filterData } = filters;
-
+  // const chatGroupId= filterData.chatGroupId;
   const andCondition = [];
-
   if (searchTerm) {
     const searchAbleFields = messageSearchableFields.map(single => {
       const query = {
@@ -47,7 +48,7 @@ const getAllMessage = async (
   const whereConditions: Prisma.MessageWhereInput =
     andCondition.length > 0 ? { AND: andCondition } : {};
 
-  const result = await prisma.message.findMany({
+  let result = await prisma.message.findMany({
     where: whereConditions,
     skip,
     take: limit,
@@ -59,11 +60,48 @@ const getAllMessage = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      reply: {
+        include: {
+          sendBy: {
+            select: {
+              email: true,
+              id: true,
+              profileImg: true,
+            },
+          },
+        },
+      },
+      sendBy: {
+        select: {
+          email: true,
+          id: true,
+          profileImg: true,
+        },
+      },
+    },
   });
   const total = await prisma.message.count();
+  const isSeenMessageExits = await prisma.seenMessage.findUnique({
+    where: { seenById: userId, groupId: groupId },
+  });
+  let unSeenCount: number = 0;
+  if (isSeenMessageExits) {
+    result = result.map(single => {
+      const isSeen =
+        new Date(isSeenMessageExits.lastSeen) >= new Date(single.createdAt);
+      if (!isSeen) {
+        unSeenCount++;
+      }
+      return {
+        ...single,
+        isSeen,
+      };
+    });
+  }
   const output = {
     data: result,
-    meta: { page, limit, total },
+    meta: { page, limit, total, unSeenCount },
   };
   return output;
 };
@@ -97,8 +135,26 @@ const createMessage = async (payload: Message): Promise<Message | null> => {
     );
   }
 
-  const newMessage = await prisma.message.create({
-    data: payload,
+  const newMessage = await prisma.$transaction(async tx => {
+    await tx.seenMessage.upsert({
+      where: {
+        groupId: payload.chatGroupId,
+        seenById: payload.sendById,
+      },
+      update: {
+        groupId: payload.chatGroupId,
+        seenById: payload.sendById,
+        lastSeen: currentTime(),
+      },
+      create: {
+        groupId: payload.chatGroupId,
+        seenById: payload.sendById,
+        lastSeen: currentTime(),
+      },
+    });
+    return await tx.message.create({
+      data: payload,
+    });
   });
   return newMessage;
 };

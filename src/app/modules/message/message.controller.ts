@@ -4,6 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
+import ApiError from '../../../errors/ApiError';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -29,8 +30,16 @@ const createMessage: RequestHandler = catchAsync(
 const getAllMessage = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, ['searchTerm', ...messageFilterAbleFields]);
   const paginationOptions = pick(req.query, paginationFields);
-
-  const result = await MessageService.getAllMessage(filters, paginationOptions);
+  const user = req.user as JwtPayload;
+  if (!filters.chatGroupId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Provide chatGroupId');
+  }
+  const result = await MessageService.getAllMessage(
+    filters,
+    paginationOptions,
+    filters.chatGroupId as string,
+    user.userId
+  );
 
   sendResponse<Message[]>(res, {
     statusCode: httpStatus.OK,

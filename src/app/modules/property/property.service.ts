@@ -15,7 +15,7 @@ const getAllProperty = async (
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, maxPrice, minPrice, ...filterData } = filters;
 
   const andCondition = [];
 
@@ -31,6 +31,20 @@ const getAllProperty = async (
     });
     andCondition.push({
       OR: searchAbleFields,
+    });
+  }
+  if (maxPrice) {
+    andCondition.push({
+      price: {
+        lte: Number(maxPrice),
+      },
+    });
+  }
+  if (minPrice) {
+    andCondition.push({
+      price: {
+        gte: Number(minPrice),
+      },
     });
   }
   if (Object.keys(filters).length) {
@@ -60,7 +74,7 @@ const getAllProperty = async (
             createdAt: 'desc',
           },
   });
-  const total = await prisma.property.count();
+  const total = await prisma.property.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },

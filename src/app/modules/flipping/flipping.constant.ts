@@ -5,3 +5,4 @@ export const flippingFilterAbleFields = [
   'title',
   'locationId',
 ];
+export const flippingFilterByPrice = ['maxPrice', 'minPrice'];

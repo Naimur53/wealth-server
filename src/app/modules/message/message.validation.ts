@@ -5,6 +5,7 @@ const createValidation = z.object({
     chatGroupId: z.string({ required_error: 'chatGroupId is required' }),
     text: z.string({ required_error: 'text is required' }).optional(),
     image: z.string({ required_error: 'image is required' }).optional(),
+    replyId: z.string({ required_error: 'image is required' }).optional(),
   }),
 });
 const updateValidation = z.object({

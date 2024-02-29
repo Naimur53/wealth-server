@@ -1,9 +1,2 @@
-
-        export const messageSearchableFields = [ 
-          
-        ];
-        export const messageFilterAbleFields = [
-            
-          ];
-          
-        
+export const messageSearchableFields = [];
+export const messageFilterAbleFields = ['chatGroupId'];

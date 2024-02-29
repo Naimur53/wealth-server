@@ -1,7 +1,8 @@
 export const crowdFundSearchableFields = ['title', 'description', 'type'];
 export const crowdFundFilterAbleFields = [
   'type',
-  'price',
+  'targetFund',
   'title',
   'locationId',
 ];
+export const crowdFundFilterByPrice = ['maxPrice', 'minPrice'];

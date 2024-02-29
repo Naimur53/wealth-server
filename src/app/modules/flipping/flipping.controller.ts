@@ -7,7 +7,10 @@ import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { flippingFilterAbleFields } from './flipping.constant';
+import {
+  flippingFilterAbleFields,
+  flippingFilterByPrice,
+} from './flipping.constant';
 import { FlippingService } from './flipping.service';
 const createFlipping: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
@@ -29,7 +32,11 @@ const createFlipping: RequestHandler = catchAsync(
 );
 
 const getAllFlipping = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, ['searchTerm', ...flippingFilterAbleFields]);
+  const filters = pick(req.query, [
+    'searchTerm',
+    ...flippingFilterAbleFields,
+    ...flippingFilterByPrice,
+  ]);
   const paginationOptions = pick(req.query, paginationFields);
 
   const result = await FlippingService.getAllFlipping(

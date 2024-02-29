@@ -15,7 +15,7 @@ const getAllCrowdFund = async (
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, maxPrice, minPrice, ...filterData } = filters;
 
   const andCondition = [];
 
@@ -41,6 +41,20 @@ const getAllCrowdFund = async (
           equals: (filterData as any)[key],
         },
       })),
+    });
+  }
+  if (maxPrice) {
+    andCondition.push({
+      targetFund: {
+        lte: Number(maxPrice),
+      },
+    });
+  }
+  if (minPrice) {
+    andCondition.push({
+      targetFund: {
+        gte: Number(minPrice),
+      },
     });
   }
 

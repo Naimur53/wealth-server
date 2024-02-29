@@ -15,7 +15,7 @@ const getAllFlipping = async (
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, maxPrice, minPrice, ...filterData } = filters;
 
   const andCondition = [];
 
@@ -43,7 +43,20 @@ const getAllFlipping = async (
       })),
     });
   }
-
+  if (maxPrice) {
+    andCondition.push({
+      price: {
+        lte: Number(maxPrice),
+      },
+    });
+  }
+  if (minPrice) {
+    andCondition.push({
+      price: {
+        gte: Number(minPrice),
+      },
+    });
+  }
   const whereConditions: Prisma.FlippingWhereInput =
     andCondition.length > 0 ? { AND: andCondition } : {};
 
