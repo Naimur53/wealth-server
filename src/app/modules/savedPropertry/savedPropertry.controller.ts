@@ -2,19 +2,18 @@ import { SavedPropertry } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
-import { paginationFields } from '../../../constants/pagination';
+import { JwtPayload } from 'jsonwebtoken';
 import catchAsync from '../../../shared/catchAsync';
-import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { savedPropertryFilterAbleFields } from './savedPropertry.constant';
 import { SavedPropertryService } from './savedPropertry.service';
 const createSavedPropertry: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const SavedPropertryData = req.body;
-
-    const result = await SavedPropertryService.createSavedPropertry(
-      SavedPropertryData
-    );
+    const user = req.user as JwtPayload;
+    const result = await SavedPropertryService.createSavedPropertry({
+      ...SavedPropertryData,
+      ownById: user.userId,
+    });
     sendResponse<SavedPropertry>(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -25,23 +24,15 @@ const createSavedPropertry: RequestHandler = catchAsync(
 );
 
 const getAllSavedPropertry = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, [
-    'searchTerm',
-    ...savedPropertryFilterAbleFields,
-  ]);
-  const paginationOptions = pick(req.query, paginationFields);
+  const user = req.user as JwtPayload;
 
-  const result = await SavedPropertryService.getAllSavedPropertry(
-    filters,
-    paginationOptions
-  );
+  const result = await SavedPropertryService.getAllSavedPropertry(user.userId);
 
   sendResponse<SavedPropertry[]>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'SavedPropertry retrieved successfully !',
-    meta: result.meta,
-    data: result.data,
+    data: result,
   });
 });
 

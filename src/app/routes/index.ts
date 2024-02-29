@@ -3,6 +3,7 @@ import { AuthRoutes } from '../modules/auth/auth.route';
 import { BankRoutes } from '../modules/bank/bank.router';
 import { ChatGroupRoutes } from '../modules/chatGroup/chatGroup.router';
 import { CrowdFundRoutes } from '../modules/crowdFund/crowdFund.router';
+import { FaqRoutes } from '../modules/faq/faq.router';
 import { FeedbackRoutes } from '../modules/feedback/feedback.router';
 import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
 import { FlippingRoutes } from '../modules/flipping/flipping.router';
@@ -106,6 +107,10 @@ const moduleRoutes = [
   {
     path: '/seenMessage',
     route: SeenMessageRoutes,
+  },
+  {
+    path: '/faq',
+    route: FaqRoutes,
   },
 ];
 

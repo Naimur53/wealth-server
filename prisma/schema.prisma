@@ -129,13 +129,11 @@ model PropertyState {
 }
 
 model SavedPropertry {
-  id         String    @id @unique @default(uuid())
+  id         String   @id @unique @default(uuid())
   ownById    String
-  ownBy      User      @relation(fields: [ownById], references: [id])
+  ownBy      User     @relation(fields: [ownById], references: [id])
   propertyId String
-  property   Property  @relation(fields: [propertyId], references: [id])
-  flipping   Flipping? @relation(fields: [flippingId], references: [id])
-  flippingId String?
+  property   Property @relation(fields: [propertyId], references: [id])
 }
 
 model Orders {
@@ -238,7 +236,7 @@ model SavedCrowdFund {
 
 // flipping area 
 model Flipping {
-  id               String           @id @default(uuid())
+  id               String          @id @default(uuid())
   thumbnail        String
   title            String
   description      String
@@ -250,16 +248,15 @@ model Flipping {
   videoUrl         String
   images           String[]
   type             EPropertyType
-  status           EPropertyStatus  @default(pending)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  status           EPropertyStatus @default(pending)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
   ownById          String
-  ownBy            User             @relation(fields: [ownById], references: [id])
+  ownBy            User            @relation(fields: [ownById], references: [id])
   location         String
   emergencyContact String?
   emergencyEmail   String?
   savedFlipping    SavedFlipping[]
-  savedPropertry   SavedPropertry[]
   Orders           Orders[]
 }
 
@@ -329,4 +326,12 @@ model SeenMessage {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   lastSeen  DateTime
+}
+
+model Faq {
+  id        String   @id @unique @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  question  String
+  ans       String
 }
