@@ -21,31 +21,32 @@ enum EUserGender {
 }
 
 model User {
-  id              String            @id @default(uuid())
-  name            String
-  email           String            @unique
-  password        String
-  phoneNumber     String
-  dateOfBath      DateTime?
-  location        String?
-  gender          EUserGender?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  role            UserRole          @default(user)
-  profileImg      String?           @default("/assets/demo-user.png")
-  isVerified      Boolean           @default(false)
-  isBlocked       Boolean?
-  isChampion      Boolean           @default(false)
-  status          EUserStatus       @default(pending)
-  verificationOtp VerificationOtp[]
-  propertryOrders Orders[]
-  savedPropertry  SavedPropertry[]
-  savedCrowdFund  SavedCrowdFund[]
-  savedflipping   SavedFlipping[]
-  feedback        Feedback[]
-  messaage        Message[]
-  seenMessage     SeenMessage?
-  Flipping        Flipping[]
+  id                String              @id @default(uuid())
+  name              String
+  email             String              @unique
+  password          String
+  phoneNumber       String
+  dateOfBath        DateTime?
+  location          String?
+  gender            EUserGender?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  role              UserRole            @default(user)
+  profileImg        String?             @default("/assets/demo-user.png")
+  isVerified        Boolean             @default(false)
+  isBlocked         Boolean?
+  isChampion        Boolean             @default(false)
+  status            EUserStatus         @default(pending)
+  verificationOtp   VerificationOtp[]
+  propertryOrders   Orders[]
+  savedPropertry    SavedPropertry[]
+  savedCrowdFund    SavedCrowdFund[]
+  savedflipping     SavedFlipping[]
+  feedback          Feedback[]
+  messaage          Message[]
+  seenMessage       SeenMessage?
+  Flipping          Flipping[]
+  PromotionInterest PromotionInterest[]
 }
 
 enum EUserStatus {
@@ -276,6 +277,30 @@ model Feedback {
   description String
   ownById     String
   ownBy       User     @relation(fields: [ownById], references: [id])
+}
+
+// propmostion 
+model Promotion {
+  id             String              @id @unique @default(uuid())
+  title          String
+  date           DateTime
+  location       String
+  thumbnail      String
+  streetLocation String
+  description    String
+  interesteds    PromotionInterest[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model PromotionInterest {
+  id          String    @id @unique @default(uuid())
+  ownById     String
+  ownBy       User      @relation(fields: [ownById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  promotion   Promotion @relation(fields: [promotionId], references: [id])
+  promotionId String
 }
 
 //  chat group 

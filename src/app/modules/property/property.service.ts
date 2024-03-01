@@ -1,4 +1,4 @@
-import { Prisma, Property } from '@prisma/client';
+import { EPropertyStatus, Prisma, Property } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -73,6 +73,9 @@ const getAllProperty = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      location: true,
+    },
   });
   const total = await prisma.property.count({ where: whereConditions });
   const output = {
@@ -100,6 +103,10 @@ const getSingleProperty = async (id: string): Promise<Property | null> => {
     where: {
       id,
     },
+    include: {
+      location: true,
+      propertyState: true,
+    },
   });
   return result;
 };
@@ -108,6 +115,16 @@ const updateProperty = async (
   id: string,
   payload: Partial<Property>
 ): Promise<Property | null> => {
+  const isExits = await prisma.property.findUnique({ where: { id } });
+  if (!isExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'property not found');
+  }
+  if (isExits.status === EPropertyStatus.sold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'sold crowd fund cannot be deleted'
+    );
+  }
   const result = await prisma.property.update({
     where: {
       id,
@@ -118,6 +135,16 @@ const updateProperty = async (
 };
 
 const deleteProperty = async (id: string): Promise<Property | null> => {
+  const isExits = await prisma.property.findUnique({ where: { id } });
+  if (!isExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'property not found');
+  }
+  if (isExits.status === EPropertyStatus.sold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'sold crowd fund cannot be deleted'
+    );
+  }
   const result = await prisma.property.delete({
     where: { id },
   });

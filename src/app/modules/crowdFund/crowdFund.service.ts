@@ -1,4 +1,9 @@
-import { CrowdFund, Prisma } from '@prisma/client';
+import {
+  CrowdFund,
+  EOrderStatus,
+  EPropertyStatus,
+  Prisma,
+} from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -73,6 +78,9 @@ const getAllCrowdFund = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      location: true,
+    },
   });
   const total = await prisma.crowdFund.count();
   const output = {
@@ -102,6 +110,21 @@ const getSingleCrowdFund = async (id: string): Promise<CrowdFund | null> => {
     where: {
       id,
     },
+    include: {
+      location: true,
+      Orders: {
+        where: {
+          status: EOrderStatus.success,
+        },
+        include: {
+          orderBy: {
+            select: {
+              profileImg: true,
+            },
+          },
+        },
+      },
+    },
   });
   return result;
 };
@@ -110,6 +133,16 @@ const updateCrowdFund = async (
   id: string,
   payload: Partial<CrowdFund>
 ): Promise<CrowdFund | null> => {
+  const isExits = await prisma.crowdFund.findUnique({ where: { id } });
+  if (!isExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Crowd fund not found');
+  }
+  if (isExits.status === EPropertyStatus.sold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'sold crowd fund cannot be update'
+    );
+  }
   const result = await prisma.crowdFund.update({
     where: {
       id,
@@ -120,8 +153,29 @@ const updateCrowdFund = async (
 };
 
 const deleteCrowdFund = async (id: string): Promise<CrowdFund | null> => {
-  const result = await prisma.crowdFund.delete({
-    where: { id },
+  const isExits = await prisma.crowdFund.findUnique({ where: { id } });
+  if (!isExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Crowd fund not found');
+  }
+  if (isExits.status === EPropertyStatus.sold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'sold crowd fund cannot be deleted'
+    );
+  }
+  const result = await prisma.$transaction(async tx => {
+    await tx.orders.deleteMany({
+      where: { crowdFundId: id },
+    });
+    await tx.orders.deleteMany({
+      where: { crowdFundId: id },
+    });
+    await tx.savedCrowdFund.deleteMany({
+      where: { crowdFundId: id },
+    });
+    return await tx.crowdFund.delete({
+      where: { id },
+    });
   });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'CrowdFund not found!');

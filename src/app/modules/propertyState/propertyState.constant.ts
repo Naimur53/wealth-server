@@ -1,9 +1,2 @@
-
-        export const propertyStateSearchableFields = [ 
-          
-        ];
-        export const propertyStateFilterAbleFields = [
-            
-          ];
-          
-        
+export const propertyStateSearchableFields = [];
+export const propertyStateFilterAbleFields = ['propertyId'];

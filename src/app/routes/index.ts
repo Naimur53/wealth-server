@@ -11,6 +11,7 @@ import { LocationRoutes } from '../modules/location/location.router';
 import { MessageRoutes } from '../modules/message/message.router';
 import { OrdersRoutes } from '../modules/orders/orders.router';
 import { ProfileRoutes } from '../modules/profile/profile.router';
+import { PromotionRoutes } from '../modules/promotion/promotion.router';
 import { PropertyRoutes } from '../modules/property/property.router';
 import { PropertyStateRoutes } from '../modules/propertyState/propertyState.router';
 import { SavedCrowdFundRoutes } from '../modules/savedCrowdFund/savedCrowdFund.router';
@@ -111,6 +112,10 @@ const moduleRoutes = [
   {
     path: '/faq',
     route: FaqRoutes,
+  },
+  {
+    path: '/promotion',
+    route: PromotionRoutes,
   },
 ];
 
