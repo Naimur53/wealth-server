@@ -145,8 +145,25 @@ const deleteProperty = async (id: string): Promise<Property | null> => {
       'sold crowd fund cannot be deleted'
     );
   }
-  const result = await prisma.property.delete({
-    where: { id },
+  const result = await prisma.$transaction(async tx => {
+    await tx.propertyState.deleteMany({
+      where: {
+        propertyId: id,
+      },
+    });
+    await tx.orders.deleteMany({
+      where: {
+        propertyId: id,
+      },
+    });
+    await tx.savedPropertry.deleteMany({
+      where: {
+        propertyId: id,
+      },
+    });
+    return await tx.property.delete({
+      where: { id },
+    });
   });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Property not found!');

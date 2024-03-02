@@ -85,6 +85,8 @@ const getAllUser = async (
       gender: true,
       location: true,
       isChampion: true,
+      deviceNotificationToken: true,
+      shouldSendNotification: true,
     },
   });
   const total = await prisma.user.count();
@@ -155,7 +157,17 @@ const updateUser = async (
       'User role can only be changed by super admin'
     );
   }
-
+  const isChangeChampion = Boolean(payload.isChampion !== undefined);
+  if (isChangeChampion && isRequestedUSerNotSuperAdmin) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Champion can only set by admin'
+    );
+  }
+  const isBlockChampion = Boolean(payload.isChampion !== undefined);
+  if (isBlockChampion && isRequestedUSerNotSuperAdmin) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Block can only set by admin');
+  }
   // if (requestedUser.role === UserRole.user && payload.status) {
   //   throw new ApiError(
   //     httpStatus.BAD_REQUEST,

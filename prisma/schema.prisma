@@ -37,6 +37,10 @@ model User {
   isBlocked         Boolean?
   isChampion        Boolean             @default(false)
   status            EUserStatus         @default(pending)
+  deviceNotificationToken String?
+  txId              String?
+  isPaid            Boolean?            @default(false)
+  shouldSendNotification Boolean?       @default(true)
   verificationOtp   VerificationOtp[]
   propertryOrders   Orders[]
   savedPropertry    SavedPropertry[]
