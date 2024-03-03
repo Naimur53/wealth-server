@@ -34,7 +34,7 @@ export type TUserOverview = {
 
 export enum EPaymentType {
   // eslint-disable-next-line no-unused-vars
-  seller = 'seller',
+  user = 'user',
   // eslint-disable-next-line no-unused-vars
   addFunds = 'addFunds',
 }

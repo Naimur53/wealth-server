@@ -18,7 +18,7 @@ const sendEmailToEveryOne = async ({
   const allEmail = await prisma.user.findMany({
     where: {
       AND: [
-        { shouldSendEmail: true, isVerified: true },
+        { shouldSendNotification: true, isVerified: true },
         {
           NOT: {
             email: {

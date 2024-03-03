@@ -4,11 +4,10 @@ import { JwtPayload } from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
-import UpdateSellerAfterPay from '../../../helpers/UpdateSellerAfterPay';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
-import nowPaymentChecker from '../../../helpers/nowPaymentChecker';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
-import { IGenericResponse } from '../../../interfaces/common';
+import { initiatePayment } from '../../../helpers/paystackPayment';
+import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
 import { userSearchableFields } from './user.constant';
@@ -86,6 +85,8 @@ const getAllUser = async (
       location: true,
       isChampion: true,
       deviceNotificationToken: true,
+      isPaid: true,
+      txId: true,
       shouldSendNotification: true,
     },
   });
@@ -113,22 +114,6 @@ const getSingleUser = async (id: string): Promise<User | null> => {
   return result;
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sellerIpn = async (data: any): Promise<void> => {
-  if (data.payment_status !== 'finished') {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Sorry payment is not finished yet '
-    );
-  }
-  await nowPaymentChecker(data.payment_id);
-  const { order_id, payment_status, price_amount } = data;
-  await UpdateSellerAfterPay({
-    order_id,
-    payment_status,
-    price_amount,
-  });
-  // update user to vari
-};
 
 const updateUser = async (
   id: string,
@@ -199,6 +184,29 @@ const deleteUser = async (id: string): Promise<User | null> => {
     const deleteUser = await tx.user.delete({ where: { id } });
     return deleteUser;
   });
+};
+const generateUserPay = async (id: string): Promise<User | null> => {
+  const isUserExist = await prisma.user.findUnique({ where: { id } });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'user not found');
+  }
+  // if (isUserExist.isPaid) {
+  //   throw new ApiError(httpStatus.BAD_REQUEST, 'already paid');
+  // }
+  // add tx id
+  const request = await initiatePayment(
+    config.sellerOneTimePayment,
+    isUserExist.email,
+    isUserExist.id,
+    EPaymentType.user,
+    config.frontendUrl
+  );
+  const output = await prisma.user.update({
+    where: { id },
+    data: { txId: request.data.authorization_url },
+  });
+  return output;
 };
 
 // const adminOverview = async (): Promise<TAdminOverview | null> => {
@@ -314,7 +322,7 @@ export const UserService = {
   getSingleUser,
   deleteUser,
   sendUserQuery,
-  sellerIpn,
+  generateUserPay,
   // adminOverview,
   // sellerOverview,
   // userOverview,

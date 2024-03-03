@@ -5,7 +5,6 @@ import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
-import catchAsyncSemaphore from '../../../shared/catchAsyncSemaphore';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
 import { userFilterAbleFields } from './user.constant';
@@ -53,20 +52,6 @@ const getSingleUser: RequestHandler = catchAsync(
     });
   }
 );
-const sellerIpn: RequestHandler = catchAsyncSemaphore(
-  async (req: Request, res: Response) => {
-    const data = req.body;
-
-    await UserService.sellerIpn(data);
-
-    sendResponse<object>(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: 'User fetched successfully!',
-      data: {},
-    });
-  }
-);
 
 const updateUser: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
@@ -94,6 +79,20 @@ const deleteUser: RequestHandler = catchAsync(
       statusCode: httpStatus.OK,
       success: true,
       message: 'User deleted successfully!',
+      data: result,
+    });
+  }
+);
+const generateUserPay: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    // const id = req.params.id;
+    const user = req.user as JwtPayload;
+    const result = await UserService.generateUserPay(user.userId);
+
+    sendResponse<User>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'User pay url successfully generate!',
       data: result,
     });
   }
@@ -159,7 +158,7 @@ export const UserController = {
   updateUser,
   getSingleUser,
   deleteUser,
-  sellerIpn,
+  generateUserPay,
   // adminOverview,
   // sellerOverview,
   // userOverview,
