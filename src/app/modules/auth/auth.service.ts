@@ -41,6 +41,9 @@ const createUser = async (user: User): Promise<ILoginResponse> => {
       rest.email === config.mainAdminEmail
         ? EUserStatus.approved
         : EUserStatus.pending,
+    isPaid: false,
+    isChampion: false,
+    isBlocked: false,
   };
   // if user and account exits
   if (isUserExist?.id && isUserExist.isVerified) {

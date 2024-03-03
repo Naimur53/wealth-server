@@ -74,7 +74,7 @@ const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
             ? client_1.UserRole.superAdmin
             : client_1.UserRole.user, isVerified: false, status: rest.email === config_1.default.mainAdminEmail
             ? client_1.EUserStatus.approved
-            : client_1.EUserStatus.pending });
+            : client_1.EUserStatus.pending, isPaid: false, isChampion: false, isBlocked: false });
     // if user and account exits
     if ((isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.id) && isUserExist.isVerified) {
         throw new ApiError_1.default(http_status_1.default.NOT_ACCEPTABLE, 'User already exits');
