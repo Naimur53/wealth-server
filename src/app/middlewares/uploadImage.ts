@@ -19,12 +19,19 @@ const uploadImage = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    console.log('info', req.files);
-    if (!req.files || !req.files.avatar) {
+    if (!req.files || !req.files.image) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Image file not found!');
     }
-
-    const file = req.files.avatar as UploadedFile;
+    if (Array.isArray(req.files.image)) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'You can only upload one image at a time'
+      );
+    }
+    if (!req.files.image?.mimetype?.includes('image')) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'You can only upload image');
+    }
+    const file = req.files.image as UploadedFile;
     const publicId =
       'myfolder/images/' + file.name.split('.')[0] + '_' + Date.now();
     const result = await uploadToCloudinary(file, publicId);
@@ -41,6 +48,7 @@ async function uploadToCloudinary(file: UploadedFile, publicId: string) {
       .upload(file.tempFilePath, {
         resource_type: 'auto', // Automatically determine the resource type
         public_id: publicId,
+        // pages: true,
       })
       .then(result => {
         resolve(result);

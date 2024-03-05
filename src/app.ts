@@ -6,6 +6,7 @@ import routes from './app/routes';
 
 import cookieParser from 'cookie-parser';
 import fileUpload from 'express-fileupload';
+// import { create } from '@openai/api';
 
 const app: Application = express();
 
@@ -21,6 +22,8 @@ app.use(
     tempFileDir: '/tmp/',
   })
 );
+// const openai = createForm
+
 app.use('/api/v1', routes);
 
 //global error handler

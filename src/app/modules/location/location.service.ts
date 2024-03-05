@@ -61,6 +61,9 @@ const getAllLocation = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      _count: true,
+    },
   });
   const total = await prisma.location.count();
   const output = {

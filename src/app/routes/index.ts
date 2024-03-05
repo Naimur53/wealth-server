@@ -19,6 +19,7 @@ import { SavedFlippingRoutes } from '../modules/savedFlipping/savedFlipping.rout
 import { SavedPropertryRoutes } from '../modules/savedPropertry/savedPropertry.router';
 import { SeenMessageRoutes } from '../modules/seenMessage/seenMessage.router';
 import { UserRoutes } from '../modules/user/user.router';
+import { WebHookRoutes } from '../modules/webhook/webhook.router';
 
 const router = express.Router();
 
@@ -116,6 +117,14 @@ const moduleRoutes = [
   {
     path: '/promotion',
     route: PromotionRoutes,
+  },
+  {
+    path: '/image-upload',
+    route: fileUploadRoutes,
+  },
+  {
+    path: '/webhook',
+    route: WebHookRoutes,
   },
 ];
 
