@@ -6,7 +6,7 @@ import { webHookController } from './webhook.controller';
 
 const router = express.Router();
 
-router.get(
+router.post(
   '/',
   auth(UserRole.admin, UserRole.superAdmin),
   UserController.getAllUser
