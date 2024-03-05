@@ -1,16 +1,11 @@
 import { UserRole } from '@prisma/client';
 import express from 'express';
 import auth from '../../middlewares/auth';
-import { UserController } from '../user/user.controller';
 import { webHookController } from './webhook.controller';
 
 const router = express.Router();
 
-router.post(
-  '/',
-  auth(UserRole.admin, UserRole.superAdmin),
-  UserController.getAllUser
-);
+router.post('/', webHookController.paystack);
 
 router.post(
   '/ai-support',
