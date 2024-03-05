@@ -24,12 +24,18 @@ cloudinary_1.v2.config({
     secure: true,
 });
 const uploadImage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
-        console.log('info', req.files);
-        if (!req.files || !req.files.avatar) {
+        if (!req.files || !req.files.image) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Image file not found!');
         }
-        const file = req.files.avatar;
+        if (Array.isArray(req.files.image)) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'You can only upload one image at a time');
+        }
+        if (!((_b = (_a = req.files.image) === null || _a === void 0 ? void 0 : _a.mimetype) === null || _b === void 0 ? void 0 : _b.includes('image'))) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'You can only upload image');
+        }
+        const file = req.files.image;
         const publicId = 'myfolder/images/' + file.name.split('.')[0] + '_' + Date.now();
         const result = yield uploadToCloudinary(file, publicId);
         req.body.uploadedImg = result;
@@ -46,6 +52,7 @@ function uploadToCloudinary(file, publicId) {
                 .upload(file.tempFilePath, {
                 resource_type: 'auto',
                 public_id: publicId,
+                // pages: true,
             })
                 .then(result => {
                 resolve(result);

@@ -24,6 +24,7 @@ const savedFlipping_router_1 = require("../modules/savedFlipping/savedFlipping.r
 const savedPropertry_router_1 = require("../modules/savedPropertry/savedPropertry.router");
 const seenMessage_router_1 = require("../modules/seenMessage/seenMessage.router");
 const user_router_1 = require("../modules/user/user.router");
+const webhook_router_1 = require("../modules/webhook/webhook.router");
 const router = express_1.default.Router();
 const moduleRoutes = [
     // ... routes
@@ -106,6 +107,14 @@ const moduleRoutes = [
     {
         path: '/promotion',
         route: promotion_router_1.PromotionRoutes,
+    },
+    {
+        path: '/image-upload',
+        route: fileUpload_route_1.fileUploadRoutes,
+    },
+    {
+        path: '/webhook',
+        route: webhook_router_1.WebHookRoutes,
     },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));

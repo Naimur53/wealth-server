@@ -79,6 +79,9 @@ const getAllMessage = (filters, paginationOptions, groupId, userId) => __awaiter
                         select: {
                             email: true,
                             id: true,
+                            name: true,
+                            role: true,
+                            isChampion: true,
                             profileImg: true,
                         },
                     },
@@ -88,7 +91,10 @@ const getAllMessage = (filters, paginationOptions, groupId, userId) => __awaiter
                 select: {
                     email: true,
                     id: true,
+                    name: true,
                     profileImg: true,
+                    role: true,
+                    isChampion: true,
                 },
             },
         },
@@ -154,6 +160,32 @@ const createMessage = (payload) => __awaiter(void 0, void 0, void 0, function* (
         });
         return yield tx.message.create({
             data: payload,
+            include: {
+                sendBy: {
+                    select: {
+                        email: true,
+                        id: true,
+                        name: true,
+                        role: true,
+                        isChampion: true,
+                        profileImg: true,
+                    },
+                },
+                reply: {
+                    include: {
+                        sendBy: {
+                            select: {
+                                email: true,
+                                id: true,
+                                name: true,
+                                role: true,
+                                isChampion: true,
+                                profileImg: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
     }));
     return newMessage;

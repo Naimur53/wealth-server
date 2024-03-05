@@ -69,6 +69,9 @@ const getAllLocation = (filters, paginationOptions) => __awaiter(void 0, void 0,
             : {
                 createdAt: 'desc',
             },
+        include: {
+            _count: true,
+        },
     });
     const total = yield prisma_1.default.location.count();
     const output = {

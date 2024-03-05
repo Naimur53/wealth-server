@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.webHookController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
+const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const common_1 = require("../../../interfaces/common");
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
@@ -43,6 +44,23 @@ const paystack = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 
         data: 'success',
     });
 }));
+const aiSupport = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const message = req.body.message;
+    if (!message) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Please provide message');
+    }
+    const data = yield webhook_service_1.webHookService.aiSupport(user.userId, message);
+    // const result = await webHookService.payStack(UserData);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'successfull!',
+        data,
+    });
+}));
 exports.webHookController = {
     paystack,
+    aiSupport,
 };

@@ -16,7 +16,6 @@ const updateValidation = zod_1.z.object({
 });
 const getSingleLocation = zod_1.z.object({
     body: zod_1.z.object({
-        flipping: zod_1.z.boolean().optional(),
         property: zod_1.z.boolean().optional(),
         crowdFund: zod_1.z.boolean().optional(),
     }),
