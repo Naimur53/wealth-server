@@ -80,6 +80,11 @@ const getAllCrowdFund = async (
           },
     include: {
       location: true,
+      Orders: {
+        where: {
+          status: EOrderStatus.success,
+        },
+      },
     },
   });
   const total = await prisma.crowdFund.count();

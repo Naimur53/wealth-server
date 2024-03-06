@@ -13,11 +13,25 @@ const uploadSingleFile: RequestHandler = catchAsync(
     sendResponse<{ url: string }>(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'User Created successfully!',
+      message: 'image url successful',
+      data: result,
+    });
+  }
+);
+const uploadSingleVideo: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const data = req.body.uploadedImg;
+    const result = { url: data.url };
+    console.log(data.url);
+    sendResponse<{ url: string }>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'video url successfully!',
       data: result,
     });
   }
 );
 export const fileUploadController = {
   uploadSingleFile,
+  uploadSingleVideo,
 };

@@ -294,7 +294,6 @@ const deleteOrders = async (id: string): Promise<Orders | null> => {
   }
   return result;
 };
-
 export const OrdersService = {
   getAllOrders,
   createOrders,

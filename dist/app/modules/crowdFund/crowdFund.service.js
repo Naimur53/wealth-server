@@ -86,6 +86,11 @@ const getAllCrowdFund = (filters, paginationOptions) => __awaiter(void 0, void 0
             },
         include: {
             location: true,
+            Orders: {
+                where: {
+                    status: client_1.EOrderStatus.success,
+                },
+            },
         },
     });
     const total = yield prisma_1.default.crowdFund.count();

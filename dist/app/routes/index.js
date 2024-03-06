@@ -109,7 +109,7 @@ const moduleRoutes = [
         route: promotion_router_1.PromotionRoutes,
     },
     {
-        path: '/image-upload',
+        path: '/upload',
         route: fileUpload_route_1.fileUploadRoutes,
     },
     {
