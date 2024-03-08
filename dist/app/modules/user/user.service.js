@@ -57,7 +57,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
-                    equals: key === 'isApprovedForSeller'
+                    equals: key === 'isChampion'
                         ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             JSON.parse(filterData[key])
                         : // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,7 +100,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             shouldSendNotification: true,
         },
     });
-    const total = yield prisma_1.default.user.count();
+    const total = yield prisma_1.default.user.count({ where: whereConditions });
     const output = {
         data: result,
         meta: { page, limit, total },
