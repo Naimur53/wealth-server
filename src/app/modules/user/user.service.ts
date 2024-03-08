@@ -43,7 +43,7 @@ const getAllUser = async (
       AND: Object.keys(filterData).map(key => ({
         [key]: {
           equals:
-            key === 'isApprovedForSeller'
+            key === 'isChampion'
               ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 JSON.parse((filterData as any)[key])
               : // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,7 +90,7 @@ const getAllUser = async (
       shouldSendNotification: true,
     },
   });
-  const total = await prisma.user.count();
+  const total = await prisma.user.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },
