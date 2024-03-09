@@ -32,7 +32,7 @@ model User {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   role              UserRole            @default(user)
-  profileImg        String?             @default("/assets/demo-user.png")
+  profileImg        String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
   isVerified        Boolean             @default(false)
   isBlocked         Boolean?
   isChampion        Boolean             @default(false)

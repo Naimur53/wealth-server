@@ -1,4 +1,4 @@
-export const crowdFundSearchableFields = ['title', 'description', 'type'];
+export const crowdFundSearchableFields = ['title', 'description'];
 export const crowdFundFilterAbleFields = [
   'type',
   'targetFund',

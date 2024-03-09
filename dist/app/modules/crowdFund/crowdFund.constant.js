@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.crowdFundFilterByPrice = exports.crowdFundFilterAbleFields = exports.crowdFundSearchableFields = void 0;
-exports.crowdFundSearchableFields = ['title', 'description', 'type'];
+exports.crowdFundSearchableFields = ['title', 'description'];
 exports.crowdFundFilterAbleFields = [
     'type',
     'targetFund',
