@@ -51,6 +51,7 @@ const getAllChatGroup = (filters, paginationOptions) => __awaiter(void 0, void 0
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     equals: filterData[key],
                 },
             })),
