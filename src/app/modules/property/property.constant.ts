@@ -1,4 +1,4 @@
-export const propertySearchableFields = ['title', 'description', 'type'];
+export const propertySearchableFields = ['title', 'description'];
 export const propertyFilterAbleFields = [
   'type',
   'price',

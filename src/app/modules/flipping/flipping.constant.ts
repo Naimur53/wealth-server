@@ -1,4 +1,4 @@
-export const flippingSearchableFields = ['title', 'description', 'type'];
+export const flippingSearchableFields = ['title', 'description'];
 export const flippingFilterAbleFields = [
   'type',
   'price',
