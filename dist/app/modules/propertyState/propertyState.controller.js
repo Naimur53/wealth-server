@@ -18,8 +18,8 @@ const pagination_1 = require("../../../constants/pagination");
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
-const propertyState_service_1 = require("./propertyState.service");
 const propertyState_constant_1 = require("./propertyState.constant");
+const propertyState_service_1 = require("./propertyState.service");
 const createPropertyState = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const PropertyStateData = req.body;
     const result = yield propertyState_service_1.PropertyStateService.createPropertyState(PropertyStateData);
@@ -30,6 +30,31 @@ const createPropertyState = (0, catchAsync_1.default)((req, res) => __awaiter(vo
         data: result,
     });
 }));
+const createMultiPropertyState = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const PropertyStateData = req.body;
+    const result = yield propertyState_service_1.PropertyStateService.createMultiPropertyState(PropertyStateData);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'PropertyState Created successfully!',
+        data: result,
+    });
+}));
+// const getSingleAllPropertyState = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const info = req.body;
+//     const result = await PropertyStateService.getSingleAllPropertyState(
+//       info.id,
+//       info.type
+//     );
+//     sendResponse<PropertyState[]>(res, {
+//       statusCode: httpStatus.OK,
+//       success: true,
+//       message: 'PropertyState retrieved successfully !',
+//       data: result,
+//     });
+//   }
+// );
 const getAllPropertyState = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filters = (0, pick_1.default)(req.query, [
         'searchTerm',
@@ -82,4 +107,5 @@ exports.PropertyStateController = {
     updatePropertyState,
     getSinglePropertyState,
     deletePropertyState,
+    createMultiPropertyState,
 };

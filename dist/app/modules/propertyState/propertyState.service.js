@@ -67,7 +67,7 @@ const getAllPropertyState = (filters, paginationOptions) => __awaiter(void 0, vo
                 [paginationOptions.sortBy]: paginationOptions.sortOrder,
             }
             : {
-                createdAt: 'desc',
+                time: 'desc',
             },
     });
     const total = yield prisma_1.default.propertyState.count();
@@ -99,6 +99,13 @@ const createPropertyState = (payload) => __awaiter(void 0, void 0, void 0, funct
         throw new ApiError_1.default(http_status_1.default.BAD_GATEWAY, 'Already exits');
     }
     const newPropertyState = yield prisma_1.default.propertyState.create({
+        data: payload,
+    });
+    return newPropertyState;
+});
+const createMultiPropertyState = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    // check already data exits on same d
+    const newPropertyState = yield prisma_1.default.propertyState.createMany({
         data: payload,
     });
     return newPropertyState;
@@ -135,4 +142,5 @@ exports.PropertyStateService = {
     updatePropertyState,
     getSinglePropertyState,
     deletePropertyState,
+    createMultiPropertyState,
 };

@@ -75,6 +75,21 @@ const getAllProperty = async (
           },
     include: {
       location: true,
+      order: {
+        where: {
+          status: 'success',
+        },
+        include: {
+          orderBy: {
+            select: {
+              email: true,
+              id: true,
+              profileImg: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
   const total = await prisma.property.count({ where: whereConditions });
@@ -94,6 +109,24 @@ const createProperty = async (payload: Property): Promise<Property | null> => {
   }
   const newProperty = await prisma.property.create({
     data: payload,
+    include: {
+      location: true,
+      order: {
+        where: {
+          status: 'success',
+        },
+        include: {
+          orderBy: {
+            select: {
+              email: true,
+              id: true,
+              profileImg: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
   return newProperty;
 };

@@ -57,7 +57,7 @@ const getAllPropertyState = async (
             [paginationOptions.sortBy]: paginationOptions.sortOrder,
           }
         : {
-            createdAt: 'desc',
+            time: 'desc',
           },
   });
   const total = await prisma.propertyState.count();
@@ -93,6 +93,16 @@ const createPropertyState = async (
   }
 
   const newPropertyState = await prisma.propertyState.create({
+    data: payload,
+  });
+  return newPropertyState;
+};
+const createMultiPropertyState = async (
+  payload: PropertyState[]
+): Promise<Prisma.BatchPayload | null> => {
+  // check already data exits on same d
+
+  const newPropertyState = await prisma.propertyState.createMany({
     data: payload,
   });
   return newPropertyState;
@@ -140,4 +150,5 @@ export const PropertyStateService = {
   updatePropertyState,
   getSinglePropertyState,
   deletePropertyState,
+  createMultiPropertyState,
 };

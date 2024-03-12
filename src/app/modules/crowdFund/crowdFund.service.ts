@@ -82,7 +82,17 @@ const getAllCrowdFund = async (
       location: true,
       Orders: {
         where: {
-          status: EOrderStatus.success,
+          status: 'success',
+        },
+        include: {
+          orderBy: {
+            select: {
+              email: true,
+              id: true,
+              profileImg: true,
+              name: true,
+            },
+          },
         },
       },
     },

@@ -86,6 +86,21 @@ const getAllProperty = (filters, paginationOptions) => __awaiter(void 0, void 0,
             },
         include: {
             location: true,
+            order: {
+                where: {
+                    status: 'success',
+                },
+                include: {
+                    orderBy: {
+                        select: {
+                            email: true,
+                            id: true,
+                            profileImg: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
         },
     });
     const total = yield prisma_1.default.property.count({ where: whereConditions });
@@ -104,6 +119,24 @@ const createProperty = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     const newProperty = yield prisma_1.default.property.create({
         data: payload,
+        include: {
+            location: true,
+            order: {
+                where: {
+                    status: 'success',
+                },
+                include: {
+                    orderBy: {
+                        select: {
+                            email: true,
+                            id: true,
+                            profileImg: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
     });
     return newProperty;
 });

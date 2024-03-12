@@ -88,7 +88,17 @@ const getAllCrowdFund = (filters, paginationOptions) => __awaiter(void 0, void 0
             location: true,
             Orders: {
                 where: {
-                    status: client_1.EOrderStatus.success,
+                    status: 'success',
+                },
+                include: {
+                    orderBy: {
+                        select: {
+                            email: true,
+                            id: true,
+                            profileImg: true,
+                            name: true,
+                        },
+                    },
                 },
             },
         },
