@@ -84,7 +84,7 @@ const getAllCrowdFund = async (
         where: {
           status: 'success',
         },
-        include: {
+        select: {
           orderBy: {
             select: {
               email: true,

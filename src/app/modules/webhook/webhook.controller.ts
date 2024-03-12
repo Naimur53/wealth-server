@@ -5,23 +5,29 @@ import ApiError from '../../../errors/ApiError';
 import { EPaymentType } from '../../../interfaces/common';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
+import { OrdersService } from '../orders/orders.service';
 import { webHookService } from './webhook.service';
 
 const paystack: RequestHandler = catchAsync(
   async (req: Request, res: Response) => {
     const ipnData = req.body;
     if (ipnData.event === 'charge.success') {
-      const paymentReference = ipnData.data.reference;
+      // const paymentReference = ipnData.data.reference;
 
       // Perform additional actions, such as updating your database, sending emails, etc.
       const paymentType = ipnData?.data?.metadata?.payment_type;
+      const orderId = ipnData?.data?.metadata?.orderId;
 
-      if (paymentType === EPaymentType.addFunds) {
+      if (paymentType === EPaymentType.order) {
         // await CurrencyRequestService.payStackWebHook({
         //   reference: paymentReference,
         // });
+        await OrdersService.updateOrders(orderId, {
+          status: 'success',
+          isPaid: true,
+        });
       } else if (paymentType === EPaymentType.user) {
-        await webHookService.payStackUserPaySuccess(paymentReference);
+        await webHookService.payStackUserPaySuccess(orderId);
       }
     }
     // const result = await webHookService.payStack(UserData);

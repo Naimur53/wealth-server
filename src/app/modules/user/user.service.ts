@@ -10,6 +10,7 @@ import { initiatePayment } from '../../../helpers/paystackPayment';
 import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
+import generateId from '../../../utils/generateId';
 import { userSearchableFields } from './user.constant';
 import { IUserFilters } from './user.interface';
 
@@ -43,7 +44,7 @@ const getAllUser = async (
       AND: Object.keys(filterData).map(key => ({
         [key]: {
           equals:
-            key === 'isChampion'
+            key === 'isChapmion'
               ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 JSON.parse((filterData as any)[key])
               : // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,8 +199,9 @@ const generateUserPay = async (id: string): Promise<User | null> => {
   const request = await initiatePayment(
     config.sellerOneTimePayment,
     isUserExist.email,
-    isUserExist.id,
+    generateId(),
     EPaymentType.user,
+    isUserExist.id,
     config.frontendUrl
   );
   const output = await prisma.user.update({

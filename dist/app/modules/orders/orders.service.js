@@ -26,9 +26,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
+const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const paystackPayment_1 = require("../../../helpers/paystackPayment");
+const common_1 = require("../../../interfaces/common");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
+const generateId_1 = __importDefault(require("../../../utils/generateId"));
 const orders_constant_1 = require("./orders.constant");
 const orders_multiHandler_1 = require("./orders.multiHandler");
 const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
@@ -71,6 +75,20 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
             : {
                 createdAt: 'desc',
             },
+        include: {
+            crowdFund: true,
+            flipping: true,
+            property: true,
+            wealthBank: true,
+            orderBy: {
+                select: {
+                    email: true,
+                    id: true,
+                    name: true,
+                    profileImg: true,
+                },
+            },
+        },
     });
     const total = yield prisma_1.default.orders.count();
     const output = {
@@ -81,8 +99,14 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const refName = payload.refName;
-    let amount;
+    let amount = 0;
     let isExits;
+    const isUserExist = yield prisma_1.default.user.findUnique({
+        where: { id: payload.orderById },
+    });
+    if (!isUserExist) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'user not exits');
+    }
     const isOrderAlreadyExist = yield prisma_1.default.orders.findFirst({
         where: {
             orderById: payload.orderById,
@@ -98,6 +122,9 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     // if wealBank exits
     if (payload.wealthBankId) {
+        if (payload.paymentType === client_1.EOrderPaymentType.paystack) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'wealth Bank id is not allowed on paystack payment');
+        }
         const isBankIdExits = yield prisma_1.default.bank.findUnique({
             where: { id: payload.wealthBankId },
         });
@@ -113,6 +140,7 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         isExits = yield prisma_1.default.crowdFund.findUnique({
             where: { id: payload.crowdFundId },
         });
+        amount = payload.amount;
     }
     // for flipping
     else if (refName === client_1.EOrderRefName.flipping) {
@@ -122,7 +150,10 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         isExits = yield prisma_1.default.flipping.findUnique({
             where: { id: payload.flippingId },
         });
-        amount = isExits === null || isExits === void 0 ? void 0 : isExits.price;
+        if (!isExits) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'data not found');
+        }
+        amount = isExits.price;
     }
     // for flipping
     else if (refName === client_1.EOrderRefName.property) {
@@ -132,6 +163,9 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         isExits = yield prisma_1.default.property.findUnique({
             where: { id: payload.propertyId },
         });
+        if (!isExits) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'data not found');
+        }
         amount = isExits === null || isExits === void 0 ? void 0 : isExits.price;
     }
     else {
@@ -147,9 +181,25 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Amount not found!');
     }
     // create pay stack url and add it
-    const newOrders = yield prisma_1.default.orders.create({
-        data: Object.assign(Object.assign({}, payload), { amount }),
-    });
+    const newOrders = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
+        const result = yield tx.orders.create({
+            data: Object.assign(Object.assign({}, payload), { amount }),
+        });
+        if (payload.paymentType === client_1.EOrderPaymentType.paystack) {
+            const payId = (0, generateId_1.default)();
+            if (amount * 100 > 2000000) {
+                throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, '2000000NG is not allowed to paystack payment');
+            }
+            const request = yield (0, paystackPayment_1.initiatePayment)(amount, isUserExist.email, payId, common_1.EPaymentType.order, result.id, config_1.default.frontendUrl);
+            const url = (_a = request === null || request === void 0 ? void 0 : request.data) === null || _a === void 0 ? void 0 : _a.authorization_url;
+            return yield tx.orders.update({
+                where: { id: result.id },
+                data: { paystackUrl: url, paystackId: payId },
+            });
+        }
+        return result;
+    }));
     return newOrders;
 });
 const getSingleOrders = (id) => __awaiter(void 0, void 0, void 0, function* () {

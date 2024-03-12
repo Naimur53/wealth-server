@@ -7,11 +7,14 @@ import {
   Prisma,
 } from '@prisma/client';
 import httpStatus from 'http-status';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
-import { IGenericResponse } from '../../../interfaces/common';
+import { initiatePayment } from '../../../helpers/paystackPayment';
+import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
+import generateId from '../../../utils/generateId';
 import { ordersSearchableFields } from './orders.constant';
 import { IOrdersFilters } from './orders.interface';
 import { multiHandler } from './orders.multiHandler';
@@ -67,6 +70,20 @@ const getAllOrders = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      crowdFund: true,
+      flipping: true,
+      property: true,
+      wealthBank: true,
+      orderBy: {
+        select: {
+          email: true,
+          id: true,
+          name: true,
+          profileImg: true,
+        },
+      },
+    },
   });
   const total = await prisma.orders.count();
   const output = {
@@ -78,8 +95,15 @@ const getAllOrders = async (
 
 const createOrders = async (payload: Orders): Promise<Orders | null> => {
   const refName = payload.refName;
-  let amount;
+  let amount: number = 0;
   let isExits;
+
+  const isUserExist = await prisma.user.findUnique({
+    where: { id: payload.orderById },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'user not exits');
+  }
 
   const isOrderAlreadyExist = await prisma.orders.findFirst({
     where: {
@@ -99,6 +123,12 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
   }
   // if wealBank exits
   if (payload.wealthBankId) {
+    if (payload.paymentType === EOrderPaymentType.paystack) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'wealth Bank id is not allowed on paystack payment'
+      );
+    }
     const isBankIdExits = await prisma.bank.findUnique({
       where: { id: payload.wealthBankId },
     });
@@ -115,6 +145,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     isExits = await prisma.crowdFund.findUnique({
       where: { id: payload.crowdFundId },
     });
+    amount = payload.amount;
   }
   // for flipping
   else if (refName === EOrderRefName.flipping) {
@@ -124,7 +155,10 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     isExits = await prisma.flipping.findUnique({
       where: { id: payload.flippingId },
     });
-    amount = isExits?.price;
+    if (!isExits) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'data not found');
+    }
+    amount = isExits.price;
   }
 
   // for flipping
@@ -135,6 +169,9 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     isExits = await prisma.property.findUnique({
       where: { id: payload.propertyId },
     });
+    if (!isExits) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'data not found');
+    }
     amount = isExits?.price;
   } else {
     throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
@@ -153,11 +190,37 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Amount not found!');
   }
   // create pay stack url and add it
-  const newOrders = await prisma.orders.create({
-    data: {
-      ...payload,
-      amount,
-    },
+
+  const newOrders = await prisma.$transaction(async tx => {
+    const result = await tx.orders.create({
+      data: {
+        ...payload,
+        amount,
+      },
+    });
+    if (payload.paymentType === EOrderPaymentType.paystack) {
+      const payId = generateId();
+      if (amount * 100 > 2000000) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          '2000000NG is not allowed to paystack payment'
+        );
+      }
+      const request = await initiatePayment(
+        amount,
+        isUserExist.email,
+        payId,
+        EPaymentType.order,
+        result.id,
+        config.frontendUrl
+      );
+      const url = request?.data?.authorization_url;
+      return await tx.orders.update({
+        where: { id: result.id },
+        data: { paystackUrl: url, paystackId: payId },
+      });
+    }
+    return result;
   });
   return newOrders;
 };

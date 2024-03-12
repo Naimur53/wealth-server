@@ -79,7 +79,7 @@ const getAllProperty = async (
         where: {
           status: 'success',
         },
-        include: {
+        select: {
           orderBy: {
             select: {
               email: true,
@@ -115,7 +115,8 @@ const createProperty = async (payload: Property): Promise<Property | null> => {
         where: {
           status: 'success',
         },
-        include: {
+        select: {
+          amount: true,
           orderBy: {
             select: {
               email: true,

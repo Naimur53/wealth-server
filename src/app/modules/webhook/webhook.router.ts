@@ -5,7 +5,7 @@ import { webHookController } from './webhook.controller';
 
 const router = express.Router();
 
-router.post('/', webHookController.paystack);
+router.post('/paystack', webHookController.paystack);
 
 router.post(
   '/ai-support',

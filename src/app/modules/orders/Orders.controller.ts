@@ -25,7 +25,7 @@ const createOrders: RequestHandler = catchAsync(
     // if payment type is manual
     if (OrdersData.paymentType === EOrderPaymentType.manual) {
       // check does user give all info for manual
-      const keys = ['bankName', 'bankAccountNumber'];
+      const keys = ['bankName', 'bankAccountNumber', 'wealthBankId'];
       keys.forEach(single => {
         if (!OrdersData[single]?.length) {
           throw new ApiError(
@@ -34,11 +34,12 @@ const createOrders: RequestHandler = catchAsync(
           );
         }
       });
-    } else {
-      if (!OrdersData.wealthBankId) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'wealthBankId is required');
-      }
     }
+    // else {
+    //   if (!OrdersData.wealthBankId) {
+    //     throw new ApiError(httpStatus.BAD_REQUEST, 'wealthBankId is required');
+    //   }
+    // }
     const result = await OrdersService.createOrders({
       ...OrdersData,
       status: EOrderStatus.pending,

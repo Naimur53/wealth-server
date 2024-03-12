@@ -7,4 +7,6 @@ var EPaymentType;
     EPaymentType["user"] = "user";
     // eslint-disable-next-line no-unused-vars
     EPaymentType["addFunds"] = "addFunds";
+    // eslint-disable-next-line no-unused-vars
+    EPaymentType["order"] = "order";
 })(EPaymentType || (exports.EPaymentType = EPaymentType = {}));

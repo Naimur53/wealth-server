@@ -12,6 +12,7 @@ export const initiatePayment = async (
   email: string,
   reference: string,
   paymentType: EPaymentType,
+  orderId: string,
   callbackUrl?: string
 ) => {
   try {
@@ -19,12 +20,13 @@ export const initiatePayment = async (
       'https://api.paystack.co/transaction/initialize',
       // Paystack uses values in kobo (1 NGN = 100 kobo)
       {
-        amount: amount * 100 * config.dollarRate,
+        amount: amount * 100,
         email,
         reference,
         callback_url: callbackUrl,
         metadata: {
           payment_type: paymentType,
+          orderId,
         },
       },
       {

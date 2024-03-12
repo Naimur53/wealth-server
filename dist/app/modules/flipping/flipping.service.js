@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FlippingService = void 0;
+const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
@@ -83,6 +84,23 @@ const getAllFlipping = (filters, paginationOptions) => __awaiter(void 0, void 0,
             : {
                 createdAt: 'desc',
             },
+        include: {
+            Orders: {
+                where: {
+                    status: 'success',
+                },
+                select: {
+                    orderBy: {
+                        select: {
+                            email: true,
+                            id: true,
+                            profileImg: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
     });
     const total = yield prisma_1.default.flipping.count();
     const output = {
@@ -115,9 +133,20 @@ const updateFlipping = (id, payload) => __awaiter(void 0, void 0, void 0, functi
     return result;
 });
 const deleteFlipping = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.flipping.delete({
-        where: { id },
-    });
+    const isExits = yield prisma_1.default.flipping.findUnique({ where: { id } });
+    if (!isExits) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'property not found');
+    }
+    if (isExits.status === client_1.EPropertyStatus.sold) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'sold crowd fund cannot be deleted');
+    }
+    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield tx.savedFlipping.deleteMany({ where: { flippingId: id } });
+        yield tx.savedFlipping.deleteMany({ where: { flippingId: id } });
+        return yield tx.flipping.delete({
+            where: { id },
+        });
+    }));
     if (!result) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Flipping not found!');
     }

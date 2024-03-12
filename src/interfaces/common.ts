@@ -37,4 +37,6 @@ export enum EPaymentType {
   user = 'user',
   // eslint-disable-next-line no-unused-vars
   addFunds = 'addFunds',
+  // eslint-disable-next-line no-unused-vars
+  order = 'order',
 }

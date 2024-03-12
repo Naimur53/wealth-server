@@ -29,7 +29,7 @@ const createOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
     // if payment type is manual
     if (OrdersData.paymentType === client_1.EOrderPaymentType.manual) {
         // check does user give all info for manual
-        const keys = ['bankName', 'bankAccountNumber'];
+        const keys = ['bankName', 'bankAccountNumber', 'wealthBankId'];
         keys.forEach(single => {
             var _a;
             if (!((_a = OrdersData[single]) === null || _a === void 0 ? void 0 : _a.length)) {
@@ -37,11 +37,11 @@ const createOrders = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
             }
         });
     }
-    else {
-        if (!OrdersData.wealthBankId) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'wealthBankId is required');
-        }
-    }
+    // else {
+    //   if (!OrdersData.wealthBankId) {
+    //     throw new ApiError(httpStatus.BAD_REQUEST, 'wealthBankId is required');
+    //   }
+    // }
     const result = yield orders_service_1.OrdersService.createOrders(Object.assign(Object.assign({}, OrdersData), { status: client_1.EOrderStatus.pending, orderById: user.userId }));
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,

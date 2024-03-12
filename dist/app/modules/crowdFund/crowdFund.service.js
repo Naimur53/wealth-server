@@ -90,7 +90,7 @@ const getAllCrowdFund = (filters, paginationOptions) => __awaiter(void 0, void 0
                 where: {
                     status: 'success',
                 },
-                include: {
+                select: {
                     orderBy: {
                         select: {
                             email: true,

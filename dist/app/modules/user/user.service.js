@@ -34,6 +34,7 @@ const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const paystackPayment_1 = require("../../../helpers/paystackPayment");
 const common_1 = require("../../../interfaces/common");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
+const generateId_1 = __importDefault(require("../../../utils/generateId"));
 const user_constant_1 = require("./user.constant");
 const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
@@ -57,7 +58,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
-                    equals: key === 'isChampion'
+                    equals: key === 'isChapmion'
                         ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             JSON.parse(filterData[key])
                         : // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,7 +183,7 @@ const generateUserPay = (id) => __awaiter(void 0, void 0, void 0, function* () {
     //   throw new ApiError(httpStatus.BAD_REQUEST, 'already paid');
     // }
     // add tx id
-    const request = yield (0, paystackPayment_1.initiatePayment)(config_1.default.sellerOneTimePayment, isUserExist.email, isUserExist.id, common_1.EPaymentType.user, config_1.default.frontendUrl);
+    const request = yield (0, paystackPayment_1.initiatePayment)(config_1.default.sellerOneTimePayment, isUserExist.email, (0, generateId_1.default)(), common_1.EPaymentType.user, isUserExist.id, config_1.default.frontendUrl);
     const output = yield prisma_1.default.user.update({
         where: { id },
         data: { txId: request.data.authorization_url },

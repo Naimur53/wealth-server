@@ -90,7 +90,7 @@ const getAllProperty = (filters, paginationOptions) => __awaiter(void 0, void 0,
                 where: {
                     status: 'success',
                 },
-                include: {
+                select: {
                     orderBy: {
                         select: {
                             email: true,
@@ -125,7 +125,8 @@ const createProperty = (payload) => __awaiter(void 0, void 0, void 0, function* 
                 where: {
                     status: 'success',
                 },
-                include: {
+                select: {
+                    amount: true,
                     orderBy: {
                         select: {
                             email: true,

@@ -1,4 +1,4 @@
-import { Flipping, Prisma } from '@prisma/client';
+import { EPropertyStatus, Flipping, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
@@ -72,6 +72,23 @@ const getAllFlipping = async (
         : {
             createdAt: 'desc',
           },
+    include: {
+      Orders: {
+        where: {
+          status: 'success',
+        },
+        select: {
+          orderBy: {
+            select: {
+              email: true,
+              id: true,
+              profileImg: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
   const total = await prisma.flipping.count();
   const output = {
@@ -111,8 +128,22 @@ const updateFlipping = async (
 };
 
 const deleteFlipping = async (id: string): Promise<Flipping | null> => {
-  const result = await prisma.flipping.delete({
-    where: { id },
+  const isExits = await prisma.flipping.findUnique({ where: { id } });
+  if (!isExits) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'property not found');
+  }
+  if (isExits.status === EPropertyStatus.sold) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'sold crowd fund cannot be deleted'
+    );
+  }
+  const result = await prisma.$transaction(async tx => {
+    await tx.savedFlipping.deleteMany({ where: { flippingId: id } });
+    await tx.savedFlipping.deleteMany({ where: { flippingId: id } });
+    return await tx.flipping.delete({
+      where: { id },
+    });
   });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Flipping not found!');

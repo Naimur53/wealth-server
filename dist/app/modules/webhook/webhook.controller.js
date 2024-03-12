@@ -18,21 +18,27 @@ const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const common_1 = require("../../../interfaces/common");
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
+const orders_service_1 = require("../orders/orders.service");
 const webhook_service_1 = require("./webhook.service");
 const paystack = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     const ipnData = req.body;
     if (ipnData.event === 'charge.success') {
-        const paymentReference = ipnData.data.reference;
+        // const paymentReference = ipnData.data.reference;
         // Perform additional actions, such as updating your database, sending emails, etc.
         const paymentType = (_b = (_a = ipnData === null || ipnData === void 0 ? void 0 : ipnData.data) === null || _a === void 0 ? void 0 : _a.metadata) === null || _b === void 0 ? void 0 : _b.payment_type;
-        if (paymentType === common_1.EPaymentType.addFunds) {
+        const orderId = (_d = (_c = ipnData === null || ipnData === void 0 ? void 0 : ipnData.data) === null || _c === void 0 ? void 0 : _c.metadata) === null || _d === void 0 ? void 0 : _d.orderId;
+        if (paymentType === common_1.EPaymentType.order) {
             // await CurrencyRequestService.payStackWebHook({
             //   reference: paymentReference,
             // });
+            yield orders_service_1.OrdersService.updateOrders(orderId, {
+                status: 'success',
+                isPaid: true,
+            });
         }
         else if (paymentType === common_1.EPaymentType.user) {
-            yield webhook_service_1.webHookService.payStackUserPaySuccess(paymentReference);
+            yield webhook_service_1.webHookService.payStackUserPaySuccess(orderId);
         }
     }
     // const result = await webHookService.payStack(UserData);
