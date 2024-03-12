@@ -252,6 +252,7 @@ model Flipping {
   streetLocation   String
   videoUrl         String
   images           String[]
+  docs             String[]
   type             EPropertyType
   status           EPropertyStatus @default(pending)
   createdAt        DateTime        @default(now())
