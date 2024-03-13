@@ -224,6 +224,9 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
     const refName = isOrderExits.refName;
     const isOrderPending = isOrderExits.status === client_1.EOrderStatus.pending;
     const isNewStatusIsSuccess = payload.status === client_1.EOrderStatus.success;
+    if (isOrderExits.status === 'denied') {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Denied order cant not be change');
+    }
     if (isNewStatusIsSuccess && isOrderPending) {
         // check product is sold or not
         const isExits = yield orders_multiHandler_1.multiHandler.findUniqueEntity(refName, {
@@ -235,7 +238,7 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, `${refName} is not found!`);
         }
         if (isExits.status === 'sold' && payload.status === 'success') {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Items already sold');
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Items already sold you can not update status');
         }
         const output = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             // crowd fund

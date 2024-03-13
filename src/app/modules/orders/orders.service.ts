@@ -252,6 +252,12 @@ const updateOrders = async (
   const isOrderPending = isOrderExits.status === EOrderStatus.pending;
   const isNewStatusIsSuccess = payload.status === EOrderStatus.success;
 
+  if (isOrderExits.status === 'denied') {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Denied order cant not be change'
+    );
+  }
   if (isNewStatusIsSuccess && isOrderPending) {
     // check product is sold or not
     const isExits = await multiHandler.findUniqueEntity(refName, {
@@ -263,7 +269,10 @@ const updateOrders = async (
       throw new ApiError(httpStatus.BAD_REQUEST, `${refName} is not found!`);
     }
     if (isExits.status === 'sold' && payload.status === 'success') {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Items already sold');
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Items already sold you can not update status'
+      );
     }
 
     const output = await prisma.$transaction(async tx => {
