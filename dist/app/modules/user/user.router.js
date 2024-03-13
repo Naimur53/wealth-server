@@ -12,11 +12,7 @@ const user_controller_1 = require("./user.controller");
 const user_validation_1 = require("./user.validation");
 const router = express_1.default.Router();
 router.get('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin), user_controller_1.UserController.getAllUser);
-// router.get(
-//   '/admin/overview',
-//   auth(UserRole.admin, UserRole.superAdmin),
-//   UserController.adminOverview
-// );
+router.get('/super-admin/overview', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin), user_controller_1.UserController.adminOverview);
 // router.get(
 //   '/seller/overview',
 //   auth(UserRole.seller),

@@ -190,29 +190,34 @@ const generateUserPay = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return output;
 });
-// const adminOverview = async (): Promise<TAdminOverview | null> => {
-//   const totalAccount = await prisma.account.count();
-//   const totalSoldAccount = await prisma.account.count({
-//     where: { isSold: true },
-//   });
-//   const totalUser = await prisma.account.count();
-//   const mainAdmin = await prisma.user.findUnique({
-//     where: { email: config.mainAdminEmail },
-//     include: {
-//       Currency: { select: { amount: true } },
-//     },
-//   });
-//   if (!mainAdmin) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, 'Main admin Not found!');
-//   }
-//   const totalEarning = mainAdmin.Currency?.amount || 0;
-//   return {
-//     totalAccount,
-//     totalSoldAccount,
-//     totalUser,
-//     totalEarning,
-//   };
-// };
+const adminOverview = () => __awaiter(void 0, void 0, void 0, function* () {
+    const totalOrder = yield prisma_1.default.orders.count();
+    const totalOrderComplete = yield prisma_1.default.orders.count({
+        where: { status: 'success' },
+    });
+    const totalUser = yield prisma_1.default.user.count({
+        where: { role: 'user', isChampion: false },
+    });
+    const totalAdmin = yield prisma_1.default.user.count({
+        where: { role: 'admin', isChampion: false },
+    });
+    const totalChampion = yield prisma_1.default.user.count({
+        where: { role: 'admin', isChampion: false },
+    });
+    const totalCrowdFund = yield prisma_1.default.crowdFund.count();
+    const totalFlipping = yield prisma_1.default.flipping.count();
+    const totalProperty = yield prisma_1.default.property.count();
+    return {
+        totalAdmin,
+        totalChampion,
+        totalUser,
+        totalCrowdFund,
+        totalFlipping,
+        totalProperty,
+        totalOrder,
+        totalOrderComplete,
+    };
+});
 // const sellerOverview = async (id: string): Promise<TSellerOverview | null> => {
 //   const totalAccount = await prisma.account.count({ where: { ownById: id } });
 //   const totalSoldAccount = await prisma.account.count({
@@ -297,7 +302,7 @@ exports.UserService = {
     deleteUser,
     sendUserQuery,
     generateUserPay,
-    // adminOverview,
+    adminOverview,
     // sellerOverview,
     // userOverview,
 };

@@ -4,6 +4,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { paginationFields } from '../../../constants/pagination';
+import { TAdminOverview } from '../../../interfaces/common';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -97,18 +98,18 @@ const generateUserPay: RequestHandler = catchAsync(
     });
   }
 );
-// const adminOverview: RequestHandler = catchAsync(
-//   async (req: Request, res: Response) => {
-//     const result = await UserService.adminOverview();
+const adminOverview: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await UserService.adminOverview();
 
-//     sendResponse<TAdminOverview>(res, {
-//       statusCode: httpStatus.OK,
-//       success: true,
-//       message: 'Admin overview successfully!',
-//       data: result,
-//     });
-//   }
-// );
+    sendResponse<TAdminOverview>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'Admin overview successfully!',
+      data: result,
+    });
+  }
+);
 // const sellerOverview: RequestHandler = catchAsync(
 //   async (req: Request, res: Response) => {
 //     const user = req.user as JwtPayload;
@@ -159,7 +160,7 @@ export const UserController = {
   getSingleUser,
   deleteUser,
   generateUserPay,
-  // adminOverview,
+  adminOverview,
   // sellerOverview,
   // userOverview,
   sendUserQuery,

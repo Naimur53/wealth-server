@@ -12,11 +12,11 @@ router.get(
   auth(UserRole.admin, UserRole.superAdmin),
   UserController.getAllUser
 );
-// router.get(
-//   '/admin/overview',
-//   auth(UserRole.admin, UserRole.superAdmin),
-//   UserController.adminOverview
-// );
+router.get(
+  '/super-admin/overview',
+  auth(UserRole.admin, UserRole.superAdmin),
+  UserController.adminOverview
+);
 // router.get(
 //   '/seller/overview',
 //   auth(UserRole.seller),

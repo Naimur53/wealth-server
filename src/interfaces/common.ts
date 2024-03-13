@@ -15,10 +15,14 @@ export type IGenericErrorResponse = {
   errorMessages: IGenericErrorMessage[];
 };
 export type TAdminOverview = {
-  totalAccount: number;
-  totalSoldAccount: number;
+  totalAdmin: number;
+  totalChampion: number;
   totalUser: number;
-  totalEarning: number;
+  totalCrowdFund: number;
+  totalFlipping: number;
+  totalProperty: number;
+  totalOrder: number;
+  totalOrderComplete: number;
 };
 export type TSellerOverview = {
   totalAccount: number;

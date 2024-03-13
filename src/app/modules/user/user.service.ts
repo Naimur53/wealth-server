@@ -7,7 +7,11 @@ import ApiError from '../../../errors/ApiError';
 import createBycryptPassword from '../../../helpers/createBycryptPassword';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { initiatePayment } from '../../../helpers/paystackPayment';
-import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
+import {
+  EPaymentType,
+  IGenericResponse,
+  TAdminOverview,
+} from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
 import generateId from '../../../utils/generateId';
@@ -211,29 +215,34 @@ const generateUserPay = async (id: string): Promise<User | null> => {
   return output;
 };
 
-// const adminOverview = async (): Promise<TAdminOverview | null> => {
-//   const totalAccount = await prisma.account.count();
-//   const totalSoldAccount = await prisma.account.count({
-//     where: { isSold: true },
-//   });
-//   const totalUser = await prisma.account.count();
-//   const mainAdmin = await prisma.user.findUnique({
-//     where: { email: config.mainAdminEmail },
-//     include: {
-//       Currency: { select: { amount: true } },
-//     },
-//   });
-//   if (!mainAdmin) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, 'Main admin Not found!');
-//   }
-//   const totalEarning = mainAdmin.Currency?.amount || 0;
-//   return {
-//     totalAccount,
-//     totalSoldAccount,
-//     totalUser,
-//     totalEarning,
-//   };
-// };
+const adminOverview = async (): Promise<TAdminOverview | null> => {
+  const totalOrder = await prisma.orders.count();
+  const totalOrderComplete = await prisma.orders.count({
+    where: { status: 'success' },
+  });
+  const totalUser = await prisma.user.count({
+    where: { role: 'user', isChampion: false },
+  });
+  const totalAdmin = await prisma.user.count({
+    where: { role: 'admin', isChampion: false },
+  });
+  const totalChampion = await prisma.user.count({
+    where: { role: 'admin', isChampion: false },
+  });
+  const totalCrowdFund = await prisma.crowdFund.count();
+  const totalFlipping = await prisma.flipping.count();
+  const totalProperty = await prisma.property.count();
+  return {
+    totalAdmin,
+    totalChampion,
+    totalUser,
+    totalCrowdFund,
+    totalFlipping,
+    totalProperty,
+    totalOrder,
+    totalOrderComplete,
+  };
+};
 // const sellerOverview = async (id: string): Promise<TSellerOverview | null> => {
 //   const totalAccount = await prisma.account.count({ where: { ownById: id } });
 //   const totalSoldAccount = await prisma.account.count({
@@ -325,7 +334,7 @@ export const UserService = {
   deleteUser,
   sendUserQuery,
   generateUserPay,
-  // adminOverview,
+  adminOverview,
   // sellerOverview,
   // userOverview,
 };

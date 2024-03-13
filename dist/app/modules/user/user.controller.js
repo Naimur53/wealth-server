@@ -85,17 +85,15 @@ const generateUserPay = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
-// const adminOverview: RequestHandler = catchAsync(
-//   async (req: Request, res: Response) => {
-//     const result = await UserService.adminOverview();
-//     sendResponse<TAdminOverview>(res, {
-//       statusCode: httpStatus.OK,
-//       success: true,
-//       message: 'Admin overview successfully!',
-//       data: result,
-//     });
-//   }
-// );
+const adminOverview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.UserService.adminOverview();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Admin overview successfully!',
+        data: result,
+    });
+}));
 // const sellerOverview: RequestHandler = catchAsync(
 //   async (req: Request, res: Response) => {
 //     const user = req.user as JwtPayload;
@@ -139,7 +137,7 @@ exports.UserController = {
     getSingleUser,
     deleteUser,
     generateUserPay,
-    // adminOverview,
+    adminOverview,
     // sellerOverview,
     // userOverview,
     sendUserQuery,
