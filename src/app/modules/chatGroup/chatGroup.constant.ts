@@ -1,2 +1,2 @@
 export const chatGroupSearchableFields = ['name'];
-export const chatGroupFilterAbleFields = [];
+export const chatGroupFilterAbleFields = ['type'];
