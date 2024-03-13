@@ -258,6 +258,12 @@ const updateOrders = async (
       'Denied order cant not be change'
     );
   }
+  if (isOrderExits.status === 'success') {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'success order cant not be change'
+    );
+  }
   if (isNewStatusIsSuccess && isOrderPending) {
     // check product is sold or not
     const isExits = await multiHandler.findUniqueEntity(refName, {
