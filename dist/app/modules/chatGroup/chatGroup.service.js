@@ -70,7 +70,7 @@ const getAllChatGroup = (filters, paginationOptions) => __awaiter(void 0, void 0
                 createdAt: 'desc',
             },
     });
-    const total = yield prisma_1.default.chatGroup.count();
+    const total = yield prisma_1.default.chatGroup.count({ where: whereConditions });
     const output = {
         data: result,
         meta: { page, limit, total },

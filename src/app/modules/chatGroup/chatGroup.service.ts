@@ -60,7 +60,7 @@ const getAllChatGroup = async (
             createdAt: 'desc',
           },
   });
-  const total = await prisma.chatGroup.count();
+  const total = await prisma.chatGroup.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },
