@@ -7,6 +7,7 @@ import { CrowdFundValidation } from './crowdFund.validation';
 const router = express.Router();
 
 router.get('/', CrowdFundController.getAllCrowdFund);
+router.get('/recently-funded', CrowdFundController.recentlyFunded);
 router.get('/:id', CrowdFundController.getSingleCrowdFund);
 
 router.post(

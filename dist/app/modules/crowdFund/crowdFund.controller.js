@@ -30,6 +30,15 @@ const createCrowdFund = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
+const recentlyFunded = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield crowdFund_service_1.CrowdFundService.recentlyFunded();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'CrowdFund Created successfully!',
+        data: result,
+    });
+}));
 const getAllCrowdFund = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filters = (0, pick_1.default)(req.query, [
         'searchTerm',
@@ -83,4 +92,5 @@ exports.CrowdFundController = {
     updateCrowdFund,
     getSingleCrowdFund,
     deleteCrowdFund,
+    recentlyFunded,
 };

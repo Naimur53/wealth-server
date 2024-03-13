@@ -91,7 +91,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
             isBlocked: true,
             status: true,
             phoneNumber: true,
-            dateOfBath: true,
+            dateOfBirth: true,
             gender: true,
             location: true,
             isChampion: true,

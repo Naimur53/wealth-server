@@ -1,4 +1,4 @@
-import { CrowdFund } from '@prisma/client';
+import { CrowdFund, Orders } from '@prisma/client';
 import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
@@ -17,6 +17,17 @@ const createCrowdFund: RequestHandler = catchAsync(
 
     const result = await CrowdFundService.createCrowdFund(CrowdFundData);
     sendResponse<CrowdFund>(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: 'CrowdFund Created successfully!',
+      data: result,
+    });
+  }
+);
+const recentlyFunded: RequestHandler = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await CrowdFundService.recentlyFunded();
+    sendResponse<Orders[]>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'CrowdFund Created successfully!',
@@ -98,4 +109,5 @@ export const CrowdFundController = {
   updateCrowdFund,
   getSingleCrowdFund,
   deleteCrowdFund,
+  recentlyFunded,
 };

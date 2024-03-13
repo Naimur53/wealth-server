@@ -12,6 +12,7 @@ const crowdFund_controller_1 = require("./crowdFund.controller");
 const crowdFund_validation_1 = require("./crowdFund.validation");
 const router = express_1.default.Router();
 router.get('/', crowdFund_controller_1.CrowdFundController.getAllCrowdFund);
+router.get('/recently-funded', crowdFund_controller_1.CrowdFundController.recentlyFunded);
 router.get('/:id', crowdFund_controller_1.CrowdFundController.getSingleCrowdFund);
 router.post('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin), (0, validateRequest_1.default)(crowdFund_validation_1.CrowdFundValidation.createValidation), crowdFund_controller_1.CrowdFundController.createCrowdFund);
 router.patch('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin), (0, validateRequest_1.default)(crowdFund_validation_1.CrowdFundValidation.updateValidation), crowdFund_controller_1.CrowdFundController.updateCrowdFund);

@@ -2,6 +2,7 @@ import {
   CrowdFund,
   EOrderStatus,
   EPropertyStatus,
+  Orders,
   Prisma,
 } from '@prisma/client';
 import httpStatus from 'http-status';
@@ -119,6 +120,18 @@ const createCrowdFund = async (
   });
   return newCrowdFund;
 };
+const recentlyFunded = async (): Promise<Orders[] | null> => {
+  const newCrowdFund = await prisma.orders.findMany({
+    where: {
+      status: 'success',
+      refName: 'crowdFund',
+    },
+    include: {
+      crowdFund: true,
+    },
+  });
+  return newCrowdFund;
+};
 
 const getSingleCrowdFund = async (id: string): Promise<CrowdFund | null> => {
   const result = await prisma.crowdFund.findUnique({
@@ -204,4 +217,5 @@ export const CrowdFundService = {
   updateCrowdFund,
   getSingleCrowdFund,
   deleteCrowdFund,
+  recentlyFunded,
 };

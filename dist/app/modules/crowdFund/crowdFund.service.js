@@ -122,6 +122,18 @@ const createCrowdFund = (payload) => __awaiter(void 0, void 0, void 0, function*
     });
     return newCrowdFund;
 });
+const recentlyFunded = () => __awaiter(void 0, void 0, void 0, function* () {
+    const newCrowdFund = yield prisma_1.default.orders.findMany({
+        where: {
+            status: 'success',
+            refName: 'crowdFund',
+        },
+        include: {
+            crowdFund: true,
+        },
+    });
+    return newCrowdFund;
+});
 const getSingleCrowdFund = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.crowdFund.findUnique({
         where: {
@@ -194,4 +206,5 @@ exports.CrowdFundService = {
     updateCrowdFund,
     getSingleCrowdFund,
     deleteCrowdFund,
+    recentlyFunded,
 };

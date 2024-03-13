@@ -81,7 +81,7 @@ const getAllUser = async (
       isBlocked: true,
       status: true,
       phoneNumber: true,
-      dateOfBath: true,
+      dateOfBirth: true,
       gender: true,
       location: true,
       isChampion: true,
