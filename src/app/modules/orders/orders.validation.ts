@@ -3,7 +3,15 @@ import { z } from 'zod';
 
 const createValidation = z.object({
   body: z.object({
-    propertyId: z.string({ required_error: 'propertyId is required' }),
+    propertyId: z
+      .string({ required_error: 'propertyId is required' })
+      .optional(),
+    flippingId: z
+      .string({ required_error: 'propertyId is required' })
+      .optional(),
+    crowdFundId: z
+      .string({ required_error: 'propertyId is required' })
+      .optional(),
     amount: z.number().optional(),
     bankName: z.string().optional(),
     bankAccountNumber: z.string().optional(),

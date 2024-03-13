@@ -5,7 +5,15 @@ const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 const createValidation = zod_1.z.object({
     body: zod_1.z.object({
-        propertyId: zod_1.z.string({ required_error: 'propertyId is required' }),
+        propertyId: zod_1.z
+            .string({ required_error: 'propertyId is required' })
+            .optional(),
+        flippingId: zod_1.z
+            .string({ required_error: 'propertyId is required' })
+            .optional(),
+        crowdFundId: zod_1.z
+            .string({ required_error: 'propertyId is required' })
+            .optional(),
         amount: zod_1.z.number().optional(),
         bankName: zod_1.z.string().optional(),
         bankAccountNumber: zod_1.z.string().optional(),
