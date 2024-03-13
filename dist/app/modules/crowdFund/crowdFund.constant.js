@@ -7,5 +7,6 @@ exports.crowdFundFilterAbleFields = [
     'targetFund',
     'title',
     'locationId',
+    'status',
 ];
 exports.crowdFundFilterByPrice = ['maxPrice', 'minPrice'];
