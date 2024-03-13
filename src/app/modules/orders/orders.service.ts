@@ -243,7 +243,7 @@ const updateOrders = async (
     where: { id },
   });
   if (payload.refName) {
-    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'You can not update');
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'You can not update refName');
   }
   if (!isOrderExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Order not found ');
@@ -262,7 +262,7 @@ const updateOrders = async (
     if (!isExits) {
       throw new ApiError(httpStatus.BAD_REQUEST, `${refName} is not found!`);
     }
-    if (isExits.status === 'sold') {
+    if (isExits.status === 'sold' && payload.status === 'success') {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Items already sold');
     }
 

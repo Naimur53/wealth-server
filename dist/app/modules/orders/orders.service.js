@@ -216,7 +216,7 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
         where: { id },
     });
     if (payload.refName) {
-        throw new ApiError_1.default(http_status_1.default.NOT_ACCEPTABLE, 'You can not update');
+        throw new ApiError_1.default(http_status_1.default.NOT_ACCEPTABLE, 'You can not update refName');
     }
     if (!isOrderExits) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Order not found ');
@@ -234,7 +234,7 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
         if (!isExits) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, `${refName} is not found!`);
         }
-        if (isExits.status === 'sold') {
+        if (isExits.status === 'sold' && payload.status === 'success') {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Items already sold');
         }
         const output = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
