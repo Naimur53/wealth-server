@@ -19,6 +19,7 @@ const uploadImage = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    console.log()
     if (!req.files || !req.files.image) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Image file not found!');
     }

@@ -227,6 +227,9 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
     if (isOrderExits.status === 'denied') {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Denied order cant not be change');
     }
+    if (isOrderExits.status === 'success') {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'success order cant not be change');
+    }
     if (isNewStatusIsSuccess && isOrderPending) {
         // check product is sold or not
         const isExits = yield orders_multiHandler_1.multiHandler.findUniqueEntity(refName, {

@@ -48,7 +48,7 @@ const getAllUser = async (
       AND: Object.keys(filterData).map(key => ({
         [key]: {
           equals:
-            key === 'isChapmion'
+            key === 'isChampion'
               ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 JSON.parse((filterData as any)[key])
               : // eslint-disable-next-line @typescript-eslint/no-explicit-any

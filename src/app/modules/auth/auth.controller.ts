@@ -196,7 +196,7 @@ const changePassword: RequestHandler = catchAsync(
     sendResponse<ILoginResponse>(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'user created successfully!',
+      message: 'password change successfully!',
       data: result,
     });
   }

@@ -26,6 +26,7 @@ cloudinary_1.v2.config({
 const uploadImage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        console.log();
         if (!req.files || !req.files.image) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Image file not found!');
         }

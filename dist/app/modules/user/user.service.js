@@ -58,7 +58,7 @@ const getAllUser = (filters, paginationOptions) => __awaiter(void 0, void 0, voi
         andCondition.push({
             AND: Object.keys(filterData).map(key => ({
                 [key]: {
-                    equals: key === 'isChapmion'
+                    equals: key === 'isChampion'
                         ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             JSON.parse(filterData[key])
                         : // eslint-disable-next-line @typescript-eslint/no-explicit-any
