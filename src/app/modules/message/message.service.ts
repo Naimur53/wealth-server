@@ -88,7 +88,7 @@ const getAllMessage = async (
     },
   });
   const total = await prisma.message.count();
-  const isSeenMessageExits = await prisma.seenMessage.findUnique({
+  const isSeenMessageExits = await prisma.seenMessage.findFirst({
     where: { seenById: userId, groupId: groupId },
   });
   let unSeenCount: number = 0;
@@ -113,9 +113,11 @@ const getAllMessage = async (
 };
 
 const createMessage = async (payload: Message): Promise<Message | null> => {
+  console.log(payload);
   const isGroupExits = await prisma.chatGroup.findUnique({
     where: { id: payload.chatGroupId },
   });
+  console.log(isGroupExits);
   if (!isGroupExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Group not found');
   }
@@ -134,10 +136,11 @@ const createMessage = async (payload: Message): Promise<Message | null> => {
       'User cannot send message to admin group'
     );
   }
+  console.log(isUserExist.role);
   if (isChampionGroup) {
     const notChampion = !isUserExist.isChampion;
     const notAdmin = isUserExist.role !== UserRole.admin;
-    const notSuperAdmin = isUserExist.role !== UserRole.admin;
+    const notSuperAdmin = isUserExist.role !== UserRole.superAdmin;
     if (notChampion && notAdmin && notSuperAdmin) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
@@ -145,24 +148,30 @@ const createMessage = async (payload: Message): Promise<Message | null> => {
       );
     }
   }
-
   const newMessage = await prisma.$transaction(async tx => {
-    await tx.seenMessage.upsert({
+    const isSeenMessageExits = await tx.seenMessage.findFirst({
       where: {
         groupId: payload.chatGroupId,
         seenById: payload.sendById,
       },
-      update: {
-        groupId: payload.chatGroupId,
-        seenById: payload.sendById,
-        lastSeen: currentTime(),
-      },
-      create: {
-        groupId: payload.chatGroupId,
-        seenById: payload.sendById,
-        lastSeen: currentTime(),
-      },
     });
+    if (!isSeenMessageExits) {
+      await tx.seenMessage.create({
+        data: {
+          groupId: payload.chatGroupId,
+          seenById: payload.sendById,
+          lastSeen: currentTime(),
+        },
+      });
+    } else {
+      await tx.seenMessage.updateMany({
+        where: {
+          groupId: payload.chatGroupId,
+          seenById: payload.sendById,
+        },
+        data: { lastSeen: currentTime() },
+      });
+    }
     return await tx.message.create({
       data: payload,
       include: {

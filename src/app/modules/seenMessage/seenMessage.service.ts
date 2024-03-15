@@ -5,6 +5,7 @@ import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
+import currentTime from '../../../utils/currentTime';
 import { seenMessageSearchableFields } from './seenMessage.constant';
 import { ISeenMessageFilters } from './seenMessage.interface';
 
@@ -71,7 +72,7 @@ const getAllSeenMessage = async (
 const createSeenMessage = async (
   payload: SeenMessage
 ): Promise<SeenMessage | null> => {
-  const isExits = await prisma.seenMessage.findUnique({
+  const isExits = await prisma.seenMessage.findFirst({
     where: {
       seenById: payload.seenById,
       groupId: payload.groupId,
@@ -100,14 +101,40 @@ const getSingleSeenMessage = async (
 const updateSeenMessage = async (
   payload: SeenMessage
 ): Promise<SeenMessage | null> => {
-  const result = await prisma.seenMessage.upsert({
+  let result: SeenMessage | null = null;
+  const isSeenMessageExits = await prisma.seenMessage.findFirst({
     where: {
       groupId: payload.groupId,
-      seenById: payload.seenById,
+      seenById: payload.id,
     },
-    update: payload,
-    create: payload,
   });
+  if (!isSeenMessageExits) {
+    result = await prisma.seenMessage.create({
+      data: {
+        groupId: payload.groupId,
+        seenById: payload.id,
+        lastSeen: currentTime(),
+      },
+    });
+  } else {
+    await prisma.seenMessage.updateMany({
+      where: {
+        groupId: payload.groupId,
+        seenById: payload.id,
+      },
+      data: { lastSeen: currentTime() },
+    });
+    result = await prisma.seenMessage.findFirst({
+      where: {
+        groupId: payload.groupId,
+        seenById: payload.id,
+      },
+    });
+  }
+  if (!result) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'try again letter');
+  }
+
   return result;
 };
 

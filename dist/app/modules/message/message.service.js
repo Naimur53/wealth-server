@@ -100,7 +100,7 @@ const getAllMessage = (filters, paginationOptions, groupId, userId) => __awaiter
         },
     });
     const total = yield prisma_1.default.message.count();
-    const isSeenMessageExits = yield prisma_1.default.seenMessage.findUnique({
+    const isSeenMessageExits = yield prisma_1.default.seenMessage.findFirst({
         where: { seenById: userId, groupId: groupId },
     });
     let unSeenCount = 0;
@@ -120,9 +120,11 @@ const getAllMessage = (filters, paginationOptions, groupId, userId) => __awaiter
     return output;
 });
 const createMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(payload);
     const isGroupExits = yield prisma_1.default.chatGroup.findUnique({
         where: { id: payload.chatGroupId },
     });
+    console.log(isGroupExits);
     if (!isGroupExits) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Group not found');
     }
@@ -138,31 +140,40 @@ const createMessage = (payload) => __awaiter(void 0, void 0, void 0, function* (
     if (isAdminGroup && isUserExist.role === client_1.UserRole.user) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User cannot send message to admin group');
     }
+    console.log(isUserExist.role);
     if (isChampionGroup) {
         const notChampion = !isUserExist.isChampion;
         const notAdmin = isUserExist.role !== client_1.UserRole.admin;
-        const notSuperAdmin = isUserExist.role !== client_1.UserRole.admin;
+        const notSuperAdmin = isUserExist.role !== client_1.UserRole.superAdmin;
         if (notChampion && notAdmin && notSuperAdmin) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Normal user cant not send message to champion group');
         }
     }
     const newMessage = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx.seenMessage.upsert({
+        const isSeenMessageExits = yield tx.seenMessage.findFirst({
             where: {
                 groupId: payload.chatGroupId,
                 seenById: payload.sendById,
             },
-            update: {
-                groupId: payload.chatGroupId,
-                seenById: payload.sendById,
-                lastSeen: (0, currentTime_1.default)(),
-            },
-            create: {
-                groupId: payload.chatGroupId,
-                seenById: payload.sendById,
-                lastSeen: (0, currentTime_1.default)(),
-            },
         });
+        if (!isSeenMessageExits) {
+            yield tx.seenMessage.create({
+                data: {
+                    groupId: payload.chatGroupId,
+                    seenById: payload.sendById,
+                    lastSeen: (0, currentTime_1.default)(),
+                },
+            });
+        }
+        else {
+            yield tx.seenMessage.updateMany({
+                where: {
+                    groupId: payload.chatGroupId,
+                    seenById: payload.sendById,
+                },
+                data: { lastSeen: (0, currentTime_1.default)() },
+            });
+        }
         return yield tx.message.create({
             data: payload,
             include: {

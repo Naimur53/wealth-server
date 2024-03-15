@@ -21,36 +21,36 @@ enum EUserGender {
 }
 
 model User {
-  id                String              @id @default(uuid())
-  name              String
-  email             String              @unique
-  password          String
-  phoneNumber       String
-  dateOfBirth        DateTime?
-  location          String?
-  gender            EUserGender?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  role              UserRole            @default(user)
-  profileImg        String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
-  isVerified        Boolean             @default(false)
-  isBlocked         Boolean?
-  isChampion        Boolean             @default(false)
-  status            EUserStatus         @default(pending)
+  id                      String              @id @default(uuid())
+  name                    String
+  email                   String              @unique
+  password                String
+  phoneNumber             String
+  dateOfBirth             DateTime?
+  location                String?
+  gender                  EUserGender?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  role                    UserRole            @default(user)
+  profileImg              String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
+  isVerified              Boolean             @default(false)
+  isBlocked               Boolean?
+  isChampion              Boolean             @default(false)
+  status                  EUserStatus         @default(pending)
   deviceNotificationToken String?
-  txId              String?
-  isPaid            Boolean?            @default(false)
-  shouldSendNotification Boolean?       @default(true)
-  verificationOtp   VerificationOtp[]
-  propertryOrders   Orders[]
-  savedPropertry    SavedPropertry[]
-  savedCrowdFund    SavedCrowdFund[]
-  savedflipping     SavedFlipping[]
-  feedback          Feedback[]
-  messaage          Message[]
-  seenMessage       SeenMessage?
-  Flipping          Flipping[]
-  PromotionInterest PromotionInterest[]
+  txId                    String?
+  isPaid                  Boolean?            @default(false)
+  shouldSendNotification  Boolean?            @default(true)
+  verificationOtp         VerificationOtp[]
+  propertryOrders         Orders[]
+  savedPropertry          SavedPropertry[]
+  savedCrowdFund          SavedCrowdFund[]
+  savedflipping           SavedFlipping[]
+  feedback                Feedback[]
+  messaage                Message[]
+  seenMessage             SeenMessage[]
+  Flipping                Flipping[]
+  PromotionInterest       PromotionInterest[]
 }
 
 enum EUserStatus {
@@ -130,8 +130,7 @@ model PropertyState {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id]) 
-
+  property   Property @relation(fields: [propertyId], references: [id])
 }
 
 model SavedPropertry {
@@ -352,7 +351,7 @@ model SeenMessage {
   id        String    @id @unique @default(uuid())
   groupId   String
   chatGroup ChatGroup @relation(fields: [groupId], references: [id])
-  seenById  String    @unique
+  seenById  String
   seenBy    User      @relation(fields: [seenById], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

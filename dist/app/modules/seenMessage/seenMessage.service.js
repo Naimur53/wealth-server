@@ -28,6 +28,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
+const currentTime_1 = __importDefault(require("../../../utils/currentTime"));
 const seenMessage_constant_1 = require("./seenMessage.constant");
 const getAllSeenMessage = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelpers.calculatePagination(paginationOptions);
@@ -78,7 +79,7 @@ const getAllSeenMessage = (filters, paginationOptions) => __awaiter(void 0, void
     return output;
 });
 const createSeenMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const isExits = yield prisma_1.default.seenMessage.findUnique({
+    const isExits = yield prisma_1.default.seenMessage.findFirst({
         where: {
             seenById: payload.seenById,
             groupId: payload.groupId,
@@ -101,14 +102,40 @@ const getSingleSeenMessage = (id) => __awaiter(void 0, void 0, void 0, function*
     return result;
 });
 const updateSeenMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.seenMessage.upsert({
+    let result = null;
+    const isSeenMessageExits = yield prisma_1.default.seenMessage.findFirst({
         where: {
             groupId: payload.groupId,
-            seenById: payload.seenById,
+            seenById: payload.id,
         },
-        update: payload,
-        create: payload,
     });
+    if (!isSeenMessageExits) {
+        result = yield prisma_1.default.seenMessage.create({
+            data: {
+                groupId: payload.groupId,
+                seenById: payload.id,
+                lastSeen: (0, currentTime_1.default)(),
+            },
+        });
+    }
+    else {
+        yield prisma_1.default.seenMessage.updateMany({
+            where: {
+                groupId: payload.groupId,
+                seenById: payload.id,
+            },
+            data: { lastSeen: (0, currentTime_1.default)() },
+        });
+        result = yield prisma_1.default.seenMessage.findFirst({
+            where: {
+                groupId: payload.groupId,
+                seenById: payload.id,
+            },
+        });
+    }
+    if (!result) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'try again letter');
+    }
     return result;
 });
 const deleteSeenMessage = (id) => __awaiter(void 0, void 0, void 0, function* () {
