@@ -17,7 +17,7 @@ const payStackUserPaySuccess = async (userId: string) => {
   //   return datas;
 };
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey: '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',
 });
 const threadByUser: any = {};
 const aiSupport = async (userId: string, message: string) => {

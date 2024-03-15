@@ -31,7 +31,7 @@ const payStackUserPaySuccess = (userId) => __awaiter(void 0, void 0, void 0, fun
     //   return datas;
 });
 const openai = new openai_1.default({
-    apiKey: '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',
+    apiKey: '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',
 });
 const threadByUser = {};
 const aiSupport = (userId, message) => __awaiter(void 0, void 0, void 0, function* () {
