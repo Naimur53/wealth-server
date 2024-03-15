@@ -138,8 +138,13 @@ const createMessage = (payload) => __awaiter(void 0, void 0, void 0, function* (
     if (isAdminGroup && isUserExist.role === client_1.UserRole.user) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User cannot send message to admin group');
     }
-    if (isChampionGroup && !isUserExist.isChampion) {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Normal user cant not send message to champion group');
+    if (isChampionGroup) {
+        const notChampion = !isUserExist.isChampion;
+        const notAdmin = isUserExist.role !== client_1.UserRole.admin;
+        const notSuperAdmin = isUserExist.role !== client_1.UserRole.admin;
+        if (notChampion && notAdmin && notSuperAdmin) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Normal user cant not send message to champion group');
+        }
     }
     const newMessage = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         yield tx.seenMessage.upsert({

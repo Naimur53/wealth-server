@@ -134,11 +134,16 @@ const createMessage = async (payload: Message): Promise<Message | null> => {
       'User cannot send message to admin group'
     );
   }
-  if (isChampionGroup && !isUserExist.isChampion) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Normal user cant not send message to champion group'
-    );
+  if (isChampionGroup) {
+    const notChampion = !isUserExist.isChampion;
+    const notAdmin = isUserExist.role !== UserRole.admin;
+    const notSuperAdmin = isUserExist.role !== UserRole.admin;
+    if (notChampion && notAdmin && notSuperAdmin) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Normal user cant not send message to champion group'
+      );
+    }
   }
 
   const newMessage = await prisma.$transaction(async tx => {
