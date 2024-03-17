@@ -27,7 +27,6 @@ exports.default = {
     currencyPerDollar: parseFloat(process.env.CURRENCY_PER_DOLLAR),
     dollarRate: parseFloat(process.env.DOLLAR_RATE),
     paystackPaymentApiKey: process.env.PAYSTACK_PAYMENT_API_KEY,
-    baseServerUrl: process.env.BASER_SERVER_URL,
     mainLogo: process.env.MAIN_LOGO,
     cloudName: process.env.CLOUD_NAME,
     cloudApiKey: process.env.CLOUD_API_KEY,

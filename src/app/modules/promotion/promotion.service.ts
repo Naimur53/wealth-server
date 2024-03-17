@@ -7,6 +7,7 @@ import prisma from '../../../shared/prisma';
 const getAllPromotion = async (): Promise<any[]> => {
   const result = await prisma.promotion.findMany({
     select: {
+      id: true,
       date: true,
       title: true,
       streetLocation: true,

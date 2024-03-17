@@ -28,7 +28,6 @@ export default {
   dollarRate: parseFloat(process.env.DOLLAR_RATE as string),
   paystackPaymentApiKey: process.env.PAYSTACK_PAYMENT_API_KEY,
 
-  baseServerUrl: process.env.BASER_SERVER_URL,
   mainLogo: process.env.MAIN_LOGO,
   cloudName: process.env.CLOUD_NAME,
   cloudApiKey: process.env.CLOUD_API_KEY,

@@ -20,6 +20,7 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const getAllPromotion = () => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.promotion.findMany({
         select: {
+            id: true,
             date: true,
             title: true,
             streetLocation: true,
