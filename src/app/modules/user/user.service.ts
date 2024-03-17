@@ -196,9 +196,9 @@ const generateUserPay = async (id: string): Promise<User | null> => {
   if (!isUserExist) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'user not found');
   }
-  // if (isUserExist.isPaid) {
-  //   throw new ApiError(httpStatus.BAD_REQUEST, 'already paid');
-  // }
+  if (isUserExist.isPaid) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'already paid');
+  }
   // add tx id
   const request = await initiatePayment(
     config.sellerOneTimePayment,

@@ -179,9 +179,9 @@ const generateUserPay = (id) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'user not found');
     }
-    // if (isUserExist.isPaid) {
-    //   throw new ApiError(httpStatus.BAD_REQUEST, 'already paid');
-    // }
+    if (isUserExist.isPaid) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'already paid');
+    }
     // add tx id
     const request = yield (0, paystackPayment_1.initiatePayment)(config_1.default.sellerOneTimePayment, isUserExist.email, (0, generateId_1.default)(), common_1.EPaymentType.user, isUserExist.id, config_1.default.frontendUrl);
     const output = yield prisma_1.default.user.update({
