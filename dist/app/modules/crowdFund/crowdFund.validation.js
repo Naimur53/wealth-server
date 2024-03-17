@@ -8,7 +8,7 @@ const createValidation = zod_1.z.object({
         thumbnail: zod_1.z.string({ required_error: 'thumbnail is required' }),
         title: zod_1.z.string({ required_error: 'title is required' }),
         description: zod_1.z.string({ required_error: 'description is required' }),
-        rooms: zod_1.z.number().optional(),
+        rooms: zod_1.z.number().optional().nullable(),
         size: zod_1.z.string({ required_error: 'size is required' }),
         status: zod_1.z
             .enum(Object.keys(client_1.EPropertyStatus))
