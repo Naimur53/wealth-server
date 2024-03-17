@@ -24,22 +24,10 @@ export default {
     process.env.SELLER_ONE_TIME_PAYMENT as string
   ),
   currencyPerDollar: parseFloat(process.env.CURRENCY_PER_DOLLAR as string),
-  withdrawalPercentage: parseFloat(process.env.WITHDRAWAL_PERCENTAGE as string),
-  withdrawalMinMoney: parseFloat(process.env.WITHDRAWAL_MIN_MONEY as string),
-  withdrawalMaxMoney: parseFloat(process.env.WITHDRAWAL_MAX_MONEY as string),
-  calculationMoneyRound: parseInt(
-    process.env.CALCULATION_MONEY_ROUND as string
-  ),
-  accountSellServiceCharge: parseFloat(
-    process.env.ACCOUNT_SELL_SERVICE_CHARGE as string
-  ),
-  accountSellPercentage: parseFloat(
-    process.env.ACCOUNT_SELL_PERCENTAGE as string
-  ),
+
   dollarRate: parseFloat(process.env.DOLLAR_RATE as string),
   paystackPaymentApiKey: process.env.PAYSTACK_PAYMENT_API_KEY,
-  nowPaymentApiKey: process.env.NOW_PAYMENT_API_KEY,
-  nowPaymentInvoiceUrl: process.env.NOW_PAYMENT_INVOICE_URL,
+
   baseServerUrl: process.env.BASER_SERVER_URL,
   mainLogo: process.env.MAIN_LOGO,
   cloudName: process.env.CLOUD_NAME,

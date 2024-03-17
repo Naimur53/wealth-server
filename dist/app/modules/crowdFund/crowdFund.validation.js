@@ -32,7 +32,7 @@ const updateValidation = zod_1.z.object({
         description: zod_1.z
             .string({ required_error: 'description is required' })
             .optional(),
-        rooms: zod_1.z.number().optional(),
+        rooms: zod_1.z.number().optional().nullable(),
         size: zod_1.z.string({ required_error: 'size is required' }).optional(),
         floor: zod_1.z.string().optional(),
         targetFund: zod_1.z
