@@ -35,12 +35,7 @@ model User {
   profileImg              String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
   isVerified              Boolean             @default(false)
   isBlocked               Boolean?
-  isChampion              Boolean             @default(false)
-  status                  EUserStatus         @default(pending)
-  deviceNotificationToken String?
-  txId                    String?
-  isPaid                  Boolean?            @default(false)
-  shouldSendNotification  Boolean?            @default(true)
+  isChampion              Boolean             @default(false) 
   verificationOtp         VerificationOtp[]
   propertryOrders         Orders[]
   savedPropertry          SavedPropertry[]

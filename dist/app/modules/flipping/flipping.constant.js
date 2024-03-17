@@ -7,5 +7,6 @@ exports.flippingFilterAbleFields = [
     'price',
     'title',
     'locationId',
+    'ownById',
 ];
 exports.flippingFilterByPrice = ['maxPrice', 'minPrice'];
