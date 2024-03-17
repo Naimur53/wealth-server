@@ -190,7 +190,9 @@ const deleteUser = async (id: string): Promise<User | null> => {
     return deleteUser;
   });
 };
-const generateUserPay = async (id: string): Promise<User | null> => {
+const generateUserPay = async (
+  id: string
+): Promise<Pick<User, 'txId' | 'id' | 'email'> | null> => {
   const isUserExist = await prisma.user.findUnique({ where: { id } });
 
   if (!isUserExist) {
@@ -211,7 +213,15 @@ const generateUserPay = async (id: string): Promise<User | null> => {
   const output = await prisma.user.update({
     where: { id },
     data: { txId: request.data.authorization_url },
+    select: {
+      txId: true,
+      id: true,
+      email: true,
+    },
   });
+  if (!output) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to generate');
+  }
   return output;
 };
 

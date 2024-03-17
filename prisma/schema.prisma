@@ -21,31 +21,36 @@ enum EUserGender {
 }
 
 model User {
-  id                      String              @id @default(uuid())
+   id                      String              @id @default(uuid()) 
   name                    String
   email                   String              @unique
   password                String
   phoneNumber             String
-  dateOfBirth             DateTime?
-  location                String?
-  gender                  EUserGender?
   createdAt               DateTime            @default(now())
-  updatedAt               DateTime            @updatedAt
+  updatedAt               DateTime
   role                    UserRole            @default(user)
   profileImg              String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
   isVerified              Boolean             @default(false)
   isBlocked               Boolean?
-  isChampion              Boolean             @default(false) 
-  verificationOtp         VerificationOtp[]
-  propertryOrders         Orders[]
-  savedPropertry          SavedPropertry[]
-  savedCrowdFund          SavedCrowdFund[]
-  savedflipping           SavedFlipping[]
-  feedback                Feedback[]
-  messaage                Message[]
-  seenMessage             SeenMessage[]
+  status                  EUserStatus         @default(pending)
+  gender                  EUserGender?
+  location                String?
+  isChampion              Boolean             @default(false)
+  deviceNotificationToken String?
+  isPaid                  Boolean?            @default(false)
+  shouldSendNotification  Boolean?            @default(true)
+  txId                    String?
+  dateOfBirth             DateTime?
+  Feedback                Feedback[]
   Flipping                Flipping[]
+  Message                 Message[]
+  Orders                  Orders[]
   PromotionInterest       PromotionInterest[]
+  SavedCrowdFund          SavedCrowdFund[]
+  SavedFlipping           SavedFlipping[]
+  SavedPropertry          SavedPropertry[]
+  SeenMessage             SeenMessage[]
+  VerificationOtp         VerificationOtp[]
 }
 
 enum EUserStatus {

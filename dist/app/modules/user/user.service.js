@@ -187,7 +187,15 @@ const generateUserPay = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const output = yield prisma_1.default.user.update({
         where: { id },
         data: { txId: request.data.authorization_url },
+        select: {
+            txId: true,
+            id: true,
+            email: true,
+        },
     });
+    if (!output) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Failed to generate');
+    }
     return output;
 });
 const adminOverview = () => __awaiter(void 0, void 0, void 0, function* () {

@@ -90,7 +90,7 @@ const generateUserPay: RequestHandler = catchAsync(
     const user = req.user as JwtPayload;
     const result = await UserService.generateUserPay(user.userId);
 
-    sendResponse<User>(res, {
+    sendResponse<Pick<User, 'txId' | 'id' | 'email'> | null>(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: 'User pay url successfully generate!',
