@@ -11,8 +11,10 @@ import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { initiatePayment } from '../../../helpers/paystackPayment';
+import sendEmail from '../../../helpers/sendEmail';
 import { EPaymentType, IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
 import generateId from '../../../utils/generateId';
 import { ordersSearchableFields } from './orders.constant';
@@ -337,8 +339,21 @@ const updateOrders = async (
       } else {
         throw new ApiError(httpStatus.BAD_REQUEST, 'something went wrong');
       }
-      return await tx.orders.update({ where: { id }, data: payload });
+      return await tx.orders.update({
+        where: { id },
+        data: payload,
+        include: { orderBy: true },
+      });
     });
+    await sendEmail(
+      { to: output.orderBy.email },
+      {
+        subject: EmailTemplates.orderSuccessful.subject,
+        html: EmailTemplates.orderSuccessful.html({
+          propertyName: isExits.title,
+        }),
+      }
+    );
     return output;
   } else {
     const result = await prisma.orders.update({

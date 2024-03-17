@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { RequestHandler } from 'express-serve-static-core';
 import httpStatus from 'http-status';
 import { paginationFields } from '../../../constants/pagination';
+import sendNotification from '../../../helpers/sendNotification';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
@@ -16,6 +17,7 @@ const createCrowdFund: RequestHandler = catchAsync(
     const CrowdFundData = req.body;
 
     const result = await CrowdFundService.createCrowdFund(CrowdFundData);
+    sendNotification({ message: 'A new crowdfund listed !' });
     sendResponse<CrowdFund>(res, {
       statusCode: httpStatus.OK,
       success: true,

@@ -62,6 +62,7 @@
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
     "nodemailer": "^6.9.8",
+    "onesignal-node": "^3.4.0",
     "openai": "^4.28.4",
     "paystack": "^2.0.1",
     "prettier-plugin-prisma": "^5.0.0",

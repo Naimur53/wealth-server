@@ -40,4 +40,6 @@ exports.default = {
     cloudName: process.env.CLOUD_NAME,
     cloudApiKey: process.env.CLOUD_API_KEY,
     cloudApiSecret: process.env.CLOUD_API_SECRET,
+    oneSignalID: process.env.ONESIGNAL_ID,
+    oneSignalApi: process.env.ONESIGNAL_API,
 };

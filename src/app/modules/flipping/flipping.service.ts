@@ -2,8 +2,10 @@ import { EPropertyStatus, Flipping, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
+import sendEmail from '../../../helpers/sendEmail';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+import EmailTemplates from '../../../shared/EmailTemplates';
 import prisma from '../../../shared/prisma';
 import { flippingSearchableFields } from './flipping.constant';
 import { IFlippingFilters } from './flipping.interface';
@@ -101,7 +103,22 @@ const getAllFlipping = async (
 const createFlipping = async (payload: Flipping): Promise<Flipping | null> => {
   const newFlipping = await prisma.flipping.create({
     data: { ...payload, status: 'pending' },
+    include: {
+      ownBy: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
   });
+  await sendEmail(
+    { to: newFlipping.ownBy.email },
+    {
+      subject: EmailTemplates.userListAProperty.subject,
+      html: EmailTemplates.userListAProperty.html(),
+    }
+  );
   return newFlipping;
 };
 

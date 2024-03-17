@@ -30,7 +30,9 @@ const config_1 = __importDefault(require("../../../config"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const paystackPayment_1 = require("../../../helpers/paystackPayment");
+const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
 const common_1 = require("../../../interfaces/common");
+const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const generateId_1 = __importDefault(require("../../../utils/generateId"));
 const orders_constant_1 = require("./orders.constant");
@@ -298,8 +300,18 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
             else {
                 throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'something went wrong');
             }
-            return yield tx.orders.update({ where: { id }, data: payload });
+            return yield tx.orders.update({
+                where: { id },
+                data: payload,
+                include: { orderBy: true },
+            });
         }));
+        yield (0, sendEmail_1.default)({ to: output.orderBy.email }, {
+            subject: EmailTemplates_1.default.orderSuccessful.subject,
+            html: EmailTemplates_1.default.orderSuccessful.html({
+                propertyName: isExits.title,
+            }),
+        });
         return output;
     }
     else {

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CrowdFundController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const pagination_1 = require("../../../constants/pagination");
+const sendNotification_1 = __importDefault(require("../../../helpers/sendNotification"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
@@ -23,6 +24,7 @@ const crowdFund_service_1 = require("./crowdFund.service");
 const createCrowdFund = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const CrowdFundData = req.body;
     const result = yield crowdFund_service_1.CrowdFundService.createCrowdFund(CrowdFundData);
+    (0, sendNotification_1.default)({ message: 'A new crowdfund listed !' });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

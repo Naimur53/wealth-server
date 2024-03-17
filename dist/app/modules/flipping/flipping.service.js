@@ -28,6 +28,8 @@ const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const ApiError_1 = __importDefault(require("../../../errors/ApiError"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const sendEmail_1 = __importDefault(require("../../../helpers/sendEmail"));
+const EmailTemplates_1 = __importDefault(require("../../../shared/EmailTemplates"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const flipping_constant_1 = require("./flipping.constant");
 const getAllFlipping = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
@@ -112,6 +114,18 @@ const getAllFlipping = (filters, paginationOptions) => __awaiter(void 0, void 0,
 const createFlipping = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const newFlipping = yield prisma_1.default.flipping.create({
         data: Object.assign(Object.assign({}, payload), { status: 'pending' }),
+        include: {
+            ownBy: {
+                select: {
+                    id: true,
+                    email: true,
+                },
+            },
+        },
+    });
+    yield (0, sendEmail_1.default)({ to: newFlipping.ownBy.email }, {
+        subject: EmailTemplates_1.default.userListAProperty.subject,
+        html: EmailTemplates_1.default.userListAProperty.html(),
     });
     return newFlipping;
 });
