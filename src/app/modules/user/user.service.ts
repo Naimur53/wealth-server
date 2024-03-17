@@ -158,6 +158,12 @@ const updateUser = async (
   if (isBlockChampion && isRequestedUSerNotSuperAdmin) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Block can only set by admin');
   }
+  if (payload.isPaid !== undefined) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'you can not change is payment status'
+    );
+  }
   // if (requestedUser.role === UserRole.user && payload.status) {
   //   throw new ApiError(
   //     httpStatus.BAD_REQUEST,
