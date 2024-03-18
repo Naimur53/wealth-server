@@ -27,7 +27,7 @@ model User {
   password                String
   phoneNumber             String
   createdAt               DateTime            @default(now())
-  updatedAt               DateTime
+  updatedAt               DateTime              @updatedAt
   role                    UserRole            @default(user)
   profileImg              String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
   isVerified              Boolean             @default(false)
