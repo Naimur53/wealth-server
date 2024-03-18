@@ -116,6 +116,12 @@ const updateLocation = async (
 
 const deleteLocation = async (id: string): Promise<Location | null> => {
   const result = await prisma.$transaction(async tx => {
+    await tx.savedPropertry.deleteMany({
+      where: { property: { locationId: id } },
+    });
+    await tx.savedCrowdFund.deleteMany({
+      where: { crowdFund: { locationId: id } },
+    });
     await tx.property.deleteMany({ where: { locationId: id } });
     await tx.crowdFund.deleteMany({ where: { locationId: id } });
     return await tx.location.delete({

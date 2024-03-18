@@ -112,6 +112,12 @@ const updateLocation = (id, payload) => __awaiter(void 0, void 0, void 0, functi
 });
 const deleteLocation = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield tx.savedPropertry.deleteMany({
+            where: { property: { locationId: id } },
+        });
+        yield tx.savedCrowdFund.deleteMany({
+            where: { crowdFund: { locationId: id } },
+        });
         yield tx.property.deleteMany({ where: { locationId: id } });
         yield tx.crowdFund.deleteMany({ where: { locationId: id } });
         return yield tx.location.delete({

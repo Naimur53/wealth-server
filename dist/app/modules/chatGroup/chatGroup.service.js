@@ -101,9 +101,14 @@ const updateChatGroup = (id, payload) => __awaiter(void 0, void 0, void 0, funct
     return result;
 });
 const deleteChatGroup = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.chatGroup.delete({
-        where: { id },
-    });
+    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        // all message
+        yield tx.message.deleteMany({ where: { chatGroupId: id } });
+        yield tx.seenMessage.deleteMany({ where: { groupId: id } });
+        return yield tx.chatGroup.delete({
+            where: { id },
+        });
+    }));
     if (!result) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'ChatGroup not found!');
     }

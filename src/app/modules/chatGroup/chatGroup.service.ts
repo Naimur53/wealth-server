@@ -100,8 +100,13 @@ const updateChatGroup = async (
 };
 
 const deleteChatGroup = async (id: string): Promise<ChatGroup | null> => {
-  const result = await prisma.chatGroup.delete({
-    where: { id },
+  const result = await prisma.$transaction(async tx => {
+    // all message
+    await tx.message.deleteMany({ where: { chatGroupId: id } });
+    await tx.seenMessage.deleteMany({ where: { groupId: id } });
+    return await tx.chatGroup.delete({
+      where: { id },
+    });
   });
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, 'ChatGroup not found!');
