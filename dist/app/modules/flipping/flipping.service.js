@@ -135,6 +135,9 @@ const getSingleFlipping = (id) => __awaiter(void 0, void 0, void 0, function* ()
             id,
         },
     });
+    if (!result) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Data not found');
+    }
     return result;
 });
 const updateFlipping = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {

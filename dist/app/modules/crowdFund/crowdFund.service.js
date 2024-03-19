@@ -155,6 +155,9 @@ const getSingleCrowdFund = (id) => __awaiter(void 0, void 0, void 0, function* (
             },
         },
     });
+    if (!result) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Data not found');
+    }
     return result;
 });
 const updateCrowdFund = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
