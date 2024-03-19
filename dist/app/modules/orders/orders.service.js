@@ -101,10 +101,12 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
 });
 const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const refName = payload.refName;
+    console.log(refName);
     let amount = 0;
     let isExits;
     const isUserExist = yield prisma_1.default.user.findUnique({
         where: { id: payload.orderById },
+        select: { id: true, email: true },
     });
     if (!isUserExist) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'user not exits');
@@ -136,12 +138,24 @@ const createOrders = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     // for crowd Fund
     if (refName === client_1.EOrderRefName.crowdFund) {
+        console.log('in crowd Fund');
         if (!payload.crowdFundId) {
             throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'crowFund id is required');
         }
         isExits = yield prisma_1.default.crowdFund.findUnique({
             where: { id: payload.crowdFundId },
         });
+        if (!isExits) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'crowdFund not fund');
+        }
+        // check does the amount more than price
+        const totalAmountRaised = isExits.fundRaised
+            ? isExits.fundRaised + payload.amount
+            : payload.amount;
+        console.log({ totalAmountRaised });
+        if (totalAmountRaised > isExits.targetFund) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'This amount is more then target fund');
+        }
         amount = payload.amount;
     }
     // for flipping
@@ -262,7 +276,7 @@ const updateOrders = (id, payload) => __awaiter(void 0, void 0, void 0, function
                 if (newRaise > preCrowdFund.targetFund) {
                     throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Amount is not valid');
                 }
-                else if (newRaise === isOrderExits.amount) {
+                else if (newRaise === preCrowdFund.targetFund) {
                     status = 'sold';
                 }
                 // check is

@@ -165,12 +165,12 @@ const updateCrowdFund = async (
   if (!isExits) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Crowd fund not found');
   }
-  if (isExits.status === EPropertyStatus.sold) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'sold crowd fund cannot be update'
-    );
-  }
+  // if (isExits.status === EPropertyStatus.sold) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     'sold crowd fund cannot be update'
+  //   );
+  // }
   const result = await prisma.crowdFund.update({
     where: {
       id,

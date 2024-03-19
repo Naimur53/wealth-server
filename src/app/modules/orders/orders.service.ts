@@ -97,11 +97,13 @@ const getAllOrders = async (
 
 const createOrders = async (payload: Orders): Promise<Orders | null> => {
   const refName = payload.refName;
+  console.log(refName);
   let amount: number = 0;
   let isExits;
 
   const isUserExist = await prisma.user.findUnique({
     where: { id: payload.orderById },
+    select: { id: true, email: true },
   });
   if (!isUserExist) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'user not exits');
@@ -141,12 +143,27 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
 
   // for crowd Fund
   if (refName === EOrderRefName.crowdFund) {
+    console.log('in crowd Fund');
     if (!payload.crowdFundId) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'crowFund id is required');
     }
     isExits = await prisma.crowdFund.findUnique({
       where: { id: payload.crowdFundId },
     });
+    if (!isExits) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'crowdFund not fund');
+    }
+    // check does the amount more than price
+    const totalAmountRaised: number = isExits.fundRaised
+      ? isExits.fundRaised + payload.amount
+      : payload.amount;
+    console.log({ totalAmountRaised });
+    if (totalAmountRaised > isExits.targetFund) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'This amount is more then target fund'
+      );
+    }
     amount = payload.amount;
   }
   // for flipping
@@ -299,7 +316,7 @@ const updateOrders = async (
         let status: EPropertyStatus = preCrowdFund.status;
         if (newRaise > preCrowdFund.targetFund) {
           throw new ApiError(httpStatus.BAD_REQUEST, 'Amount is not valid');
-        } else if (newRaise === isOrderExits.amount) {
+        } else if (newRaise === preCrowdFund.targetFund) {
           status = 'sold';
         }
         // check is
