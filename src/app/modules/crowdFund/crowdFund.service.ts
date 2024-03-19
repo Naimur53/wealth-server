@@ -154,6 +154,9 @@ const getSingleCrowdFund = async (id: string): Promise<CrowdFund | null> => {
       },
     },
   });
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Data not found');
+  }
   return result;
 };
 

@@ -6,7 +6,7 @@ const createValidation = z.object({
     thumbnail: z.string({ required_error: 'thumbnail is required' }),
     title: z.string({ required_error: 'title is required' }),
     description: z.string({ required_error: 'description is required' }),
-    rooms: z.number().optional(),
+    rooms: z.number().optional().nullable(),
     size: z.string({ required_error: 'size is required' }),
     floor: z.string().optional(),
     status: z

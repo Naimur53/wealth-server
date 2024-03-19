@@ -128,6 +128,9 @@ const getSingleFlipping = async (id: string): Promise<Flipping | null> => {
       id,
     },
   });
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Data not found');
+  }
   return result;
 };
 

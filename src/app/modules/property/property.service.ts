@@ -142,6 +142,9 @@ const getSingleProperty = async (id: string): Promise<Property | null> => {
       propertyState: true,
     },
   });
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Data not found');
+  }
   return result;
 };
 
