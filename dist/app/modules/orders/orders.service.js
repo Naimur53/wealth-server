@@ -78,9 +78,13 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
                 createdAt: 'desc',
             },
         include: {
-            crowdFund: true,
+            crowdFund: {
+                include: { location: true },
+            },
             flipping: true,
-            property: true,
+            property: {
+                include: { location: true },
+            },
             wealthBank: true,
             orderBy: {
                 select: {
@@ -92,7 +96,7 @@ const getAllOrders = (filters, paginationOptions) => __awaiter(void 0, void 0, v
             },
         },
     });
-    const total = yield prisma_1.default.orders.count();
+    const total = yield prisma_1.default.orders.count({ where: whereConditions });
     const output = {
         data: result,
         meta: { page, limit, total },

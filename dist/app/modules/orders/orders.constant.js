@@ -9,4 +9,5 @@ exports.ordersFilterAbleFields = [
     'crowdFundId',
     'flippingId',
     'status',
+    'paymentType',
 ];

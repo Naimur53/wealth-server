@@ -6,4 +6,5 @@ export const ordersFilterAbleFields = [
   'crowdFundId',
   'flippingId',
   'status',
+  'paymentType',
 ];

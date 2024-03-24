@@ -73,9 +73,13 @@ const getAllOrders = async (
             createdAt: 'desc',
           },
     include: {
-      crowdFund: true,
+      crowdFund: {
+        include: { location: true },
+      },
       flipping: true,
-      property: true,
+      property: {
+        include: { location: true },
+      },
       wealthBank: true,
       orderBy: {
         select: {
@@ -87,7 +91,7 @@ const getAllOrders = async (
       },
     },
   });
-  const total = await prisma.orders.count();
+  const total = await prisma.orders.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },

@@ -11,8 +11,8 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const Orders_controller_1 = require("./Orders.controller");
 const orders_validation_1 = require("./orders.validation");
 const router = express_1.default.Router();
-router.get('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin), Orders_controller_1.OrdersController.getAllOrders);
-router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin, client_1.UserRole.superAdmin), Orders_controller_1.OrdersController.getSingleOrders);
+router.get('/', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin, client_1.UserRole.user), Orders_controller_1.OrdersController.getAllOrders);
+router.get('/:id', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin, client_1.UserRole.user), Orders_controller_1.OrdersController.getSingleOrders);
 router.post('/', (0, auth_1.default)(client_1.UserRole.user), (0, validateRequest_1.default)(orders_validation_1.OrdersValidation.createValidation), Orders_controller_1.OrdersController.createOrders);
 router.patch('/:id', (0, auth_1.default)(client_1.UserRole.user, client_1.UserRole.admin, client_1.UserRole.superAdmin), (0, validateRequest_1.default)(orders_validation_1.OrdersValidation.updateValidation), Orders_controller_1.OrdersController.updateOrders);
 router.delete('/:id', Orders_controller_1.OrdersController.deleteOrders);

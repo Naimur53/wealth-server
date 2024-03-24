@@ -8,12 +8,12 @@ const router = express.Router();
 
 router.get(
   '/',
-  auth(UserRole.admin, UserRole.superAdmin),
+  auth(UserRole.admin, UserRole.superAdmin, UserRole.user),
   OrdersController.getAllOrders
 );
 router.get(
   '/:id',
-  auth(UserRole.admin, UserRole.superAdmin, UserRole.superAdmin),
+  auth(UserRole.admin, UserRole.superAdmin, UserRole.user),
   OrdersController.getSingleOrders
 );
 
