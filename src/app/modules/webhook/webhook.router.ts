@@ -9,7 +9,7 @@ router.post('/paystack', webHookController.paystack);
 
 router.post(
   '/ai-support',
-  auth(UserRole.admin, UserRole.superAdmin, UserRole.superAdmin),
+  auth(UserRole.admin, UserRole.superAdmin, UserRole.user),
   webHookController.aiSupport
 );
 export const WebHookRoutes = router;
