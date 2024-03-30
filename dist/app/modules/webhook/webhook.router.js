@@ -10,5 +10,5 @@ const auth_1 = __importDefault(require("../../middlewares/auth"));
 const webhook_controller_1 = require("./webhook.controller");
 const router = express_1.default.Router();
 router.post('/paystack', webhook_controller_1.webHookController.paystack);
-router.post('/ai-support', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin, client_1.UserRole.superAdmin), webhook_controller_1.webHookController.aiSupport);
+router.post('/ai-support', (0, auth_1.default)(client_1.UserRole.admin, client_1.UserRole.superAdmin, client_1.UserRole.user), webhook_controller_1.webHookController.aiSupport);
 exports.WebHookRoutes = router;
