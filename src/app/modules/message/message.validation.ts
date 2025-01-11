@@ -12,7 +12,7 @@ const createValidation = z.object({
       .optional()
       .nullable(),
     replyId: z
-      .string({ required_error: 'image is required' })
+      .string({ required_error: 'ReplyId is required' })
       .optional()
       .nullable(),
     sendBy: z
@@ -47,7 +47,7 @@ const createValidation = z.object({
             id: z.string(),
             name: z.string(),
             role: z.string(),
-            isChampion: z.string(),
+            isChampion: z.boolean(),
             profileImg: z.string(),
           })
           .optional()

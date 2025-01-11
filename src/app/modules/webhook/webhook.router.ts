@@ -12,4 +12,5 @@ router.post(
   auth(UserRole.admin, UserRole.superAdmin, UserRole.user),
   webHookController.aiSupport
 );
+router.get('/dollar-rate', webHookController.dollarRate);
 export const WebHookRoutes = router;

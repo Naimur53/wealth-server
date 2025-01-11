@@ -98,7 +98,7 @@ const getAllCrowdFund = async (
       },
     },
   });
-  const total = await prisma.crowdFund.count();
+  const total = await prisma.crowdFund.count({ where: whereConditions });
   const output = {
     data: result,
     meta: { page, limit, total },

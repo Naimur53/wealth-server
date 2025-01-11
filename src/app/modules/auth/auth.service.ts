@@ -12,6 +12,7 @@ import prisma from '../../../shared/prisma';
 import generateOTP, { checkTimeOfOTP } from '../../../utils/generatateOpt';
 import { UserService } from '../user/user.service';
 import {
+  IAdminLogin,
   ILogin,
   ILoginResponse,
   IRefreshTokenResponse,
@@ -138,6 +139,109 @@ const loginUser = async (payload: ILogin): Promise<ILoginResponse> => {
     refreshToken,
   };
 };
+const loginAdmin = async (payload: ILogin): Promise<{ otp: string }> => {
+  const { email: givenEmail, password } = payload;
+  const isUserExist = await prisma.user.findUnique({
+    where: { email: givenEmail },
+  });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
+  }
+  if (
+    isUserExist.password &&
+    !(await bcryptjs.compare(password, isUserExist.password))
+  ) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password is incorrect');
+  }
+
+  //create access token & refresh token
+  const { email, role } = isUserExist;
+
+  if (role === UserRole.user) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Your are not a admin');
+  }
+  const otp = generateOTP();
+  const verificationOtp = await prisma.$transaction(async tx => {
+    await tx.verificationOtp.deleteMany({
+      where: { ownById: isUserExist.id },
+    });
+    return await tx.verificationOtp.create({
+      data: {
+        ownById: isUserExist.id,
+        otp: otp,
+        type: EVerificationOtp.adminLogin,
+      },
+    });
+  });
+  if (!verificationOtp.otp) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to generate otp');
+  }
+  await sendEmail(
+    { to: email },
+    {
+      subject: EmailTemplates.adminLogin.subject,
+      html: EmailTemplates.adminLogin.html({ token: otp }),
+    }
+  );
+  return {
+    otp: 'otp send',
+  };
+};
+const verifyOtpForAdminLogin = async (
+  payload: IAdminLogin
+): Promise<ILoginResponse> => {
+  const { email: givenEmail, password } = payload;
+  const isUserExist = await prisma.user.findUnique({
+    where: { email: givenEmail },
+  });
+
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
+  }
+  if (
+    isUserExist.password &&
+    !(await bcryptjs.compare(password, isUserExist.password))
+  ) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password is incorrect');
+  }
+  const isTokenExit = await prisma.verificationOtp.findFirst({
+    where: {
+      ownById: isUserExist.id,
+      otp: payload.opt,
+      type: EVerificationOtp.adminLogin,
+    },
+  });
+
+  if (!isTokenExit) {
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'OTP is not match');
+  }
+
+  // check time validation
+  if (checkTimeOfOTP(isTokenExit.createdAt)) {
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'OPT is expired!');
+  }
+  //create access token & refresh
+  const { email, id, role, name, ...others } = isUserExist;
+
+  const accessToken = jwtHelpers.createToken(
+    { userId: id, role },
+    config.jwt.secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.createToken(
+    { userId: id, role },
+    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_expires_in as string
+  );
+
+  return {
+    user: { email, id, name, role, ...others },
+    accessToken,
+    refreshToken,
+  };
+};
 const resendEmail = async (givenEmail: string): Promise<ILoginResponse> => {
   const isUserExist = await prisma.user.findUnique({
     where: { email: givenEmail },
@@ -222,8 +326,50 @@ const sendForgotEmail = async (
   await sendEmail(
     { to: email },
     {
-      subject: EmailTemplates.verify.subject,
-      html: EmailTemplates.verify.html({ token: otp }),
+      subject: EmailTemplates.verifyForgot.subject,
+      html: EmailTemplates.verifyForgot.html({ token: otp }),
+    }
+  );
+  return {
+    otp,
+  };
+};
+const sendDeleteUserEmail = async (
+  givenEmail: string
+): Promise<{ otp: number }> => {
+  const isUserExist = await prisma.user.findUnique({
+    where: { email: givenEmail },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  const otp = generateOTP();
+  //create access token & refresh token
+  const { email } = isUserExist;
+  console.log(email);
+  const verificationOtp = await prisma.$transaction(async tx => {
+    await tx.verificationOtp.deleteMany({
+      where: { ownById: isUserExist.id },
+    });
+    return await tx.verificationOtp.create({
+      data: {
+        ownById: isUserExist.id,
+        otp: otp,
+        type: EVerificationOtp.deleteUser,
+      },
+    });
+  });
+  if (!verificationOtp.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cannot create verification Otp'
+    );
+  }
+  await sendEmail(
+    { to: email },
+    {
+      subject: EmailTemplates.deleteUser.subject,
+      html: EmailTemplates.deleteUser.html({ token: otp }),
     }
   );
   return {
@@ -292,6 +438,52 @@ const verifySignupToken = async (
   return {
     accessToken: newAccessToken,
     user: rest,
+  };
+};
+
+const verifyDeleteUserToken = async (
+  token: number,
+  userEmail: string
+): Promise<{ token: number; isValidate: boolean; deletedUserId: string }> => {
+  const isUserExist = await prisma.user.findUnique({
+    where: { email: userEmail },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
+  }
+  console.log(token, userEmail);
+  // check is token match and valid
+  const isTokenExit = await prisma.verificationOtp.findFirst({
+    where: {
+      ownById: isUserExist.id,
+      otp: token,
+      type: EVerificationOtp.deleteUser,
+    },
+  });
+
+  if (!isTokenExit) {
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'OTP is not match');
+  }
+
+  // check time validation
+  if (checkTimeOfOTP(isTokenExit.createdAt)) {
+    throw new ApiError(httpStatus.NOT_ACCEPTABLE, 'OPT is expired!');
+  }
+
+  // delete all otp user
+  const result = await prisma.user.delete({
+    where: {
+      id: isUserExist.id,
+    },
+  });
+  if (!result.id) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Failed to delete');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+  return {
+    token,
+    isValidate: true,
+    deletedUserId: result.id,
   };
 };
 
@@ -445,4 +637,8 @@ export const AuthService = {
   sendForgotEmail,
   verifyForgotToken,
   changePassword,
+  sendDeleteUserEmail,
+  verifyDeleteUserToken,
+  loginAdmin,
+  verifyOtpForAdminLogin,
 };

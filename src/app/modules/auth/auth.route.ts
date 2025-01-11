@@ -16,6 +16,16 @@ router.post(
   AuthController.loginUser
 );
 router.post(
+  '/verify-otp-for-admin-login',
+  validateRequest(AuthValidation.loginAdminZodSchema),
+  AuthController.verifyOtpForAdminLogin
+);
+router.post(
+  '/admin-login',
+  validateRequest(AuthValidation.loginZodSchema),
+  AuthController.loginAdmin
+);
+router.post(
   '/refresh-token',
   validateRequest(AuthValidation.refreshTokenZodSchema),
   AuthController.refreshToken
@@ -32,11 +42,20 @@ router.post(
   AuthController.verifyForgotToken
 );
 router.post(
+  '/verify-delete-user-token-and-delete-user',
+  validateRequest(AuthValidation.verifyForgotToken),
+  AuthController.verifyDeleteUserToken
+);
+router.post(
   '/change-password',
   validateRequest(AuthValidation.changePassword),
   AuthController.changePassword
 );
 router.post('/resend-signup-email/:email', AuthController.resendEmail);
 router.post('/send-forgot-email/:email', AuthController.sendForgotEmail);
+router.post(
+  '/send-delete-user-email/:email',
+  AuthController.sendDeleteUserEmail
+);
 
 export const AuthRoutes = router;

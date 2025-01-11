@@ -40,7 +40,9 @@ const updateValidation = z.object({
     locationId: z
       .string({ required_error: 'locationId is required' })
       .optional(),
-    type: z.enum(['apartment', 'house', 'condo']).optional(),
+    type: z
+      .enum(Object.keys(EPropertyType) as [string, ...string[]])
+      .optional(),
   }),
 });
 export const PropertyValidation = {

@@ -126,7 +126,7 @@ const updateUser = async (
   requestedUser: JwtPayload
 ): Promise<User | null> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-  const { password, status, ...rest } = payload;
+  const { password, ...rest } = payload;
   let genarateBycryptPass;
   if (password) {
     genarateBycryptPass = await createBycryptPassword(password);
@@ -170,7 +170,7 @@ const updateUser = async (
   //     'only admin and super admin can verify seller '
   //   );
   // }
-
+  console.log(rest);
   const result = await prisma.user.update({
     where: {
       id,

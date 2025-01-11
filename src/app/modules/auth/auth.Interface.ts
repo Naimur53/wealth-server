@@ -10,6 +10,11 @@ export type ILogin = {
   email: string;
   password: string;
 };
+export type IAdminLogin = {
+  email: string;
+  password: string;
+  opt: number;
+};
 export type ILoginResponse = {
   accessToken: string;
   user: Omit<User, 'password'>;

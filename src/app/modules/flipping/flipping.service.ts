@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import sendEmail from '../../../helpers/sendEmail';
+import sendNotification from '../../../helpers/sendNotification';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import EmailTemplates from '../../../shared/EmailTemplates';
@@ -138,6 +139,9 @@ const updateFlipping = async (
   id: string,
   payload: Partial<Flipping>
 ): Promise<Flipping | null> => {
+  if (payload.status === 'available') {
+    sendNotification({ message: 'A new Flipping listed !' });
+  }
   const result = await prisma.flipping.update({
     where: {
       id,

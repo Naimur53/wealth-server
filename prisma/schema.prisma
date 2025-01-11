@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 enum UserRole {
@@ -21,13 +22,13 @@ enum EUserGender {
 }
 
 model User {
-   id                      String              @id @default(uuid()) 
+  id                      String              @id @default(uuid())
   name                    String
   email                   String              @unique
   password                String
   phoneNumber             String
   createdAt               DateTime            @default(now())
-  updatedAt               DateTime              @updatedAt
+  updatedAt               DateTime            @updatedAt
   role                    UserRole            @default(user)
   profileImg              String?             @default("https://truckomat.com/wp-content/uploads/2019/06/avatar-960_720-e1562935069333.png")
   isVerified              Boolean             @default(false)
@@ -65,12 +66,14 @@ model VerificationOtp {
   otp       Int
   createdAt DateTime         @default(now())
   ownById   String
-  ownBy     User             @relation(fields: [ownById], references: [id])
+  ownBy     User             @relation(fields: [ownById], references: [id], onDelete: Cascade)
 }
 
 enum EVerificationOtp {
   createUser
   forgotPassword
+  deleteUser
+  adminLogin
 }
 
 // for location and property
@@ -102,7 +105,7 @@ model Property {
   status         EPropertyStatus  @default(available)
   updatedAt      DateTime         @updatedAt
   type           EPropertyType
-  location       Location         @relation(fields: [locationId], references: [id])
+  location       Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   propertyState  PropertyState[]
   order          Orders[]
   savedPropertry SavedPropertry[]
@@ -130,15 +133,15 @@ model PropertyState {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 model SavedPropertry {
   id         String   @id @unique @default(uuid())
   ownById    String
-  ownBy      User     @relation(fields: [ownById], references: [id])
+  ownBy      User     @relation(fields: [ownById], references: [id], onDelete: Cascade)
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 model Orders {
@@ -146,11 +149,11 @@ model Orders {
   isPaid            Boolean           @default(false)
   amount            Float
   propertyId        String?
-  property          Property?         @relation(fields: [propertyId], references: [id])
+  property          Property?         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   crowdFundId       String?
-  crowdFund         CrowdFund?        @relation(fields: [crowdFundId], references: [id])
+  crowdFund         CrowdFund?        @relation(fields: [crowdFundId], references: [id], onDelete: Cascade)
   flippingId        String?
-  flipping          Flipping?         @relation(fields: [flippingId], references: [id])
+  flipping          Flipping?         @relation(fields: [flippingId], references: [id], onDelete: Cascade)
   refName           EOrderRefName
   bankName          String?
   bankAccountNumber String?
@@ -158,9 +161,9 @@ model Orders {
   paystackId        String?
   paystackUrl       String?
   wealthBankId      String?
-  wealthBank        Bank?             @relation(fields: [wealthBankId], references: [id])
+  wealthBank        Bank?             @relation(fields: [wealthBankId], references: [id], onDelete: Cascade)
   orderById         String
-  orderBy           User              @relation(fields: [orderById], references: [id])
+  orderBy           User              @relation(fields: [orderById], references: [id], onDelete: Cascade)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   status            EOrderStatus      @default(pending)
@@ -188,15 +191,20 @@ enum EOrderPaymentType {
 
 // Bank
 model Bank {
-  id              String    @id @unique @default(uuid())
-  name            String
-  accountNumber   String
-  accountName     String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  typeOfBank      EBankType
-  logoOfBank      String
-  propertryOrders Orders[]
+  id                     String    @id @unique @default(uuid())
+  name                   String
+  accountNumber          String
+  accountName            String
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  bankAddress            String?
+  shortCode              String?
+  swiftCode              String?
+  beneficiaryPhoneNumber String?
+  address                String?
+  typeOfBank             EBankType
+  logoOfBank             String
+  propertryOrders        Orders[]
 }
 
 enum EBankType {
@@ -224,7 +232,7 @@ model CrowdFund {
   status         EPropertyStatus  @default(available)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  location       Location         @relation(fields: [locationId], references: [id])
+  location       Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   savedCrowdFund SavedCrowdFund[]
   Orders         Orders[]
 }
@@ -232,9 +240,9 @@ model CrowdFund {
 model SavedCrowdFund {
   id          String    @id @unique @default(uuid())
   ownById     String
-  ownBy       User      @relation(fields: [ownById], references: [id])
+  ownBy       User      @relation(fields: [ownById], references: [id], onDelete: Cascade)
   crowdFundId String
-  crowdFund   CrowdFund @relation(fields: [crowdFundId], references: [id])
+  crowdFund   CrowdFund @relation(fields: [crowdFundId], references: [id], onDelete: Cascade)
 }
 
 // ------------------------------------ crowd fund end 
@@ -258,7 +266,7 @@ model Flipping {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   ownById          String
-  ownBy            User            @relation(fields: [ownById], references: [id])
+  ownBy            User            @relation(fields: [ownById], references: [id], onDelete: Cascade)
   location         String
   emergencyContact String?
   emergencyEmail   String?
@@ -269,9 +277,9 @@ model Flipping {
 model SavedFlipping {
   id         String   @id @unique @default(uuid())
   ownById    String
-  ownBy      User     @relation(fields: [ownById], references: [id])
+  ownBy      User     @relation(fields: [ownById], references: [id], onDelete: Cascade)
   flippingId String
-  flipping   Flipping @relation(fields: [flippingId], references: [id])
+  flipping   Flipping @relation(fields: [flippingId], references: [id], onDelete: Cascade)
 }
 
 // feed back 
@@ -281,7 +289,7 @@ model Feedback {
   rating      Int
   description String
   ownById     String
-  ownBy       User     @relation(fields: [ownById], references: [id])
+  ownBy       User     @relation(fields: [ownById], references: [id], onDelete: Cascade)
 }
 
 // propmostion 
@@ -301,10 +309,10 @@ model Promotion {
 model PromotionInterest {
   id          String    @id @unique @default(uuid())
   ownById     String
-  ownBy       User      @relation(fields: [ownById], references: [id])
+  ownBy       User      @relation(fields: [ownById], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  promotion   Promotion @relation(fields: [promotionId], references: [id])
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
   promotionId String
 }
 
@@ -332,16 +340,16 @@ enum EChatGroupType {
 model Message {
   id          String    @id @unique @default(uuid())
   chatGroupId String
-  chatGroup   ChatGroup @relation(fields: [chatGroupId], references: [id])
+  chatGroup   ChatGroup @relation(fields: [chatGroupId], references: [id], onDelete: Cascade)
 
   text    String?
   image   String?
   replyId String?
 
-  reply Message? @relation(fields: [replyId], references: [id], name: "Replies")
+  reply Message? @relation(fields: [replyId], references: [id], onDelete: Cascade, name: "Replies")
 
   sendById  String
-  sendBy    User      @relation(fields: [sendById], references: [id])
+  sendBy    User      @relation(fields: [sendById], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   replies   Message[] @relation("Replies")
@@ -350,9 +358,9 @@ model Message {
 model SeenMessage {
   id        String    @id @unique @default(uuid())
   groupId   String
-  chatGroup ChatGroup @relation(fields: [groupId], references: [id])
+  chatGroup ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   seenById  String
-  seenBy    User      @relation(fields: [seenById], references: [id])
+  seenBy    User      @relation(fields: [seenById], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   lastSeen  DateTime

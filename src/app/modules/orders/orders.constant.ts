@@ -7,4 +7,5 @@ export const ordersFilterAbleFields = [
   'flippingId',
   'status',
   'paymentType',
+  'buyerEmail',
 ];

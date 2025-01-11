@@ -1,7 +1,11 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import httpStatus from 'http-status';
 import OpenAI from 'openai';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
 import prisma from '../../../shared/prisma';
+import { AiInstruction } from './webhook.utils';
+const genAI = new GoogleGenerativeAI(config.googleAi);
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const payStackUserPaySuccess = async (userId: string) => {
@@ -16,12 +20,14 @@ const payStackUserPaySuccess = async (userId: string) => {
   return upateUser;
   //   return datas;
 };
+
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey: config.openAiApi,
 });
+
 const threadByUser: any = {};
 const aiSupport = async (userId: string, message: string) => {
-  const assistantIdToUse = 'asst_wB7w7PFzXSmVYqa2inyrphEi'; // Replace with your assistant ID
+  const assistantIdToUse = config.openAiAssistant_id; // Replace with your assistant ID
   // Spec // You should include the user ID in the request
 
   // Create a new thread if it's the user's first message
@@ -106,8 +112,30 @@ const aiSupport = async (userId: string, message: string) => {
   }
   //   return datas;
 };
-
+const googleAiSupport = async (message: string) => {
+  const faq = await prisma.faq.findMany();
+  const strFaq = faq
+    .map((single, i) => {
+      return `
+    ${28 + i}. ${single.question}.
+    Ans: ${single.ans}
+    `;
+    })
+    .join('\n');
+  console.log(strFaq);
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    systemInstruction: AiInstruction(strFaq),
+  });
+  const result = await model.generateContent(`
+ 
+  question: ${message}
+  `);
+  // console.log(result.response.text());
+  return result.response.text();
+};
 export const webHookService = {
   payStackUserPaySuccess,
   aiSupport,
+  googleAiSupport,
 };

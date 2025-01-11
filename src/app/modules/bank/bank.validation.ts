@@ -8,6 +8,11 @@ const createValidation = z.object({
     accountNumber: z.string({ required_error: 'accountNumber is required' }),
     logoOfBank: z.string({ required_error: 'logoOfBank is required' }),
     typeOfBank: z.enum(Object.keys(EBankType) as [string, ...string[]]),
+    bankAddress: z.string().optional().nullable(),
+    shortCode: z.string().optional().nullable(),
+    swiftCode: z.string().optional().nullable(),
+    beneficiaryPhoneNumber: z.string().optional().nullable(),
+    address: z.string().optional().nullable(),
   }),
 });
 const updateValidation = z.object({

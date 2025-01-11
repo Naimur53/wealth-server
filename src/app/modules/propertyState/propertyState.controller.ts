@@ -18,7 +18,7 @@ const createPropertyState: RequestHandler = catchAsync(
     sendResponse<PropertyState>(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'PropertyState Created successfully!',
+      message: 'Property state Created successfully!',
       data: result,
     });
   }

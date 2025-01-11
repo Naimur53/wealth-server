@@ -2,6 +2,7 @@ import { EPropertyStatus, Prisma, Property } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
+import sendNotification from '../../../helpers/sendNotification';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
@@ -129,6 +130,7 @@ const createProperty = async (payload: Property): Promise<Property | null> => {
       },
     },
   });
+  sendNotification({ message: 'A new property listed !' });
   return newProperty;
 };
 

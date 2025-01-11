@@ -13,8 +13,13 @@ export const initiatePayment = async (
   reference: string,
   paymentType: EPaymentType,
   orderId: string,
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   callbackUrl?: string
 ) => {
+  console.log(
+    { mainamount: amount, amount: amount * 100 },
+    'bro please show the console log about the payment amount'
+  );
   try {
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
@@ -23,7 +28,7 @@ export const initiatePayment = async (
         amount: amount * 100,
         email,
         reference,
-        callback_url: callbackUrl,
+        // callback_url: callbackUrl,
         metadata: {
           payment_type: paymentType,
           orderId,

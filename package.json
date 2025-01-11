@@ -17,7 +17,7 @@
     "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Programming Hero",
+  "author": "wealth promise land",
   "license": "ISC",
   "lint-staged": {
     "src/**/*.ts": "yarn lint-prettier"
@@ -42,6 +42,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.14.1",
     "@nowpaymentsio/nowpayments-api-js": "^1.0.5",
     "@prisma/client": "^5.2.0",
     "@types/bcrypt": "^5.0.0",

@@ -28,7 +28,7 @@ const getAllOrders = async (
   const { page, limit, skip } =
     paginationHelpers.calculatePagination(paginationOptions);
 
-  const { searchTerm, ...filterData } = filters;
+  const { searchTerm, buyerEmail, ...filterData } = filters;
 
   const andCondition = [];
 
@@ -44,6 +44,15 @@ const getAllOrders = async (
     });
     andCondition.push({
       OR: searchAbleFields,
+    });
+  }
+  if (buyerEmail) {
+    andCondition.push({
+      AND: {
+        orderBy: {
+          email: buyerEmail,
+        },
+      },
     });
   }
   if (Object.keys(filters).length) {
@@ -87,6 +96,8 @@ const getAllOrders = async (
           id: true,
           name: true,
           profileImg: true,
+          phoneNumber: true,
+          location: true,
         },
       },
     },
@@ -123,12 +134,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       flippingId: payload.flippingId,
     },
   });
-  if (isOrderAlreadyExist) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Already order this item wait form confirmation'
-    );
-  }
+
   // if wealBank exits
   if (payload.wealthBankId) {
     if (payload.paymentType === EOrderPaymentType.paystack) {
@@ -144,7 +150,12 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Bank id is not valid');
     }
   }
-
+  if (isOrderAlreadyExist && refName != EOrderRefName.crowdFund) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Already order this item wait form confirmation'
+    );
+  }
   // for crowd Fund
   if (refName === EOrderRefName.crowdFund) {
     console.log('in crowd Fund');
@@ -223,7 +234,7 @@ const createOrders = async (payload: Orders): Promise<Orders | null> => {
     });
     if (payload.paymentType === EOrderPaymentType.paystack) {
       const payId = generateId();
-      if (amount * 100 > 2000000) {
+      if (amount >= 2000000) {
         throw new ApiError(
           httpStatus.BAD_REQUEST,
           '2000000NG is not allowed to paystack payment'

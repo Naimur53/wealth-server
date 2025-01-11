@@ -6,11 +6,7 @@ import { PromotionController } from './promotion.controller';
 import { PromotionValidation } from './promotion.validation';
 const router = express.Router();
 
-router.get(
-  '/',
-  // auth(UserRole.admin, UserRole.superAdmin),
-  PromotionController.getAllPromotion
-);
+router.get('/', PromotionController.getAllPromotion);
 router.get('/:id', PromotionController.getSinglePromotion);
 
 router.post(

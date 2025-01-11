@@ -87,7 +87,7 @@ const getAllMessage = async (
       },
     },
   });
-  const total = await prisma.message.count();
+  const total = await prisma.message.count({ where: whereConditions });
   const isSeenMessageExits = await prisma.seenMessage.findFirst({
     where: { seenById: userId, groupId: groupId },
   });
